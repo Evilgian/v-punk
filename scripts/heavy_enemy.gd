@@ -150,6 +150,12 @@ func die() -> void:
 			var drop := drop_scene.instantiate() as Area2D
 			if drop:
 				drop.global_position = global_position + Vector2(randf_range(-15, 15), randf_range(-15, 15))
+				if "drop_type" in drop:
+					var r := randf()
+					if i == 0 and r < 0.12:
+						drop.drop_type = "gear_drop"
+					elif r < 0.35:
+						drop.drop_type = "upgrade_scroll"
 				get_tree().current_scene.add_child.call_deferred(drop)
 
 	queue_free()

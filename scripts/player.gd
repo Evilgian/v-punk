@@ -60,13 +60,27 @@ func _ready() -> void:
 	var speed_talent: float = tm.get_bonus_value("speed") if (tm and tm.has_method("get_bonus_value")) else 0.0
 
 	var im: Node = get_node_or_null("/root/InventoryManager")
+	var pet_laser_lvl: int = 1
+	var pet_shield_lvl: int = 1
 	if im:
 		has_pet_laser = (im.equipped_pet1_id == "drone_laser" or im.equipped_pet2_id == "drone_laser")
 		has_pet_shield = (im.equipped_pet1_id == "drone_shield" or im.equipped_pet2_id == "drone_shield")
+		if im.has_method("get_item_level"):
+			var wep_lvl: int = im.get_item_level(im.equipped_weapon_id)
+			weapon_base_damage += (wep_lvl - 1) * 3
+			if not im.equipped_armor_id.is_empty():
+				var arm_lvl: int = im.get_item_level(im.equipped_armor_id)
+				max_hp += (arm_lvl - 1) * 18
+			if has_pet_laser:
+				pet_laser_lvl = im.get_item_level("drone_laser")
+			if has_pet_shield:
+				pet_shield_lvl = im.get_item_level("drone_shield")
 		if im.equipped_ring1_id == "ring_speed" or im.equipped_ring2_id == "ring_speed":
-			speed += 25.0
+			var r_spd_lvl: int = im.get_item_level("ring_speed") if im.has_method("get_item_level") else 1
+			speed += 25.0 + float(r_spd_lvl - 1) * 6.0
 		if im.equipped_ring1_id == "ring_crit" or im.equipped_ring2_id == "ring_crit":
-			bonus_damage += 4
+			var r_crt_lvl: int = im.get_item_level("ring_crit") if im.has_method("get_item_level") else 1
+			bonus_damage += 4 + (r_crt_lvl - 1) * 2
 
 	# Bonus Archetipo / Classe Scelta dal Giocatore
 	match Global.player_class.to_upper():
@@ -79,7 +93,7 @@ func _ready() -> void:
 			bonus_damage += 1
 
 	speed += WeaponDB.get_equipped_boots_speed_bonus() + speed_talent
-	max_hp += (Global.upgrade_hp_lvl * 20) + WeaponDB.get_equipped_armor_hp_bonus() + hp_talent + (25 if has_pet_shield else 0)
+	max_hp += (Global.upgrade_hp_lvl * 20) + WeaponDB.get_equipped_armor_hp_bonus() + hp_talent + ((25 + (pet_shield_lvl - 1) * 12) if has_pet_shield else 0)
 	bonus_damage += (Global.upgrade_dmg_lvl * 2) + atk_talent
 	current_hp = max_hp
 

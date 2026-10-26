@@ -181,24 +181,42 @@ func _die() -> void:
 
 	var w: WorldData = WorldDB.get_selected_world()
 	var mult: float = w.reward_multiplier if w else 1.0
-	Global.total_credits += int(120.0 * mult)
-	Global.total_coins += int(350.0 * mult)
+	var world_num: int = WorldDB.world_order.find(w.id if w else "world_1") + 1
+	if world_num <= 0: world_num = 1
+
+	var reward_coins: int = int(600.0 * mult)
+	var reward_gems: int = int(200.0 * mult)
+	var reward_scrolls: int = 3 + world_num * 2
+
+	Global.total_coins += reward_coins
+	Global.total_credits += reward_gems
+	Global.upgrade_scrolls += reward_scrolls
 	Global.quest_runs += 1
 	Global.quest_kills += 1
 
-	# Bottino Equipaggiamento garantito alla sconfitta del Boss!
-	var boss_loot_pool := [
-		{"id": "kevlar", "name": "Giubbotto Kevlar", "slot": "CORAZZA", "rarity": "COMMON"},
-		{"id": "ring_crit", "name": "Anello Critico", "slot": "ANELLO 1", "rarity": "COMMON"},
-		{"id": "ring_speed", "name": "Anello Velocità", "slot": "ANELLO 2", "rarity": "RARE"},
-		{"id": "drone_laser", "name": "Drone Laser", "slot": "PET 1", "rarity": "RARE"},
-		{"id": "shotgun", "name": "Fucile a Pompa", "slot": "ARMA", "rarity": "RARE"},
-		{"id": "katana", "name": "Katana Lame Veloci", "slot": "ARMA", "rarity": "EPIC"}
-	]
-	var drop_item: Dictionary = boss_loot_pool[randi() % boss_loot_pool.size()]
+	# 2 Drop Equipaggiamento Garantiti al Completamento del Mondo!
+	var dropped_items: Array = []
 	var im: Node = get_node_or_null("/root/InventoryManager")
-	if im and im.has_method("add_item"):
-		im.add_item(str(drop_item["id"]), str(drop_item["name"]), str(drop_item["slot"]), str(drop_item["rarity"]))
+	if im and im.has_method("roll_random_in_run_gear_drop"):
+		dropped_items.append(im.roll_random_in_run_gear_drop(world_num))
+		dropped_items.append(im.roll_random_in_run_gear_drop(world_num))
+
+	# Sblocco Sequenziale del Mondo Successivo
+	var newly_unlocked_world: int = 0
+	if world_num >= Global.max_unlocked_world and world_num < 8:
+		Global.max_unlocked_world = world_num + 1
+		newly_unlocked_world = Global.max_unlocked_world
+		WorldDB.selected_world_id = "world_" + str(Global.max_unlocked_world)
+
+	Global.last_run_rewards = {
+		"world_name": w.display_name if w else "SETTORE 01",
+		"world_num": world_num,
+		"coins": reward_coins,
+		"gems": reward_gems,
+		"scrolls": reward_scrolls,
+		"items": dropped_items,
+		"unlocked_world": newly_unlocked_world
+	}
 
 	var ss: Node = get_node_or_null("/root/SaveSystem")
 	if ss and ss.has_method("save_game"): ss.save_game()

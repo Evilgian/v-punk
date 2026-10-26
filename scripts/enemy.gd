@@ -93,7 +93,13 @@ func die() -> void:
 		var drop := drop_scene.instantiate() as Area2D
 		if drop:
 			drop.global_position = global_position
-			if "drop_type" in drop and randf() < 0.08:
-				drop.drop_type = "heal"
+			if "drop_type" in drop:
+				var r := randf()
+				if r < 0.05:
+					drop.drop_type = "gear_drop" # 5% Drop Armatura / Anello / Pet / Arma
+				elif r < 0.20:
+					drop.drop_type = "upgrade_scroll" # 15% Nucleo Potenziamento ⚙️
+				elif r < 0.28:
+					drop.drop_type = "heal"
 			get_tree().current_scene.add_child.call_deferred(drop)
 	queue_free()

@@ -11,15 +11,15 @@ func _init_database() -> void:
 	worlds.clear()
 	world_order.clear()
 
-	# Mondo 1 - Foresta Bio-Cibernetica
+	# Mondo 1 - Foresta Bio-Cibernetica (25 Livelli)
 	var w1 := WorldData.new()
 	w1.id = "world_1"
 	w1.display_name = "Mondo 1: Foresta Bio-Cyber"
-	w1.total_rooms = 10
+	w1.total_rooms = 25
 	w1.enemy_hp_multiplier = 1.0
 	w1.enemy_dmg_multiplier = 1.0
 	w1.reward_multiplier = 1.0
-	w1.description = "Settore botanico mutato, pattugliato da bio-droni e dal Golem Silvano MK-I."
+	w1.description = "Settore 01 (25 Livelli): Giungla sintetico-mutante pattugliata dal Golem Silvano MK-I."
 	w1.biome_color = Color(0.04, 0.14, 0.08, 1.0)
 	w1.accent_color = Color(0.2, 1.0, 0.55, 1.0)
 	w1.trap_type = "SPIKES"
@@ -33,15 +33,15 @@ func _init_database() -> void:
 	w1.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_12.png"
 	_register_world(w1)
 
-	# Mondo 2 - Deserto delle Rovine
+	# Mondo 2 - Deserto delle Rovine (30 Livelli)
 	var w2 := WorldData.new()
 	w2.id = "world_2"
 	w2.display_name = "Mondo 2: Deserto delle Rovine"
-	w2.total_rooms = 12
-	w2.enemy_hp_multiplier = 1.35
-	w2.enemy_dmg_multiplier = 1.2
-	w2.reward_multiplier = 1.5
-	w2.description = "Dune radioattive con vortici di sabbia e lo Scorpione Meccanico Imperiale."
+	w2.total_rooms = 30
+	w2.enemy_hp_multiplier = 1.55
+	w2.enemy_dmg_multiplier = 1.35
+	w2.reward_multiplier = 1.6
+	w2.description = "Settore 02 (30 Livelli): Dune radioattive con vortici gravitazionali e Scorpione Imperiale."
 	w2.biome_color = Color(0.18, 0.13, 0.05, 1.0)
 	w2.accent_color = Color(1.0, 0.78, 0.2, 1.0)
 	w2.trap_type = "SANDPIT"
@@ -55,15 +55,15 @@ func _init_database() -> void:
 	w2.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_18.png"
 	_register_world(w2)
 
-	# Mondo 3 - Stazione Cyberpunk
+	# Mondo 3 - Stazione Cyberpunk (30 Livelli)
 	var w3 := WorldData.new()
 	w3.id = "world_3"
 	w3.display_name = "Mondo 3: Stazione Cyberpunk"
-	w3.total_rooms = 15
-	w3.enemy_hp_multiplier = 1.75
-	w3.enemy_dmg_multiplier = 1.45
-	w3.reward_multiplier = 2.2
-	w3.description = "Grattacielo orbitale ad alta sicurezza difeso dal Mega Dron-Core 3000."
+	w3.total_rooms = 30
+	w3.enemy_hp_multiplier = 2.25
+	w3.enemy_dmg_multiplier = 1.75
+	w3.reward_multiplier = 2.4
+	w3.description = "Settore 03 (30 Livelli): Grattacielo Arasaka ad alta sicurezza difeso dal Mega Dron-Core."
 	w3.biome_color = Color(0.10, 0.04, 0.20, 1.0)
 	w3.accent_color = Color(0.0, 0.94, 1.0, 1.0)
 	w3.trap_type = "LASER"
@@ -77,15 +77,15 @@ func _init_database() -> void:
 	w3.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_24.png"
 	_register_world(w3)
 
-	# Mondo 4 - Laboratorio Criogenico
+	# Mondo 4 - Laboratorio Criogenico (35 Livelli)
 	var w4 := WorldData.new()
 	w4.id = "world_4"
 	w4.display_name = "Mondo 4: Lab Criogenico"
-	w4.total_rooms = 16
-	w4.enemy_hp_multiplier = 2.2
-	w4.enemy_dmg_multiplier = 1.7
-	w4.reward_multiplier = 3.0
-	w4.description = "Reattore sub-zero con trappole criogeniche e il boss Cryo-Valkyrie Zero."
+	w4.total_rooms = 35
+	w4.enemy_hp_multiplier = 3.1
+	w4.enemy_dmg_multiplier = 2.2
+	w4.reward_multiplier = 3.4
+	w4.description = "Settore 04 (35 Livelli): Reattore sub-zero con trappole criogeniche e Cryo-Valkyrie Zero."
 	w4.biome_color = Color(0.03, 0.13, 0.22, 1.0)
 	w4.accent_color = Color(0.45, 0.90, 1.0, 1.0)
 	w4.trap_type = "CRYO"
@@ -99,15 +99,15 @@ func _init_database() -> void:
 	w4.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_30.png"
 	_register_world(w4)
 
-	# Mondo 5 - Fonderia Magmatica
+	# Mondo 5 - Fonderia Magmatica (35 Livelli)
 	var w5 := WorldData.new()
 	w5.id = "world_5"
 	w5.display_name = "Mondo 5: Fonderia Magmatica"
-	w5.total_rooms = 18
-	w5.enemy_hp_multiplier = 2.8
-	w5.enemy_dmg_multiplier = 2.0
-	w5.reward_multiplier = 4.0
-	w5.description = "Fornace geotermica di metallo fuso presidiata dal Titano Vulcan Overlord."
+	w5.total_rooms = 35
+	w5.enemy_hp_multiplier = 4.2
+	w5.enemy_dmg_multiplier = 2.7
+	w5.reward_multiplier = 4.6
+	w5.description = "Settore 05 (35 Livelli): Fornace geotermica di metallo fuso presidiata da Vulcan Overlord."
 	w5.biome_color = Color(0.20, 0.05, 0.03, 1.0)
 	w5.accent_color = Color(1.0, 0.38, 0.1, 1.0)
 	w5.trap_type = "MAGMA"
@@ -121,15 +121,15 @@ func _init_database() -> void:
 	w5.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_36.png"
 	_register_world(w5)
 
-	# Mondo 6 - Raffineria Bio-Tossica
+	# Mondo 6 - Raffineria Bio-Tossica (40 Livelli)
 	var w6 := WorldData.new()
 	w6.id = "world_6"
 	w6.display_name = "Mondo 6: Raffineria Bio-Tossica"
-	w6.total_rooms = 20
-	w6.enemy_hp_multiplier = 3.5
-	w6.enemy_dmg_multiplier = 2.35
-	w6.reward_multiplier = 5.5
-	w6.description = "Impianto chimico corrotto da vapori acidi e dalla mutazione Hydra Chimera X."
+	w6.total_rooms = 40
+	w6.enemy_hp_multiplier = 5.6
+	w6.enemy_dmg_multiplier = 3.3
+	w6.reward_multiplier = 6.2
+	w6.description = "Settore 06 (40 Livelli): Impianto chimico corrotto da vapori acidi e da Hydra Chimera X."
 	w6.biome_color = Color(0.06, 0.16, 0.04, 1.0)
 	w6.accent_color = Color(0.65, 1.0, 0.15, 1.0)
 	w6.trap_type = "ACID"
@@ -143,15 +143,15 @@ func _init_database() -> void:
 	w6.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_42.png"
 	_register_world(w6)
 
-	# Mondo 7 - Cittadella Astrale
+	# Mondo 7 - Cittadella Astrale (45 Livelli)
 	var w7 := WorldData.new()
 	w7.id = "world_7"
 	w7.display_name = "Mondo 7: Cittadella Astrale"
-	w7.total_rooms = 22
-	w7.enemy_hp_multiplier = 4.4
-	w7.enemy_dmg_multiplier = 2.8
-	w7.reward_multiplier = 7.5
-	w7.description = "Santuario orbitale alimentato a plasma solare e custodito da Archon Seraphim."
+	w7.total_rooms = 45
+	w7.enemy_hp_multiplier = 7.5
+	w7.enemy_dmg_multiplier = 4.0
+	w7.reward_multiplier = 8.5
+	w7.description = "Settore 07 (45 Livelli): Santuario orbitale a plasma solare custodito da Archon Seraphim."
 	w7.biome_color = Color(0.07, 0.09, 0.22, 1.0)
 	w7.accent_color = Color(1.0, 0.86, 0.30, 1.0)
 	w7.trap_type = "TESLA"
@@ -165,15 +165,15 @@ func _init_database() -> void:
 	w7.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_47.png"
 	_register_world(w7)
 
-	# Mondo 8 - Singolarità del Vuoto (Nexus Finale)
+	# Mondo 8 - Singolarità del Vuoto (50 Livelli)
 	var w8 := WorldData.new()
 	w8.id = "world_8"
 	w8.display_name = "Mondo 8: Nexus della Singolarità"
-	w8.total_rooms = 25
-	w8.enemy_hp_multiplier = 5.5
-	w8.enemy_dmg_multiplier = 3.4
-	w8.reward_multiplier = 10.0
-	w8.description = "Orizzonte degli eventi cibernetico. Sconfiggi l'IA Suprema OMEGA PROTOCOL."
+	w8.total_rooms = 50
+	w8.enemy_hp_multiplier = 10.0
+	w8.enemy_dmg_multiplier = 5.0
+	w8.reward_multiplier = 12.0
+	w8.description = "Settore 08 (50 Livelli): Orizzonte degli eventi. Sconfiggi l'IA Suprema OMEGA PROTOCOL."
 	w8.biome_color = Color(0.05, 0.02, 0.10, 1.0)
 	w8.accent_color = Color(1.0, 0.15, 0.75, 1.0)
 	w8.trap_type = "VOID"

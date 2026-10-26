@@ -9,6 +9,10 @@ var player_color_id: String = "CYAN" # CYAN, MAGENTA, GOLD, GREEN
 # Economia & Progressione (Partenza pulita da zero)
 var total_credits: int = 0
 var total_coins: int = 0
+var upgrade_scrolls: int = 0 # Nuclei Cyber-Upgrade ⚙️ per potenziare il livello di Armi, Corazze, Anelli e Droni
+var max_unlocked_world: int = 1 # Sblocco sequenziale Mondi (1 -> 8)
+var last_run_rewards: Dictionary = {} # Riepilogo premi fine mondo
+
 var upgrade_dmg_lvl: int = 0
 var upgrade_hp_lvl: int = 0
 

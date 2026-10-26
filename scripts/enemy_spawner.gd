@@ -80,8 +80,10 @@ func start_room() -> void:
 			crate.global_position = crate_pos
 			get_tree().current_scene.add_child.call_deferred(crate)
 
-	# Stanze Standard: Nemici con moltiplicatori HP e Danno bioma, spawnati dentro i confini 720x1280 e lontano dagli ostacoli
-	total_room_enemies = 3 + min(current_room, 8)
+	# Stanze Standard: Nemici con moltiplicatori HP e Danno bioma + progressione graduale stanza per stanza
+	total_room_enemies = 3 + min(int(current_room / 2), 9)
+	var room_hp_scale: float = 1.0 + float(current_room - 1) * 0.04
+	var room_dmg_scale: float = 1.0 + float(current_room - 1) * 0.025
 	print("Generazione di ", total_room_enemies, " nemici nella Stanza ", current_room)
 
 	for i in range(total_room_enemies):
@@ -101,11 +103,11 @@ func start_room() -> void:
 			if enemy:
 				enemy.global_position = spawn_pos
 				if "hp" in enemy:
-					enemy.hp = int(enemy.hp * current_world.enemy_hp_multiplier)
+					enemy.hp = int(float(enemy.hp) * current_world.enemy_hp_multiplier * room_hp_scale)
 				if "max_hp" in enemy and "hp" in enemy:
 					enemy.max_hp = enemy.hp
 				if "damage" in enemy:
-					enemy.damage = int(enemy.damage * current_world.enemy_dmg_multiplier)
+					enemy.damage = int(float(enemy.damage) * current_world.enemy_dmg_multiplier * room_dmg_scale)
 				get_tree().current_scene.add_child.call_deferred(enemy)
 
 	_update_hud_counter()

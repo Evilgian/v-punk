@@ -14,6 +14,9 @@ var inventory: Array = [
 	{"id": "pistol_base", "name": "Pistola Base", "slot": "ARMA", "rarity": "COMMON", "count": 1}
 ]
 
+# Livello di potenziamento per ogni tipo di equipaggiamento (Lv. 1 -> Lv. 25+)
+var item_levels: Dictionary = {}
+
 func init_starter_loadout(chosen_class: String) -> void:
 	equipped_armor_id = ""
 	equipped_ring1_id = ""
@@ -21,6 +24,7 @@ func init_starter_loadout(chosen_class: String) -> void:
 	equipped_pet1_id = ""
 	equipped_pet2_id = ""
 	WeaponDB.equipped_armor_id = ""
+	item_levels = {}
 
 	match chosen_class.to_upper():
 		"VANGUARD":
@@ -41,6 +45,82 @@ func init_starter_loadout(chosen_class: String) -> void:
 			inventory = [
 				{"id": "pistol_base", "name": "Pistola Base", "slot": "ARMA", "rarity": "COMMON", "count": 1}
 			]
+
+func get_item_level(item_id: String) -> int:
+	if item_id.is_empty(): return 1
+	return max(1, int(item_levels.get(item_id, 1)))
+
+func get_upgrade_coin_cost(item_id: String) -> int:
+	var lvl := get_item_level(item_id)
+	return 40 * lvl
+
+func get_upgrade_scroll_cost(item_id: String) -> int:
+	var lvl := get_item_level(item_id)
+	return 1 + int((lvl - 1) / 3)
+
+func get_item_stat_description(item_id: String, slot_type: String) -> String:
+	var lvl := get_item_level(item_id)
+	var s := slot_type.to_upper()
+	if "ARMA" in s:
+		var bonus_dmg := (lvl - 1) * 3
+		return "⚔️ Bonus Livello Arma: +" + str(bonus_dmg) + " ATK (Prossimo Lv: +" + str(lvl * 3) + " ATK)"
+	elif "CORAZZA" in s:
+		var base_hp := 60 if item_id == "nano_armor" else 25
+		var bonus_hp := base_hp + (lvl - 1) * 18
+		return "🛡️ Corazza Totale: +" + str(bonus_hp) + " HP (Prossimo Lv: +" + str(bonus_hp + 18) + " HP)"
+	elif "ANELLO 1" in s or item_id == "ring_crit":
+		var bonus_atk := 4 + (lvl - 1) * 2
+		return "🎯 Anello Critico: +" + str(bonus_atk) + " Danno Critico (Prossimo Lv: +" + str(bonus_atk + 2) + ")"
+	elif "ANELLO 2" in s or item_id == "ring_speed":
+		var bonus_spd := 25 + (lvl - 1) * 6
+		return "⚡ Anello Velocità: +" + str(bonus_spd) + " Velocità (Prossimo Lv: +" + str(bonus_spd + 6) + ")"
+	elif "PET 1" in s or item_id == "drone_laser":
+		var pct := 50 + (lvl - 1) * 10
+		return "🤖 Drone Laser: Spara colpi al " + str(pct) + "% ATK (Prossimo Lv: " + str(pct + 10) + "%)"
+	else:
+		var bonus_sh := 25 + (lvl - 1) * 12
+		return "🛡️ Drone Scudo: +" + str(bonus_sh) + " HP Scudo (Prossimo Lv: +" + str(bonus_sh + 12) + " HP)"
+
+func upgrade_item_level(item_id: String) -> Dictionary:
+	var coin_cost := get_upgrade_coin_cost(item_id)
+	var scroll_cost := get_upgrade_scroll_cost(item_id)
+	if Global.total_coins < coin_cost:
+		return {"success": false, "message": "❌ Monete insufficienti! Servono " + str(coin_cost) + " 🪙"}
+	if Global.upgrade_scrolls < scroll_cost:
+		return {"success": false, "message": "❌ Nuclei insufficienti! Servono " + str(scroll_cost) + " ⚙️ (Trovane nei livelli!)"}
+
+	Global.total_coins -= coin_cost
+	Global.upgrade_scrolls -= scroll_cost
+	var new_lvl := get_item_level(item_id) + 1
+	item_levels[item_id] = new_lvl
+
+	var ss: Node = get_node_or_null("/root/SaveSystem")
+	if ss and ss.has_method("save_game"): ss.save_game()
+	return {"success": true, "new_level": new_lvl, "message": "⬆️ POTENZIAMENTO COMPLETATO: Lv. " + str(new_lvl) + "!"}
+
+func roll_random_in_run_gear_drop(world_num: int = 1) -> Dictionary:
+	# Pool completo di Armature, Anelli, Pet e Armi droppabili durante i livelli e a fine mondo
+	var gear_pool := [
+		{"id": "kevlar", "name": "Giubbotto Kevlar", "slot": "CORAZZA", "rarity": "COMMON"},
+		{"id": "nano_armor", "name": "Armatura Nano-Tech", "slot": "CORAZZA", "rarity": "RARE" if world_num < 3 else "EPIC"},
+		{"id": "ring_crit", "name": "Anello Critico", "slot": "ANELLO 1", "rarity": "COMMON"},
+		{"id": "ring_speed", "name": "Anello Velocità", "slot": "ANELLO 2", "rarity": "COMMON" if world_num < 2 else "RARE"},
+		{"id": "drone_laser", "name": "Drone Laser", "slot": "PET 1", "rarity": "RARE"},
+		{"id": "drone_shield", "name": "Drone Scudo", "slot": "PET 2", "rarity": "RARE" if world_num < 3 else "EPIC"},
+		{"id": "pistol_base", "name": "Pistola Base", "slot": "ARMA", "rarity": "COMMON"},
+		{"id": "shotgun", "name": "Fucile a Pompa", "slot": "ARMA", "rarity": "COMMON"},
+		{"id": "homing_wand", "name": "Conduttore Psionico", "slot": "ARMA", "rarity": "RARE"},
+		{"id": "smg", "name": "Mitraglietta Cyber", "slot": "ARMA", "rarity": "RARE"},
+		{"id": "katana", "name": "Katana Lame Veloci", "slot": "ARMA", "rarity": "EPIC"},
+		{"id": "laser_rifle", "name": "Fucile Laser High-Tech", "slot": "ARMA", "rarity": "EPIC"}
+	]
+	if world_num >= 3:
+		gear_pool.append({"id": "scythe", "name": "Falce Pesante Perforante", "slot": "ARMA", "rarity": "LEGENDARY"})
+		gear_pool.append({"id": "plasma_cannon", "name": "Cannone al Plasma", "slot": "ARMA", "rarity": "LEGENDARY"})
+
+	var chosen: Dictionary = gear_pool[randi() % gear_pool.size()].duplicate()
+	add_item(str(chosen["id"]), str(chosen["name"]), str(chosen["slot"]), str(chosen["rarity"]))
+	return chosen
 
 const RARITY_ORDER := ["COMMON", "RARE", "EPIC", "LEGENDARY"]
 

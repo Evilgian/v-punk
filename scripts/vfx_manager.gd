@@ -31,6 +31,25 @@ func spawn_floating_damage(global_pos: Vector2, amount: int, is_crit: bool = fal
 
 	tw.chain().tween_callback(lbl.queue_free)
 
+func spawn_floating_text(global_pos: Vector2, text_str: String, col: Color = Color(1.0, 0.88, 0.15, 1.0)) -> void:
+	var scene := get_tree().current_scene
+	if not scene: return
+
+	var lbl := Label.new()
+	lbl.text = text_str
+	lbl.global_position = global_pos + Vector2(-90, -24)
+	lbl.z_index = 25
+	lbl.add_theme_font_size_override("font_size", 17)
+	lbl.add_theme_color_override("font_color", col)
+	lbl.add_theme_color_override("font_outline_color", Color(0.04, 0.05, 0.12, 0.98))
+	lbl.add_theme_constant_override("outline_size", 4)
+	scene.add_child(lbl)
+
+	var tw := scene.create_tween().set_parallel(true)
+	tw.tween_property(lbl, "global_position", lbl.global_position + Vector2(0, -56), 1.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(lbl, "modulate:a", 0.0, 1.1).set_delay(0.45)
+	tw.chain().tween_callback(lbl.queue_free)
+
 func flash_hit(node: CanvasItem) -> void:
 	if not is_instance_valid(node): return
 	var orig_mod: Color = node.get_meta("base_modulate", Color.WHITE)

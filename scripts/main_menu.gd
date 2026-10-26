@@ -353,7 +353,7 @@ func _update_top_bar() -> void:
 	var callsign := Global.player_name if not Global.player_name.is_empty() else "NUOVO"
 	if profile_level_label:
 		profile_level_label.text = callsign + " [" + Global.get_class_display_name() + "] • Lv." + str(total_lvl)
-	if energy_label: energy_label.text = "⚡ 30/30"
+	if energy_label: energy_label.text = "⚙️ " + str(Global.upgrade_scrolls)
 	if coins_label: coins_label.text = "🪙 " + str(Global.total_coins)
 	if gems_label: gems_label.text = "💎 " + str(Global.total_credits)
 
@@ -437,13 +437,28 @@ func _show_home_view() -> void:
 
 	var world: WorldData = WorldDB.get_selected_world()
 	if world:
+		var world_num: int = WorldDB.world_order.find(world.id) + 1
+		if world_num <= 0: world_num = 1
+		var is_locked: bool = (world_num > Global.max_unlocked_world)
+
 		if world_card_name:
-			world_card_name.text = world.display_name
-			world_card_name.add_theme_color_override("font_color", world.accent_color)
+			world_card_name.text = ("🔒 " if is_locked else "🔓 ") + world.display_name + (" [BLOCCATO]" if is_locked else "")
+			world_card_name.add_theme_color_override("font_color", Color(0.65, 0.35, 0.45, 1.0) if is_locked else world.accent_color)
 		if world_card_info:
-			world_card_info.text = "Stanze: " + str(world.total_rooms) + " | Boss: " + world.boss_name + " | Bottino Oro: x" + str(world.reward_multiplier)
+			world_card_info.text = "Livelli: " + str(world.total_rooms) + " | Boss: " + world.boss_name + " | Bottino: x" + str(world.reward_multiplier) + " | Difficoltà: x" + str(world.enemy_hp_multiplier)
 		if world_card_desc:
-			world_card_desc.text = world.description
+			if is_locked:
+				world_card_desc.text = "🔒 SETTORE CRIPTATO: Completa il Mondo 0" + str(world_num - 1) + " per sbloccare l'accesso a questo settore."
+			else:
+				world_card_desc.text = world.description
+		if btn_play_home:
+			btn_play_home.disabled = is_locked
+			if is_locked:
+				btn_play_home.text = "🔒 COMPLETA MONDO 0" + str(world_num - 1) + " PER SBLOCCARE"
+				CyberTheme.style_button(btn_play_home, CyberTheme.COL_MAGENTA, false)
+			else:
+				btn_play_home.text = "⚡ AFFRONTA SETTORE (" + str(world.total_rooms) + " LIVELLI) ▶"
+				CyberTheme.style_button(btn_play_home, CyberTheme.COL_YELLOW, true)
 		if is_instance_valid(boss_holo_node):
 			boss_holo_node.queue_redraw()
 
@@ -601,6 +616,7 @@ func _open_item_action_modal(item_data: Dictionary) -> void:
 			modal.setup_item(item_data)
 		if modal.has_signal("action_completed"):
 			modal.action_completed.connect(func():
+				_update_top_bar()
 				_populate_inventory()
 			)
 
@@ -614,6 +630,7 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 	var lbl: Label = slot_panel.get_node_or_null("Lbl") as Label
 	var is_empty: bool = eq_item.is_empty() or eq_item.get("id", "").is_empty()
 	var item_id: String = str(eq_item.get("id", ""))
+	var item_lvl: int = im.get_item_level(item_id) if (im and not is_empty and im.has_method("get_item_level")) else 1
 
 	if lbl:
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -621,7 +638,7 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 			lbl.text = slot_type + "\n[SLOTS LIBERO]"
 			lbl.modulate = Color(0.65, 0.72, 0.85, 0.8)
 		else:
-			lbl.text = slot_type + "\n" + str(eq_item.get("name", slot_type))
+			lbl.text = slot_type + " [Lv." + str(item_lvl) + "]\n" + str(eq_item.get("name", slot_type))
 			lbl.modulate = Color.WHITE
 
 	var rar_str: String = str(eq_item.get("rarity", "COMMON")) if not is_empty else "COMMON"
@@ -668,11 +685,15 @@ func _populate_inventory() -> void:
 	var crit_bonus: int = int(tm.get_bonus_value("crit")) if (tm and tm.has_method("get_bonus_value")) else 0
 	var speed_bonus: int = int(tm.get_bonus_value("speed")) if (tm and tm.has_method("get_bonus_value")) else 0
 
+	var im: Node = get_node_or_null("/root/InventoryManager")
+	var wep_lvl: int = im.get_item_level(WeaponDB.equipped_weapon_id) if (im and im.has_method("get_item_level")) else 1
+	var arm_lvl: int = im.get_item_level(WeaponDB.equipped_armor_id) if (im and not WeaponDB.equipped_armor_id.is_empty() and im.has_method("get_item_level")) else 1
+
 	var eq_weapon: WeaponStats = WeaponDB.get_equipped_weapon()
 	var base_atk: int = eq_weapon.get_final_damage() if eq_weapon else 10
-	var total_atk: int = base_atk + atk_bonus + 5
+	var total_atk: int = base_atk + atk_bonus + (wep_lvl - 1) * 3
 
-	var armor_bonus: int = WeaponDB.get_equipped_armor_hp_bonus()
+	var armor_bonus: int = WeaponDB.get_equipped_armor_hp_bonus() + ((arm_lvl - 1) * 18 if not WeaponDB.equipped_armor_id.is_empty() else 0)
 	var total_hp: int = 100 + hp_bonus + armor_bonus
 	var total_crit: int = 10 + crit_bonus
 	var total_speed: int = 300 + speed_bonus + int(WeaponDB.get_equipped_boots_speed_bonus())
@@ -680,9 +701,8 @@ func _populate_inventory() -> void:
 	if hero_atk_label != null: hero_atk_label.text = "⚔️ ATK: " + str(total_atk)
 	if hero_hp_label != null: hero_hp_label.text = "❤️ HP: " + str(total_hp)
 	if hero_crit_label != null: hero_crit_label.text = "🎯 CRIT: " + str(total_crit) + "%"
-	if hero_speed_label != null: hero_speed_label.text = "⚡ VEL: " + str(total_speed)
+	if hero_speed_label != null: hero_speed_label.text = "⚡ VEL: " + str(total_speed) + " | ⚙️ " + str(Global.upgrade_scrolls)
 
-	var im: Node = get_node_or_null("/root/InventoryManager")
 	var fusible: Array = []
 	if im and im.has_method("get_fusible_items"): fusible = im.get_fusible_items()
 
@@ -691,7 +711,7 @@ func _populate_inventory() -> void:
 			var f_item: Dictionary = fusible[0]
 			merge_status_label.text = "🔴 Fusione Disponibile! 3x " + str(f_item["name"]) + " (" + str(f_item["rarity"]) + ")"
 		else:
-			merge_status_label.text = "Possiedi 3 oggetti identici per effettuare la fusione 3-in-1."
+			merge_status_label.text = "Tocca un oggetto per Equipaggiarlo o Potenziarne il Livello (⚙️ Nuclei: " + str(Global.upgrade_scrolls) + ")."
 
 	if inventory_grid:
 		for child in inventory_grid.get_children(): child.queue_free()
@@ -702,18 +722,19 @@ func _populate_inventory() -> void:
 		for item in items:
 			var item_id: String = str(item.get("id", ""))
 			var is_eq: bool = im.is_item_equipped(item_id) if (im and im.has_method("is_item_equipped")) else false
-			var card := _create_gear_grid_card(item_id, str(item["name"]), str(item["slot"]), item.get("rarity", "COMMON"), is_eq, int(item.get("count", 1)))
+			var i_lvl: int = im.get_item_level(item_id) if (im and im.has_method("get_item_level")) else 1
+			var card := _create_gear_grid_card(item_id, str(item["name"]), str(item["slot"]), item.get("rarity", "COMMON"), is_eq, int(item.get("count", 1)), i_lvl)
 			card.pressed.connect(func():
 				SoundFX.play_click()
 				_open_item_action_modal(item)
 			)
 			inventory_grid.add_child(card)
 
-func _create_gear_grid_card(item_id: String, item_name: String, slot_name: String, rarity_val: Variant, is_eq: bool, count: int = 1) -> Button:
+func _create_gear_grid_card(item_id: String, item_name: String, slot_name: String, rarity_val: Variant, is_eq: bool, count: int = 1, item_lvl: int = 1) -> Button:
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(204, 182)
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var eq_badge := "\n⚡ [EQUIPAGGIATO]" if is_eq else ("\n[" + slot_name + "]" + (" (x" + str(count) + ")" if count > 1 else ""))
+	var eq_badge := "\n⚡ [EQUIP • Lv." + str(item_lvl) + "]" if is_eq else ("\n[Lv." + str(item_lvl) + " • " + slot_name + "]" + (" (x" + str(count) + ")" if count > 1 else ""))
 	btn.text = "\n\n\n\n" + item_name + eq_badge
 	btn.add_theme_font_size_override("font_size", 13)
 
@@ -1184,6 +1205,12 @@ func _on_btn_checkin_pressed() -> void:
 	_show_checkin_view()
 
 func _on_btn_play_pressed() -> void:
+	var world: WorldData = WorldDB.get_selected_world()
+	if world:
+		var world_num: int = WorldDB.world_order.find(world.id) + 1
+		if world_num > Global.max_unlocked_world:
+			SoundFX.play_hit()
+			return
 	SoundFX.play_click()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
