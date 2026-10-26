@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 env:
-  GODOT_VERSION: 4.3
+  GODOT_VERSION: 4.3.0
 
 jobs:
   build-android:
@@ -25,28 +25,31 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Genera Debug Keystore per firma APK
+      - name: Verifica Android SDK Preinstallato e Genera Keystore
         run: |
+          echo "ANDROID_HOME is: $ANDROID_HOME"
           mkdir -p ~/.android
           keytool -genkey -v -keystore ~/.android/debug.keystore \
             -storepass android -alias androiddebugkey -keypass android \
             -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: Installa Godot ${{ env.GODOT_VERSION }} & Export Templates
-        uses: chickensoft-games/setup-godot@v2
-        with:
-          version: ${{ env.GODOT_VERSION }}
-          include-templates: true
-          use-dotnet: false
+      - name: Scarica e Installa Godot 4.3 & Export Templates
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+          unzip -q Godot_v4.3-stable_linux.x86_64.zip
+          sudo mv Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
 
-      - name: Configura Editor Settings per Android SDK e Keystore
+          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.3.stable
+          unzip -q Godot_v4.3-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/4.3.stable/
+
+      - name: Configura Editor Settings e Keystore per Android
         run: |
           mkdir -p ~/.config/godot
-          cat << EOF > ~/.config/godot/editor_settings-4.tres
+          cat << EOF > ~/.config/godot/editor_settings-4.3.tres
           [gd_resource type="EditorSettings" format=3]
           [resource]
           export/android/android_sdk_path = "$ANDROID_HOME"
@@ -54,16 +57,19 @@ jobs:
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOF
-          cp ~/.config/godot/editor_settings-4.tres ~/.config/godot/editor_settings-4.3.tres
+          cp ~/.config/godot/editor_settings-4.3.tres ~/.config/godot/editor_settings-4.tres
+
+          # Inserisce anche il keystore direttamente nel preset Android
+          sed -i "s|custom_template/release=\"\"|custom_template/release=\"\"\nkeystore/debug=\"$HOME/.android/debug.keystore\"\nkeystore/debug_user=\"androiddebugkey\"\nkeystore/debug_password=\"android\"|g" export_presets.cfg
 
       - name: Importa Risorse & Compila V-Punk.apk
         run: |
           mkdir -p build/android
-          # Allinea il tag versione per il runner cloud Godot 4.3
           sed -i 's/"4.7"/"4.3"/g' project.godot
           sed -i 's/"4.6"/"4.3"/g' project.godot
-          godot --headless --import
+          godot --headless --import || true
           godot --headless --export-debug "Android" build/android/V-Punk.apk
+          ls -lh build/android/V-Punk.apk
 
       - name: Carica V-Punk.apk negli Artifacts
         uses: actions/upload-artifact@v4
