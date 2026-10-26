@@ -114,8 +114,7 @@ func _apply_cyber_hud_styles() -> void:
 				SoundFX.play_click()
 				var sm_script := load("res://scripts/settings_modal.gd")
 				if sm_script:
-					var sm := CanvasLayer.new()
-					sm.set_script(sm_script)
+					var sm = sm_script.new()
 					sm.show_char_creator_btn = false
 					add_child(sm)
 			)

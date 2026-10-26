@@ -45,30 +45,35 @@ static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving
 	var sh_r := PackedVector2Array([Vector2(-8, 19), Vector2(8, 17), Vector2(10, 8), Vector2(-6, 8)])
 	c.draw_colored_polygon(sh_l, Color(0.14, 0.18, 0.28, 1.0))
 	c.draw_colored_polygon(sh_r, Color(0.14, 0.18, 0.28, 1.0))
-	c.draw_polyline(sh_l, Color(0.0, 0.94, 1.0, 0.9), 1.8)
-	c.draw_polyline(sh_r, Color(0.0, 0.94, 1.0, 0.9), 1.8)
+	c.draw_polyline(sh_l, aura, 2.0)
+	c.draw_polyline(sh_r, aura, 2.0)
 
-	# Torso Corazzato + Reattore Petto
-	c.draw_circle(Vector2(0, 0), 12.0, Color(0.10, 0.12, 0.18, 1.0))
-	c.draw_arc(Vector2(0, 0), 12.0, 0, TAU, 20, Color(0.25, 0.35, 0.55, 1.0), 2.0)
-	c.draw_circle(Vector2(3, 0), 4.5, Color(0.0, 0.95, 1.0, 0.95))
-
-	# Casco Cyber-Ronin con Visiera al Neon a "V"
-	c.draw_circle(Vector2(1 + breath * 0.3, 0), 9.5, Color(0.16, 0.20, 0.30, 1.0))
-	c.draw_arc(Vector2(1 + breath * 0.3, 0), 9.5, 0, TAU, 20, Color(0.0, 0.94, 1.0, 0.85), 1.6)
-	# Visiera luminosa frontale
-	var visor := PackedVector2Array([
-		Vector2(5, -6),
-		Vector2(10, 0),
-		Vector2(5, 6),
-		Vector2(8, 0)
-	])
-	c.draw_colored_polygon(visor, Color(0.0, 1.0, 0.95, 1.0))
-
-	# Sovrapposizione Modello 3D-Shaded Eroe (Carbon/Metallic Normal-Lit Texture)
+	# Sovrapposizione Modello 3D-Shaded Eroe (Tinto dinamicamente con il colore Aura/Visiera scelto)
 	var hero_tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_hero.png")
 	if hero_tex:
-		c.draw_texture_rect(hero_tex, Rect2(Vector2(-24, -24), Vector2(48, 48)), false)
+		var body_tint := Color(
+			clampf(0.45 + aura.r * 0.75, 0.45, 1.25),
+			clampf(0.45 + aura.g * 0.75, 0.45, 1.25),
+			clampf(0.45 + aura.b * 0.75, 0.45, 1.25),
+			1.0
+		)
+		c.draw_texture_rect(hero_tex, Rect2(Vector2(-24, -24), Vector2(48, 48)), false, body_tint)
+
+	# Torso Reattore Petto + Casco & Visiera Neon disegnati SOPRA la texture 3D così il cambio colore è immediato e brillante!
+	c.draw_circle(Vector2(2, 0), 5.2, Color(aura.r, aura.g, aura.b, 0.45))
+	c.draw_circle(Vector2(2, 0), 3.2, aura)
+	c.draw_circle(Vector2(2, 0), 1.5, Color.WHITE)
+
+	# Bordo luminoso del Casco + Visiera al Neon a "V" del colore scelto
+	c.draw_arc(Vector2(1 + breath * 0.3, 0), 10.0, -PI * 0.65, PI * 0.65, 20, aura, 2.2)
+	var visor := PackedVector2Array([
+		Vector2(4, -7),
+		Vector2(11, 0),
+		Vector2(4, 7),
+		Vector2(7.5, 0)
+	])
+	c.draw_colored_polygon(visor, aura)
+	c.draw_polyline(visor, Color.WHITE, 1.2)
 
 	# Arma Equipaggiata in Mano (Modello 3D-Shaded + Rinculo + Mirino Laser)
 	_draw_hero_weapon(c, weapon_id, anim_t, is_shooting)

@@ -257,6 +257,14 @@ var cyber_bg_canvas: Control = null
 var boss_holo_node: Node2D = null
 var hero_holo_node: Node2D = null
 var top_avatar_holo: Node2D = null
+var char_modal_layer: CanvasLayer = null
+var char_preview_holo: Node2D = null
+var char_preview_panel: PanelContainer = null
+var char_name_input: LineEdit = null
+var char_selected_class: String = "RONIN"
+var char_selected_color: String = "CYAN"
+var char_class_btns: Dictionary = {}
+var char_color_btns: Dictionary = {}
 
 func _process(delta: float) -> void:
 	menu_anim_t += delta
@@ -264,6 +272,7 @@ func _process(delta: float) -> void:
 	if is_instance_valid(boss_holo_node): boss_holo_node.queue_redraw()
 	if is_instance_valid(hero_holo_node): hero_holo_node.queue_redraw()
 	if is_instance_valid(top_avatar_holo): top_avatar_holo.queue_redraw()
+	if is_instance_valid(char_preview_holo): char_preview_holo.queue_redraw()
 
 func _setup_procedural_menu_models() -> void:
 	if preview_icon:
@@ -1219,8 +1228,7 @@ func _open_settings_modal() -> void:
 	SoundFX.play_click()
 	var sm_script := load("res://scripts/settings_modal.gd")
 	if sm_script:
-		var sm := CanvasLayer.new()
-		sm.set_script(sm_script)
+		var sm = sm_script.new()
 		sm.show_char_creator_btn = true
 		sm.open_character_creator_requested.connect(func():
 			_show_character_creation_modal(false)
@@ -1240,32 +1248,60 @@ func _on_btn_play_pressed() -> void:
 # ==============================================================================
 # TERMINALE IDENTITÀ NEURALE: CREAZIONE PERSONAGGIO (NOME, CLASSE, COLORE AURA)
 # ==============================================================================
+const CHAR_CLASS_DEFS := [
+	{"id": "RONIN", "title": "⚡ CYBER-RONIN", "wep": "pistol_base", "wep_name": "Pistola Base", "bonus": "+30 VEL | +5% CRIT", "col": Color(0.0, 0.95, 1.0, 1.0)},
+	{"id": "VANGUARD", "title": "🛡️ VANGUARD", "wep": "shotgun", "wep_name": "Fucile a Pompa", "bonus": "+40 HP CORAZZA", "col": Color(0.99, 0.93, 0.04, 1.0)},
+	{"id": "NETRUNNER", "title": "🔮 NETRUNNER", "wep": "homing_wand", "wep_name": "Conduttore Psion", "bonus": "+4 ATK GUIDATO", "col": Color(1.0, 0.08, 0.45, 1.0)}
+]
+
+const CHAR_COLOR_DEFS := [
+	{"id": "CYAN", "label": "🔹 CIANO", "col": Color(0.0, 0.95, 1.0, 1.0)},
+	{"id": "MAGENTA", "label": "🔸 MAGENTA", "col": Color(1.0, 0.12, 0.52, 1.0)},
+	{"id": "GOLD", "label": "⭐ ORO", "col": Color(1.0, 0.86, 0.08, 1.0)},
+	{"id": "GREEN", "label": "🟢 BIO-VERDE", "col": Color(0.12, 1.0, 0.52, 1.0)}
+]
+
 func _show_character_creation_modal(is_first_time: bool = true) -> void:
-	var old_modal := get_node_or_null("CharCreationModal")
-	if old_modal:
-		old_modal.queue_free()
+	if is_instance_valid(char_modal_layer):
+		char_modal_layer.queue_free()
+		char_modal_layer = null
+
+	char_selected_class = Global.player_class if not Global.player_class.is_empty() else "RONIN"
+	char_selected_color = Global.player_color_id if not Global.player_color_id.is_empty() else "CYAN"
+	Global.player_color_id = char_selected_color
+	char_class_btns.clear()
+	char_color_btns.clear()
+
+	char_modal_layer = CanvasLayer.new()
+	char_modal_layer.name = "CharCreationModalLayer"
+	char_modal_layer.layer = 35
+	char_modal_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(char_modal_layer)
+
+	var root_ctrl := Control.new()
+	char_modal_layer.add_child(root_ctrl)
+	root_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var overlay := ColorRect.new()
-	overlay.name = "CharCreationModal"
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0.015, 0.02, 0.05, 0.96)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(overlay)
+	root_ctrl.add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_top", 24)
-	margin.add_theme_constant_override("margin_bottom", 24)
-	overlay.add_child(margin)
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_top", 18)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	root_ctrl.add_child(margin)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var main_panel := PanelContainer.new()
-	main_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.02, 2, 8, 14))
+	main_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.01, 2, 8, 14))
 	margin.add_child(main_panel)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 14)
+	vbox.add_theme_constant_override("separation", 10)
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	main_panel.add_child(vbox)
 
@@ -1273,102 +1309,71 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	var lbl_hdr := Label.new()
 	lbl_hdr.text = "// TERMINALE IDENTITÀ NEURALE : CREAZIONE OPERATIVO //"
 	lbl_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_hdr.add_theme_font_size_override("font_size", 19)
+	lbl_hdr.add_theme_font_size_override("font_size", 18)
 	CyberTheme.style_label(lbl_hdr, CyberTheme.COL_YELLOW, 4)
 	vbox.add_child(lbl_hdr)
 
 	var lbl_sub := Label.new()
-	lbl_sub.text = "Configura il tuo Mercenario Cyberware per iniziare la tua scalata a Night City"
+	lbl_sub.text = "Personalizza Nome, Archetipo e Colore Visiera per iniziare a Night City"
 	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_sub.add_theme_font_size_override("font_size", 13)
 	CyberTheme.style_label(lbl_sub, CyberTheme.COL_CYAN, 2)
 	vbox.add_child(lbl_sub)
 
-	# Stato temporaneo di selezione nel modal
-	var sel_state := {
-		"class": Global.player_class if not Global.player_class.is_empty() else "RONIN",
-		"color": Global.player_color_id if not Global.player_color_id.is_empty() else "CYAN",
-		"wep": "pistol_base"
-	}
-
 	# 2. Podio Olografico 3D Anteprima in Tempo Reale
-	var preview_panel := PanelContainer.new()
-	preview_panel.custom_minimum_size = Vector2(220, 200)
-	preview_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), CyberTheme.COL_CYAN, 0.04, 2, 6, 10))
-	vbox.add_child(preview_panel)
+	char_preview_panel = PanelContainer.new()
+	char_preview_panel.custom_minimum_size = Vector2(220, 175)
+	char_preview_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	char_preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), Global.get_player_accent_color(), 0.03, 2, 6, 10))
+	vbox.add_child(char_preview_panel)
 
 	var preview_ctrl := Control.new()
-	preview_ctrl.custom_minimum_size = Vector2(200, 185)
+	preview_ctrl.custom_minimum_size = Vector2(200, 160)
 	preview_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview_panel.add_child(preview_ctrl)
+	char_preview_panel.add_child(preview_ctrl)
 
-	var preview_holo := Node2D.new()
-	preview_holo.position = Vector2(100, 102)
-	preview_holo.scale = Vector2(2.3, 2.3)
-	preview_holo.draw.connect(func():
-		var w_preview := "pistol_base"
-		if sel_state["class"] == "VANGUARD": w_preview = "shotgun"
-		elif sel_state["class"] == "NETRUNNER": w_preview = "homing_wand"
-		Global.player_color_id = str(sel_state["color"])
-		CyberModels.draw_hero(preview_holo, w_preview, menu_anim_t, true, true, -PI * 0.5 + sin(menu_anim_t * 2.0) * 0.25)
-	)
-	preview_ctrl.add_child(preview_holo)
-
-	# Aggiorna continuamente l'anteprima 3D nel modal
-	var timer := Timer.new()
-	timer.wait_time = 0.03
-	timer.autostart = true
-	timer.timeout.connect(func():
-		if is_instance_valid(preview_holo):
-			preview_holo.queue_redraw()
-	)
-	overlay.add_child(timer)
+	char_preview_holo = Node2D.new()
+	char_preview_holo.position = Vector2(100, 88)
+	char_preview_holo.scale = Vector2(2.2, 2.2)
+	char_preview_holo.draw.connect(_on_draw_char_preview_holo)
+	preview_ctrl.add_child(char_preview_holo)
 
 	# 3. Inserimento Nome Operativo (Callsign)
-	var name_vbox := VBoxContainer.new()
-	name_vbox.add_theme_constant_override("separation", 6)
-	vbox.add_child(name_vbox)
-
 	var lbl_name_prompt := Label.new()
 	lbl_name_prompt.text = "1. NOME OPERATIVO / CALLSIGN:"
 	lbl_name_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_name_prompt.add_theme_font_size_override("font_size", 15)
+	lbl_name_prompt.add_theme_font_size_override("font_size", 14)
 	CyberTheme.style_label(lbl_name_prompt, CyberTheme.COL_YELLOW, 3)
-	name_vbox.add_child(lbl_name_prompt)
+	vbox.add_child(lbl_name_prompt)
 
 	var name_hbox := HBoxContainer.new()
 	name_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	name_hbox.add_theme_constant_override("separation", 10)
-	name_vbox.add_child(name_hbox)
+	vbox.add_child(name_hbox)
 
-	var name_input := LineEdit.new()
-	name_input.custom_minimum_size = Vector2(360, 48)
-	name_input.placeholder_text = "Inserisci il tuo nome (es. V-RONIN)..."
-	name_input.text = Global.player_name if not Global.player_name.is_empty() else "V-77"
-	name_input.max_length = 14
-	name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_input.add_theme_font_size_override("font_size", 18)
-	name_input.add_theme_stylebox_override("normal", CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.98), CyberTheme.COL_CYAN, 0.04, 2, 6, 4))
-	name_hbox.add_child(name_input)
+	char_name_input = LineEdit.new()
+	char_name_input.custom_minimum_size = Vector2(340, 46)
+	char_name_input.placeholder_text = "Inserisci il tuo nome (es. V-RONIN)..."
+	char_name_input.text = Global.player_name if not Global.player_name.is_empty() else "V-77"
+	char_name_input.max_length = 14
+	char_name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	char_name_input.add_theme_font_size_override("font_size", 17)
+	char_name_input.add_theme_stylebox_override("normal", CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.98), CyberTheme.COL_CYAN, 0.03, 2, 6, 4))
+	name_hbox.add_child(char_name_input)
 
 	var btn_rand_name := Button.new()
-	btn_rand_name.custom_minimum_size = Vector2(140, 48)
+	btn_rand_name.custom_minimum_size = Vector2(140, 46)
 	btn_rand_name.text = "🎲 CASUALE"
 	btn_rand_name.add_theme_font_size_override("font_size", 14)
 	CyberTheme.style_button(btn_rand_name, CyberTheme.COL_MAGENTA, false)
-	var random_names := ["V-77", "AKIRA-9", "KIRA-X", "ZERO-V", "NYX-2077", "RAVEN", "GHOST-X", "SILVERHAND"]
-	btn_rand_name.pressed.connect(func():
-		SoundFX.play_click()
-		name_input.text = random_names[randi() % random_names.size()]
-	)
+	btn_rand_name.pressed.connect(_on_char_rand_name_pressed)
 	name_hbox.add_child(btn_rand_name)
 
 	# 4. Selezione Archetipo / Classe (3 Card con Modello Arma 3D)
 	var lbl_class_prompt := Label.new()
 	lbl_class_prompt.text = "2. SCEGLI IL TUO ARCHETIPO ESOSCHELETRO & ARMA INIZIALE:"
 	lbl_class_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_class_prompt.add_theme_font_size_override("font_size", 15)
+	lbl_class_prompt.add_theme_font_size_override("font_size", 14)
 	CyberTheme.style_label(lbl_class_prompt, CyberTheme.COL_YELLOW, 3)
 	vbox.add_child(lbl_class_prompt)
 
@@ -1377,80 +1382,53 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	class_hbox.add_theme_constant_override("separation", 10)
 	vbox.add_child(class_hbox)
 
-	var class_defs := [
-		{"id": "RONIN", "title": "⚡ CYBER-RONIN", "wep": "pistol_base", "wep_name": "Pistola Base", "bonus": "+30 VEL | +5% CRIT", "col": CyberTheme.COL_CYAN},
-		{"id": "VANGUARD", "title": "🛡️ VANGUARD", "wep": "shotgun", "wep_name": "Fucile a Pompa", "bonus": "+40 HP CORAZZA", "col": CyberTheme.COL_YELLOW},
-		{"id": "NETRUNNER", "title": "🔮 NETRUNNER", "wep": "homing_wand", "wep_name": "Conduttore Psion", "bonus": "+4 ATK GUIDATO", "col": CyberTheme.COL_MAGENTA}
-	]
-
-	var class_buttons: Array[Button] = []
-	for c_def in class_defs:
+	for c_def in CHAR_CLASS_DEFS:
 		var cb := Button.new()
-		cb.custom_minimum_size = Vector2(195, 195)
+		cb.custom_minimum_size = Vector2(190, 175)
 		cb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var cid: String = c_def["id"]
-		var cwep: String = c_def["wep"]
+		var cid: String = str(c_def["id"])
+		var cwep: String = str(c_def["wep"])
 		var ccol: Color = c_def["col"]
-		cb.text = "\n\n\n\n" + c_def["title"] + "\nArma: " + c_def["wep_name"] + "\n" + c_def["bonus"]
-		cb.add_theme_font_size_override("font_size", 13)
-		CyberTheme.style_button(cb, ccol, sel_state["class"] == cid)
+		cb.text = "\n\n\n\n" + str(c_def["title"]) + "\nArma: " + str(c_def["wep_name"]) + "\n" + str(c_def["bonus"])
+		cb.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_button(cb, ccol, char_selected_class == cid)
+		class_hbox.add_child(cb)
 
 		var w_icon := Control.new()
 		w_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		w_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-		w_icon.draw.connect(func():
-			CyberTheme.draw_item_icon(w_icon, Vector2(cb.size.x * 0.5, 52.0), cwep, "ARMA", ccol, 84.0)
-		)
 		cb.add_child(w_icon)
-
-		cb.pressed.connect(func():
-			SoundFX.play_click()
-			sel_state["class"] = cid
-			for idx in range(class_buttons.size()):
-				var b_def: Dictionary = class_defs[idx]
-				CyberTheme.style_button(class_buttons[idx], b_def["col"], b_def["id"] == cid)
+		w_icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		w_icon.draw.connect(func():
+			CyberTheme.draw_item_icon(w_icon, Vector2(cb.size.x * 0.5, 48.0), cwep, "ARMA", ccol, 78.0)
 		)
-		class_buttons.append(cb)
-		class_hbox.add_child(cb)
+
+		cb.pressed.connect(_on_char_class_selected.bind(cid))
+		char_class_btns[cid] = cb
 
 	# 5. Selezione Colore Visiera / Aura Neon
 	var lbl_col_prompt := Label.new()
 	lbl_col_prompt.text = "3. COLORE AURA NEON & VISIERA:"
 	lbl_col_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_col_prompt.add_theme_font_size_override("font_size", 15)
+	lbl_col_prompt.add_theme_font_size_override("font_size", 14)
 	CyberTheme.style_label(lbl_col_prompt, CyberTheme.COL_YELLOW, 3)
 	vbox.add_child(lbl_col_prompt)
 
 	var col_hbox := HBoxContainer.new()
 	col_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	col_hbox.add_theme_constant_override("separation", 10)
+	col_hbox.add_theme_constant_override("separation", 8)
 	vbox.add_child(col_hbox)
 
-	var color_defs := [
-		{"id": "CYAN", "label": "🔹 CIANO", "col": CyberTheme.COL_CYAN},
-		{"id": "MAGENTA", "label": "🔸 MAGENTA", "col": CyberTheme.COL_MAGENTA},
-		{"id": "GOLD", "label": "⭐ ORO", "col": CyberTheme.COL_YELLOW},
-		{"id": "GREEN", "label": "🟢 BIO-VERDE", "col": CyberTheme.COL_GREEN}
-	]
-	var col_buttons: Array[Button] = []
-	for col_def in color_defs:
+	for col_def in CHAR_COLOR_DEFS:
 		var col_btn := Button.new()
-		col_btn.custom_minimum_size = Vector2(142, 46)
-		var col_id: String = col_def["id"]
+		col_btn.custom_minimum_size = Vector2(142, 48)
+		var col_id: String = str(col_def["id"])
 		var col_val: Color = col_def["col"]
-		col_btn.text = col_def["label"]
+		var col_lbl: String = str(col_def["label"])
 		col_btn.add_theme_font_size_override("font_size", 13)
-		CyberTheme.style_button(col_btn, col_val, sel_state["color"] == col_id)
-		col_btn.pressed.connect(func():
-			SoundFX.play_click()
-			sel_state["color"] = col_id
-			Global.player_color_id = col_id
-			for j in range(col_buttons.size()):
-				var d_j: Dictionary = color_defs[j]
-				CyberTheme.style_button(col_buttons[j], d_j["col"], d_j["id"] == col_id)
-		)
-		col_buttons.append(col_btn)
+		_style_color_choice_btn(col_btn, col_val, col_lbl, char_selected_color == col_id)
+		col_btn.pressed.connect(_on_char_color_selected.bind(col_id))
 		col_hbox.add_child(col_btn)
+		char_color_btns[col_id] = col_btn
 
 	# 6. Pulsanti di Conferma Creazione (e Chiudi se già creato)
 	var action_hbox := HBoxContainer.new()
@@ -1463,32 +1441,7 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	btn_confirm.text = "⚡ CREA OPERATIVO & INIZIA DA ZERO ⚡" if is_first_time else "⚡ SALVA / RICREA DA ZERO ⚡"
 	btn_confirm.add_theme_font_size_override("font_size", 18)
 	CyberTheme.style_button(btn_confirm, CyberTheme.COL_YELLOW, true)
-	btn_confirm.pressed.connect(func():
-		SoundFX.play_win()
-		var final_name := name_input.text.strip_edges()
-		if final_name.is_empty():
-			final_name = "V-77"
-
-		var sys_save: Node = get_node_or_null("/root/SaveSystem")
-		if sys_save and sys_save.has_method("reset_save"):
-			sys_save.reset_save()
-
-		Global.profile_created = true
-		Global.player_name = final_name
-		Global.player_class = str(sel_state["class"])
-		Global.player_color_id = str(sel_state["color"])
-
-		var im: Node = get_node_or_null("/root/InventoryManager")
-		if im and im.has_method("init_starter_loadout"):
-			im.init_starter_loadout(Global.player_class)
-
-		if sys_save and sys_save.has_method("save_game"):
-			sys_save.save_game()
-
-		_update_top_bar()
-		_show_home_view()
-		overlay.queue_free()
-	)
+	btn_confirm.pressed.connect(_on_char_confirm_pressed)
 	action_hbox.add_child(btn_confirm)
 
 	if not is_first_time:
@@ -1497,8 +1450,92 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 		btn_cancel.text = "ANNULLA"
 		btn_cancel.add_theme_font_size_override("font_size", 16)
 		CyberTheme.style_button(btn_cancel, CyberTheme.COL_CYAN, false)
-		btn_cancel.pressed.connect(func():
-			SoundFX.play_click()
-			overlay.queue_free()
-		)
+		btn_cancel.pressed.connect(_on_char_cancel_pressed)
 		action_hbox.add_child(btn_cancel)
+
+func _style_color_choice_btn(btn: Button, col_val: Color, label_str: String, is_selected: bool) -> void:
+	if not btn: return
+	btn.text = ("✓ " if is_selected else "") + label_str
+	var bg := Color(col_val.r * 0.42, col_val.g * 0.42, col_val.b * 0.42, 0.98) if is_selected else Color(0.06, 0.08, 0.14, 0.95)
+	var border := Color.WHITE if is_selected else col_val
+	var sb := CyberTheme.make_cyber_box(bg, border, 0.06, 3 if is_selected else 2, 8 if is_selected else 5, 12 if is_selected else 4)
+	btn.add_theme_stylebox_override("normal", sb)
+	btn.add_theme_stylebox_override("hover", sb)
+	btn.add_theme_stylebox_override("pressed", sb)
+	btn.add_theme_color_override("font_color", Color.WHITE if is_selected else col_val.lightened(0.25))
+	btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.95))
+	btn.add_theme_constant_override("outline_size", 3)
+
+func _on_draw_char_preview_holo() -> void:
+	if not is_instance_valid(char_preview_holo): return
+	var w_preview := "pistol_base"
+	if char_selected_class == "VANGUARD": w_preview = "shotgun"
+	elif char_selected_class == "NETRUNNER": w_preview = "homing_wand"
+	Global.player_color_id = char_selected_color
+	CyberModels.draw_hero(char_preview_holo, w_preview, menu_anim_t, true, true, -PI * 0.5 + sin(menu_anim_t * 2.0) * 0.25)
+
+func _on_char_rand_name_pressed() -> void:
+	SoundFX.play_click()
+	var random_names := ["V-77", "AKIRA-9", "KIRA-X", "ZERO-V", "NYX-2077", "RAVEN", "GHOST-X", "SILVERHAND"]
+	if is_instance_valid(char_name_input):
+		char_name_input.text = random_names[randi() % random_names.size()]
+
+func _on_char_class_selected(cid: String) -> void:
+	SoundFX.play_click()
+	char_selected_class = cid
+	for c_def in CHAR_CLASS_DEFS:
+		var id_k: String = str(c_def["id"])
+		if char_class_btns.has(id_k) and is_instance_valid(char_class_btns[id_k]):
+			CyberTheme.style_button(char_class_btns[id_k], c_def["col"], id_k == cid)
+	if is_instance_valid(char_preview_holo):
+		char_preview_holo.queue_redraw()
+
+func _on_char_color_selected(col_id: String) -> void:
+	SoundFX.play_click()
+	char_selected_color = col_id
+	Global.player_color_id = col_id
+	for col_def in CHAR_COLOR_DEFS:
+		var id_k: String = str(col_def["id"])
+		if char_color_btns.has(id_k) and is_instance_valid(char_color_btns[id_k]):
+			_style_color_choice_btn(char_color_btns[id_k], col_def["col"], str(col_def["label"]), id_k == col_id)
+	if is_instance_valid(char_preview_panel):
+		char_preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), Global.get_player_accent_color(), 0.03, 2, 6, 10))
+	if is_instance_valid(char_preview_holo):
+		char_preview_holo.queue_redraw()
+
+func _on_char_confirm_pressed() -> void:
+	SoundFX.play_win()
+	var final_name := "V-77"
+	if is_instance_valid(char_name_input):
+		final_name = char_name_input.text.strip_edges()
+	if final_name.is_empty():
+		final_name = "V-77"
+
+	var sys_save: Node = get_node_or_null("/root/SaveSystem")
+	if sys_save and sys_save.has_method("reset_save"):
+		sys_save.reset_save()
+
+	Global.profile_created = true
+	Global.player_name = final_name
+	Global.player_class = char_selected_class
+	Global.player_color_id = char_selected_color
+
+	var im: Node = get_node_or_null("/root/InventoryManager")
+	if im and im.has_method("init_starter_loadout"):
+		im.init_starter_loadout(Global.player_class)
+
+	if sys_save and sys_save.has_method("save_game"):
+		sys_save.save_game()
+
+	if is_instance_valid(char_modal_layer):
+		char_modal_layer.queue_free()
+		char_modal_layer = null
+
+	_update_top_bar()
+	_show_home_view()
+
+func _on_char_cancel_pressed() -> void:
+	SoundFX.play_click()
+	if is_instance_valid(char_modal_layer):
+		char_modal_layer.queue_free()
+		char_modal_layer = null

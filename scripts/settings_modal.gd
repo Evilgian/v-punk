@@ -14,19 +14,23 @@ func _build_ui() -> void:
 	for c in get_children():
 		c.queue_free()
 
+	var root_ctrl := Control.new()
+	add_child(root_ctrl)
+	root_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
 	var overlay := ColorRect.new()
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0.015, 0.02, 0.05, 0.94)
 	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(overlay)
+	root_ctrl.add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 24)
 	margin.add_theme_constant_override("margin_right", 24)
-	margin.add_theme_constant_override("margin_top", 50)
-	margin.add_theme_constant_override("margin_bottom", 50)
-	overlay.add_child(margin)
+	margin.add_theme_constant_override("margin_top", 40)
+	margin.add_theme_constant_override("margin_bottom", 40)
+	root_ctrl.add_child(margin)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.02, 2, 10, 16))

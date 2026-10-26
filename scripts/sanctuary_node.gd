@@ -51,14 +51,18 @@ func _open_sanctuary_modal() -> void:
 	modal_layer.layer = 25
 	add_child(modal_layer)
 
+	var root_ctrl := Control.new()
+	modal_layer.add_child(root_ctrl)
+	root_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
 	var overlay := ColorRect.new()
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.color = Color(0.01, 0.025, 0.06, 0.88)
-	modal_layer.add_child(overlay)
+	root_ctrl.add_child(overlay)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var center_box := CenterContainer.new()
-	center_box.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.add_child(center_box)
+	root_ctrl.add_child(center_box)
+	center_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(620, 520)

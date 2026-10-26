@@ -53,8 +53,7 @@ func start_room() -> void:
 		print("👼 SANTUARIO CYBER-VALCHIRIA nella Stanza ", current_room)
 		var sanct_script := load("res://scripts/sanctuary_node.gd")
 		if sanct_script:
-			var sanct := Node2D.new()
-			sanct.set_script(sanct_script)
+			var sanct: Node2D = sanct_script.new()
 			sanct.global_position = Vector2(360, 540)
 			get_tree().current_scene.add_child.call_deferred(sanct)
 		spawn_door()
