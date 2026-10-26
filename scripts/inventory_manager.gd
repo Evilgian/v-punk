@@ -1,25 +1,46 @@
 extends Node
 
-# 6 Active Equipment Slots
+# 6 Active Equipment Slots (Solo l'arma base all'inizio; gli altri 5 slot sono vuoti!)
 var equipped_weapon_id: String = "pistol_base"
-var equipped_armor_id: String = "kevlar"
-var equipped_ring1_id: String = "ring_crit"
-var equipped_ring2_id: String = "ring_speed"
-var equipped_pet1_id: String = "drone_laser"
-var equipped_pet2_id: String = "drone_shield"
+var equipped_armor_id: String = ""
+var equipped_ring1_id: String = ""
+var equipped_ring2_id: String = ""
+var equipped_pet1_id: String = ""
+var equipped_pet2_id: String = ""
 
 # Owned items inventory list: Array of Dictionaries
 # Structure: {"id": String, "name": String, "slot": String, "rarity": String, "count": int}
 var inventory: Array = [
-	{"id": "pistol_base", "name": "Pistola Base", "slot": "ARMA", "rarity": "COMMON", "count": 1},
-	{"id": "shotgun", "name": "Fucile a Pompa", "slot": "ARMA", "rarity": "RARE", "count": 1},
-	{"id": "kevlar", "name": "Giubbotto Kevlar", "slot": "CORAZZA", "rarity": "COMMON", "count": 1},
-	{"id": "nano_armor", "name": "Armatura Nano-Tech", "slot": "CORAZZA", "rarity": "EPIC", "count": 1},
-	{"id": "ring_crit", "name": "Anello Critico", "slot": "ANELLO 1", "rarity": "COMMON", "count": 1},
-	{"id": "ring_speed", "name": "Anello Velocità", "slot": "ANELLO 2", "rarity": "RARE", "count": 1},
-	{"id": "drone_laser", "name": "Drone Laser", "slot": "PET 1", "rarity": "RARE", "count": 1},
-	{"id": "drone_shield", "name": "Drone Scudo", "slot": "PET 2", "rarity": "EPIC", "count": 1}
+	{"id": "pistol_base", "name": "Pistola Base", "slot": "ARMA", "rarity": "COMMON", "count": 1}
 ]
+
+func init_starter_loadout(chosen_class: String) -> void:
+	equipped_armor_id = ""
+	equipped_ring1_id = ""
+	equipped_ring2_id = ""
+	equipped_pet1_id = ""
+	equipped_pet2_id = ""
+	WeaponDB.equipped_armor_id = ""
+
+	match chosen_class.to_upper():
+		"VANGUARD":
+			equipped_weapon_id = "shotgun"
+			WeaponDB.equipped_weapon_id = "shotgun"
+			inventory = [
+				{"id": "shotgun", "name": "Fucile a Pompa", "slot": "ARMA", "rarity": "COMMON", "count": 1}
+			]
+		"NETRUNNER":
+			equipped_weapon_id = "homing_wand"
+			WeaponDB.equipped_weapon_id = "homing_wand"
+			inventory = [
+				{"id": "homing_wand", "name": "Conduttore Psionico", "slot": "ARMA", "rarity": "COMMON", "count": 1}
+			]
+		_:
+			equipped_weapon_id = "pistol_base"
+			WeaponDB.equipped_weapon_id = "pistol_base"
+			inventory = [
+				{"id": "pistol_base", "name": "Pistola Base", "slot": "ARMA", "rarity": "COMMON", "count": 1}
+			]
 
 const RARITY_ORDER := ["COMMON", "RARE", "EPIC", "LEGENDARY"]
 
@@ -57,9 +78,11 @@ func equip_item(item_id: String, slot_type: String) -> void:
 func unequip_item(slot_type: String) -> void:
 	match slot_type.to_upper():
 		"ARMA":
-			equipped_weapon_id = ""
+			equipped_weapon_id = "pistol_base"
+			WeaponDB.equipped_weapon_id = "pistol_base"
 		"CORAZZA":
 			equipped_armor_id = ""
+			WeaponDB.equipped_armor_id = ""
 		"ANELLO 1":
 			equipped_ring1_id = ""
 		"ANELLO 2":

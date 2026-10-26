@@ -15,6 +15,12 @@ func save_game() -> void:
 	var wdb: Node = get_node_or_null("/root/WorldDB")
 
 	var save_dict := {
+		"profile": {
+			"profile_created": Global.profile_created,
+			"player_name": Global.player_name,
+			"player_class": Global.player_class,
+			"player_color_id": Global.player_color_id
+		},
 		"economy": {
 			"total_coins": Global.total_coins,
 			"total_credits": Global.total_credits,
@@ -27,11 +33,11 @@ func save_game() -> void:
 		},
 		"inventory": {
 			"equipped_weapon_id": im.equipped_weapon_id if (im and "equipped_weapon_id" in im) else "pistol_base",
-			"equipped_armor_id": im.equipped_armor_id if (im and "equipped_armor_id" in im) else "kevlar",
-			"equipped_ring1_id": im.equipped_ring1_id if (im and "equipped_ring1_id" in im) else "ring_crit",
-			"equipped_ring2_id": im.equipped_ring2_id if (im and "equipped_ring2_id" in im) else "ring_speed",
-			"equipped_pet1_id": im.equipped_pet1_id if (im and "equipped_pet1_id" in im) else "drone_laser",
-			"equipped_pet2_id": im.equipped_pet2_id if (im and "equipped_pet2_id" in im) else "drone_shield",
+			"equipped_armor_id": im.equipped_armor_id if (im and "equipped_armor_id" in im) else "",
+			"equipped_ring1_id": im.equipped_ring1_id if (im and "equipped_ring1_id" in im) else "",
+			"equipped_ring2_id": im.equipped_ring2_id if (im and "equipped_ring2_id" in im) else "",
+			"equipped_pet1_id": im.equipped_pet1_id if (im and "equipped_pet1_id" in im) else "",
+			"equipped_pet2_id": im.equipped_pet2_id if (im and "equipped_pet2_id" in im) else "",
 			"items": im.inventory if (im and "inventory" in im) else []
 		},
 		"talents": {
@@ -49,12 +55,10 @@ func save_game() -> void:
 	if file:
 		file.store_string(JSON.stringify(save_dict, "\t"))
 		file.close()
-		print("💾 SaveSystem: Dati salvati con successo su disco (user://save_data.json)!")
 
 func load_game() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
-		print("💾 SaveSystem: Nessun salvataggio trovato. Creazione nuovo profilo iniziale.")
-		save_game()
+		Global.profile_created = false
 		return
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
@@ -66,16 +70,27 @@ func load_game() -> void:
 
 	var parsed = JSON.parse_string(json_text)
 	if not (parsed is Dictionary):
-		print("❌ SaveSystem: Errore parsing JSON salvataggio!")
+		Global.profile_created = false
 		return
 
 	var data: Dictionary = parsed as Dictionary
 
+	# Se il salvataggio appartiene alla versione precedente senza creazione personaggio, forza la creazione da zero!
+	if not data.has("profile") or not (data["profile"] is Dictionary) or not bool(data["profile"].get("profile_created", false)):
+		reset_save()
+		return
+
+	var prof: Dictionary = data["profile"]
+	Global.profile_created = bool(prof.get("profile_created", false))
+	Global.player_name = str(prof.get("player_name", "V-RONIN"))
+	Global.player_class = str(prof.get("player_class", "RONIN"))
+	Global.player_color_id = str(prof.get("player_color_id", "CYAN"))
+
 	# Restore Economy & Profile
 	if data.has("economy") and data["economy"] is Dictionary:
 		var eco: Dictionary = data["economy"]
-		Global.total_coins = int(eco.get("total_coins", 1250))
-		Global.total_credits = int(eco.get("total_credits", 200))
+		Global.total_coins = int(eco.get("total_coins", 0))
+		Global.total_credits = int(eco.get("total_credits", 0))
 		Global.daily_ads_watched = int(eco.get("daily_ads_watched", 0))
 		Global.checkin_day = int(eco.get("checkin_day", 1))
 		Global.checkin_claimed = bool(eco.get("checkin_claimed", false))
@@ -91,12 +106,16 @@ func load_game() -> void:
 		var inv_data: Dictionary = data["inventory"]
 		var im: Node = get_node_or_null("/root/InventoryManager")
 		if im:
-			if "equipped_weapon_id" in im: im.equipped_weapon_id = str(inv_data.get("equipped_weapon_id", "pistol_base"))
-			if "equipped_armor_id" in im: im.equipped_armor_id = str(inv_data.get("equipped_armor_id", "kevlar"))
-			if "equipped_ring1_id" in im: im.equipped_ring1_id = str(inv_data.get("equipped_ring1_id", "ring_crit"))
-			if "equipped_ring2_id" in im: im.equipped_ring2_id = str(inv_data.get("equipped_ring2_id", "ring_speed"))
-			if "equipped_pet1_id" in im: im.equipped_pet1_id = str(inv_data.get("equipped_pet1_id", "drone_laser"))
-			if "equipped_pet2_id" in im: im.equipped_pet2_id = str(inv_data.get("equipped_pet2_id", "drone_shield"))
+			if "equipped_weapon_id" in im:
+				im.equipped_weapon_id = str(inv_data.get("equipped_weapon_id", "pistol_base"))
+				WeaponDB.equipped_weapon_id = im.equipped_weapon_id
+			if "equipped_armor_id" in im:
+				im.equipped_armor_id = str(inv_data.get("equipped_armor_id", ""))
+				WeaponDB.equipped_armor_id = im.equipped_armor_id
+			if "equipped_ring1_id" in im: im.equipped_ring1_id = str(inv_data.get("equipped_ring1_id", ""))
+			if "equipped_ring2_id" in im: im.equipped_ring2_id = str(inv_data.get("equipped_ring2_id", ""))
+			if "equipped_pet1_id" in im: im.equipped_pet1_id = str(inv_data.get("equipped_pet1_id", ""))
+			if "equipped_pet2_id" in im: im.equipped_pet2_id = str(inv_data.get("equipped_pet2_id", ""))
 			if "inventory" in im and inv_data.get("items") is Array:
 				im.inventory = inv_data["items"]
 
@@ -115,13 +134,15 @@ func load_game() -> void:
 		if q_data.get("quests_claimed") is Dictionary:
 			Global.quests_claimed = q_data["quests_claimed"]
 
-	print("📂 SaveSystem: Salvataggio caricato con successo! Monete: ", Global.total_coins, " | Gemme: ", Global.total_credits)
-
 func reset_save() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(SAVE_PATH)
-	Global.total_coins = 1250
-	Global.total_credits = 200
+	Global.profile_created = false
+	Global.player_name = ""
+	Global.player_class = "RONIN"
+	Global.player_color_id = "CYAN"
+	Global.total_coins = 0
+	Global.total_credits = 0
 	Global.daily_ads_watched = 0
 	Global.checkin_day = 1
 	Global.checkin_claimed = false
@@ -130,9 +151,10 @@ func reset_save() -> void:
 	Global.quest_talents = 0
 	Global.quests_claimed = {}
 
+	var im: Node = get_node_or_null("/root/InventoryManager")
+	if im and im.has_method("init_starter_loadout"):
+		im.init_starter_loadout("RONIN")
+
 	var tm: Node = get_node_or_null("/root/TalentManager")
 	if tm and "talent_levels" in tm:
 		tm.talent_levels = {"atk": 0, "hp": 0, "crit": 0, "recovery": 0, "speed": 0, "gold": 0}
-
-	save_game()
-	print("⚠️ SaveSystem: Profilo resettato alle impostazioni di fabbrica!")

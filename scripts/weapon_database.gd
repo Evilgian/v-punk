@@ -9,9 +9,9 @@ var armors: Dictionary = {}
 var gloves: Dictionary = {}
 var boots: Dictionary = {}
 
-var equipped_armor_id: String = "kevlar"
-var equipped_gloves_id: String = "cyber_gloves"
-var equipped_boots_id: String = "antigrav_boots"
+var equipped_armor_id: String = ""
+var equipped_gloves_id: String = ""
+var equipped_boots_id: String = ""
 
 func _ready() -> void:
 	_init_weapon_database()

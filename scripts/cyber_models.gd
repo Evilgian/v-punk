@@ -8,11 +8,12 @@ static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving
 	# Ombra morbida a terra
 	c.draw_circle(Vector2(0, 10), 20.0, Color(0, 0, 0, 0.45))
 
-	# Anello tattico olografico ai piedi
-	var ring_col := Color(0.0, 0.95, 1.0, 0.75) if is_shooting else Color(0.15, 0.65, 1.0, 0.42)
-	c.draw_circle(Vector2.ZERO, 24.0, Color(ring_col.r, ring_col.g, ring_col.b, 0.12))
-	c.draw_arc(Vector2.ZERO, 25.0, anim_t * 2.2, anim_t * 2.2 + PI * 1.4, 28, ring_col, 2.2)
-	c.draw_arc(Vector2.ZERO, 25.0, anim_t * 2.2 + PI, anim_t * 2.2 + PI * 1.6, 16, Color(0.8, 0.2, 1.0, 0.6), 2.0)
+	# Anello tattico olografico ai piedi con il colore Aura scelto dal giocatore
+	var aura := Global.get_player_accent_color()
+	var ring_col := Color(aura.r, aura.g, aura.b, 0.82 if is_shooting else 0.52)
+	c.draw_circle(Vector2.ZERO, 24.0, Color(ring_col.r, ring_col.g, ring_col.b, 0.14))
+	c.draw_arc(Vector2.ZERO, 25.0, anim_t * 2.2, anim_t * 2.2 + PI * 1.4, 28, ring_col, 2.4)
+	c.draw_arc(Vector2.ZERO, 25.0, anim_t * 2.2 + PI, anim_t * 2.2 + PI * 1.6, 16, Color(1.0, 1.0, 1.0, 0.55), 2.0)
 
 	# Rotazione del corpo verso la direzione di mira/movimento
 	c.draw_set_transform(Vector2.ZERO, aim_angle, Vector2.ONE)
@@ -29,8 +30,8 @@ static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving
 		Vector2(-22 - (5.0 if is_moving else 0.0), 13 + cape_sway),
 		Vector2(-6, 9)
 	])
-	c.draw_colored_polygon(cape_pts, Color(0.55, 0.10, 0.95, 0.55))
-	c.draw_polyline(cape_pts, Color(0.0, 0.95, 1.0, 0.8), 1.5)
+	c.draw_colored_polygon(cape_pts, Color(aura.r * 0.55, aura.g * 0.35, aura.b * 0.75, 0.58))
+	c.draw_polyline(cape_pts, aura, 1.8)
 
 	# Stivali Cyber-Jet (animati durante la corsa)
 	c.draw_rect(Rect2(Vector2(-6 + stride, -13), Vector2(12, 7)), Color(0.12, 0.15, 0.22, 1.0), true)

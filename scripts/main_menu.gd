@@ -162,8 +162,15 @@ func _ready() -> void:
 	if btn_next_world: btn_next_world.pressed.connect(func(): _cycle_world(1))
 	if preview_icon: preview_icon.pressed.connect(func(): _cycle_world(1))
 
+	var prof_card_ctrl: Control = find_child("ProfileCard", true, false) as Control
+	if prof_card_ctrl:
+		_connect_button(prof_card_ctrl, func(): _show_character_creation_modal(false))
+
 	_update_top_bar()
 	_show_home_view()
+
+	if not Global.profile_created:
+		call_deferred("_show_character_creation_modal", true)
 
 	# Title Logo floating animation
 	var title_lbl: Label = find_child("TitleLabel", true, false) as Label
@@ -343,7 +350,9 @@ func _update_top_bar() -> void:
 	if tm and "talent_levels" in tm:
 		for k in tm.talent_levels:
 			total_lvl += int(tm.talent_levels[k])
-	if profile_level_label: profile_level_label.text = "Lv. " + str(total_lvl)
+	var callsign := Global.player_name if not Global.player_name.is_empty() else "NUOVO"
+	if profile_level_label:
+		profile_level_label.text = callsign + " [" + Global.get_class_display_name() + "] • Lv." + str(total_lvl)
 	if energy_label: energy_label.text = "⚡ 30/30"
 	if coins_label: coins_label.text = "🪙 " + str(Global.total_coins)
 	if gems_label: gems_label.text = "💎 " + str(Global.total_credits)
@@ -473,19 +482,21 @@ func _rebuild_home_loadout_dashboard() -> void:
 
 	var arm_id: String = WeaponDB.equipped_armor_id
 	var eq_armor: Dictionary = WeaponDB.armors.get(arm_id, {}) as Dictionary
-	var arm_name: String = str(eq_armor.get("name", "Kevlar Tattico"))
+	var has_armor: bool = not arm_id.is_empty() and not eq_armor.is_empty()
+	var arm_name: String = str(eq_armor.get("name", "Nessuna Corazza")) if has_armor else "Nessuna Corazza"
 	var arm_hp: int = WeaponDB.get_equipped_armor_hp_bonus()
 
 	var im: Node = get_node_or_null("/root/InventoryManager")
 	var pet_item: Dictionary = im.get_equipped_item_in_slot("PET 1") if (im and im.has_method("get_equipped_item_in_slot")) else {}
-	var pet_id: String = str(pet_item.get("id", "drone_laser")) if not pet_item.is_empty() else "drone_laser"
-	var pet_name: String = str(pet_item.get("name", "Drone Laser")) if not pet_item.is_empty() else "Drone Supporto"
+	var has_pet: bool = not pet_item.is_empty() and not str(pet_item.get("id", "")).is_empty()
+	var pet_id: String = str(pet_item.get("id", "drone_laser")) if has_pet else "drone_laser"
+	var pet_name: String = str(pet_item.get("name", "Drone Laser")) if has_pet else "Slot Drone Vuoto"
 
 	# 3 Vetrina Card Modelli 3D: Arma, Corazza, Drone
 	var showcase_items := [
 		{"id": wep_id, "slot": "ARMA", "title": wep_name, "stat": "⚔️ Danno: " + str(wep_dmg), "col": CyberTheme.COL_CYAN},
-		{"id": arm_id, "slot": "CORAZZA", "title": arm_name, "stat": "🛡️ Corazza: +" + str(arm_hp) + " HP", "col": CyberTheme.COL_MAGENTA},
-		{"id": pet_id, "slot": "PET 1", "title": pet_name, "stat": "🤖 Modulo Orbitale", "col": CyberTheme.COL_GREEN}
+		{"id": arm_id if has_armor else "kevlar", "slot": "CORAZZA", "title": arm_name, "stat": ("🛡️ +" + str(arm_hp) + " HP") if has_armor else "🔒 Non Equipaggiata", "col": CyberTheme.COL_MAGENTA if has_armor else Color(0.35, 0.40, 0.52, 0.8)},
+		{"id": pet_id, "slot": "PET 1", "title": pet_name, "stat": "🤖 Attivo in Arena" if has_pet else "🔒 Non Equipaggiato", "col": CyberTheme.COL_GREEN if has_pet else Color(0.35, 0.40, 0.52, 0.8)}
 	]
 
 	for s_info in showcase_items:
@@ -883,19 +894,29 @@ func _buy_crate(cost: int, crate_type: String) -> void:
 		Global.total_credits -= cost
 		SoundFX.play_pickup()
 
-		var item_id: String = "shotgun"
-		var item_name: String = "Fucile a Pompa"
-		var slot_type: String = "ARMA"
-		var rarity: String = "RARE"
+		var normal_pool := [
+			{"id": "shotgun", "name": "Fucile a Pompa", "slot": "ARMA", "rarity": "RARE"},
+			{"id": "homing_wand", "name": "Conduttore Psionico", "slot": "ARMA", "rarity": "RARE"},
+			{"id": "smg", "name": "Mitraglietta Cyber", "slot": "ARMA", "rarity": "RARE"},
+			{"id": "kevlar", "name": "Giubbotto Kevlar", "slot": "CORAZZA", "rarity": "COMMON"},
+			{"id": "ring_crit", "name": "Anello Critico", "slot": "ANELLO 1", "rarity": "COMMON"},
+			{"id": "ring_speed", "name": "Anello Velocità", "slot": "ANELLO 2", "rarity": "RARE"},
+			{"id": "drone_laser", "name": "Drone Laser", "slot": "PET 1", "rarity": "RARE"}
+		]
+		var epic_pool := [
+			{"id": "katana", "name": "Katana Lame Veloci", "slot": "ARMA", "rarity": "EPIC"},
+			{"id": "laser_rifle", "name": "Fucile Laser High-Tech", "slot": "ARMA", "rarity": "EPIC"},
+			{"id": "nano_armor", "name": "Armatura Nano-Tech", "slot": "CORAZZA", "rarity": "EPIC"},
+			{"id": "drone_shield", "name": "Drone Scudo", "slot": "PET 2", "rarity": "EPIC"},
+			{"id": "scythe", "name": "Falce Pesante Perforante", "slot": "ARMA", "rarity": "LEGENDARY"},
+			{"id": "plasma_cannon", "name": "Cannone al Plasma", "slot": "ARMA", "rarity": "LEGENDARY"}
+		]
 
-		if crate_type != "NORMAL":
-			var roll := randf()
-			if roll < 0.5:
-				item_id = "katana"; item_name = "Katana Lame Veloci"; slot_type = "ARMA"; rarity = "EPIC"
-			elif roll < 0.8:
-				item_id = "scythe"; item_name = "Falce Pesante Perforante"; slot_type = "ARMA"; rarity = "LEGENDARY"
-			else:
-				item_id = "plasma_cannon"; item_name = "Cannone al Plasma"; slot_type = "ARMA"; rarity = "LEGENDARY"
+		var chosen: Dictionary = normal_pool[randi() % normal_pool.size()] if crate_type == "NORMAL" else epic_pool[randi() % epic_pool.size()]
+		var item_id: String = str(chosen["id"])
+		var item_name: String = str(chosen["name"])
+		var slot_type: String = str(chosen["slot"])
+		var rarity: String = str(chosen["rarity"])
 
 		var im: Node = get_node_or_null("/root/InventoryManager")
 		if im and im.has_method("add_item"):
@@ -1165,3 +1186,269 @@ func _on_btn_checkin_pressed() -> void:
 func _on_btn_play_pressed() -> void:
 	SoundFX.play_click()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+
+# ==============================================================================
+# TERMINALE IDENTITÀ NEURALE: CREAZIONE PERSONAGGIO (NOME, CLASSE, COLORE AURA)
+# ==============================================================================
+func _show_character_creation_modal(is_first_time: bool = true) -> void:
+	var old_modal := get_node_or_null("CharCreationModal")
+	if old_modal:
+		old_modal.queue_free()
+
+	var overlay := ColorRect.new()
+	overlay.name = "CharCreationModal"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.015, 0.02, 0.05, 0.96)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(overlay)
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 24)
+	margin.add_theme_constant_override("margin_bottom", 24)
+	overlay.add_child(margin)
+
+	var main_panel := PanelContainer.new()
+	main_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.02, 2, 8, 14))
+	margin.add_child(main_panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 14)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	main_panel.add_child(vbox)
+
+	# 1. Titolo Terminale
+	var lbl_hdr := Label.new()
+	lbl_hdr.text = "// TERMINALE IDENTITÀ NEURALE : CREAZIONE OPERATIVO //"
+	lbl_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_hdr.add_theme_font_size_override("font_size", 19)
+	CyberTheme.style_label(lbl_hdr, CyberTheme.COL_YELLOW, 4)
+	vbox.add_child(lbl_hdr)
+
+	var lbl_sub := Label.new()
+	lbl_sub.text = "Configura il tuo Mercenario Cyberware per iniziare la tua scalata a Night City"
+	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_sub.add_theme_font_size_override("font_size", 13)
+	CyberTheme.style_label(lbl_sub, CyberTheme.COL_CYAN, 2)
+	vbox.add_child(lbl_sub)
+
+	# Stato temporaneo di selezione nel modal
+	var sel_state := {
+		"class": Global.player_class if not Global.player_class.is_empty() else "RONIN",
+		"color": Global.player_color_id if not Global.player_color_id.is_empty() else "CYAN",
+		"wep": "pistol_base"
+	}
+
+	# 2. Podio Olografico 3D Anteprima in Tempo Reale
+	var preview_panel := PanelContainer.new()
+	preview_panel.custom_minimum_size = Vector2(220, 200)
+	preview_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), CyberTheme.COL_CYAN, 0.04, 2, 6, 10))
+	vbox.add_child(preview_panel)
+
+	var preview_ctrl := Control.new()
+	preview_ctrl.custom_minimum_size = Vector2(200, 185)
+	preview_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	preview_panel.add_child(preview_ctrl)
+
+	var preview_holo := Node2D.new()
+	preview_holo.position = Vector2(100, 102)
+	preview_holo.scale = Vector2(2.3, 2.3)
+	preview_holo.draw.connect(func():
+		var w_preview := "pistol_base"
+		if sel_state["class"] == "VANGUARD": w_preview = "shotgun"
+		elif sel_state["class"] == "NETRUNNER": w_preview = "homing_wand"
+		Global.player_color_id = str(sel_state["color"])
+		CyberModels.draw_hero(preview_holo, w_preview, menu_anim_t, true, true, -PI * 0.5 + sin(menu_anim_t * 2.0) * 0.25)
+	)
+	preview_ctrl.add_child(preview_holo)
+
+	# Aggiorna continuamente l'anteprima 3D nel modal
+	var timer := Timer.new()
+	timer.wait_time = 0.03
+	timer.autostart = true
+	timer.timeout.connect(func():
+		if is_instance_valid(preview_holo):
+			preview_holo.queue_redraw()
+	)
+	overlay.add_child(timer)
+
+	# 3. Inserimento Nome Operativo (Callsign)
+	var name_vbox := VBoxContainer.new()
+	name_vbox.add_theme_constant_override("separation", 6)
+	vbox.add_child(name_vbox)
+
+	var lbl_name_prompt := Label.new()
+	lbl_name_prompt.text = "1. NOME OPERATIVO / CALLSIGN:"
+	lbl_name_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_name_prompt.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(lbl_name_prompt, CyberTheme.COL_YELLOW, 3)
+	name_vbox.add_child(lbl_name_prompt)
+
+	var name_hbox := HBoxContainer.new()
+	name_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	name_hbox.add_theme_constant_override("separation", 10)
+	name_vbox.add_child(name_hbox)
+
+	var name_input := LineEdit.new()
+	name_input.custom_minimum_size = Vector2(360, 48)
+	name_input.placeholder_text = "Inserisci il tuo nome (es. V-RONIN)..."
+	name_input.text = Global.player_name if not Global.player_name.is_empty() else "V-77"
+	name_input.max_length = 14
+	name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_input.add_theme_font_size_override("font_size", 18)
+	name_input.add_theme_stylebox_override("normal", CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.98), CyberTheme.COL_CYAN, 0.04, 2, 6, 4))
+	name_hbox.add_child(name_input)
+
+	var btn_rand_name := Button.new()
+	btn_rand_name.custom_minimum_size = Vector2(140, 48)
+	btn_rand_name.text = "🎲 CASUALE"
+	btn_rand_name.add_theme_font_size_override("font_size", 14)
+	CyberTheme.style_button(btn_rand_name, CyberTheme.COL_MAGENTA, false)
+	var random_names := ["V-77", "AKIRA-9", "KIRA-X", "ZERO-V", "NYX-2077", "RAVEN", "GHOST-X", "SILVERHAND"]
+	btn_rand_name.pressed.connect(func():
+		SoundFX.play_click()
+		name_input.text = random_names[randi() % random_names.size()]
+	)
+	name_hbox.add_child(btn_rand_name)
+
+	# 4. Selezione Archetipo / Classe (3 Card con Modello Arma 3D)
+	var lbl_class_prompt := Label.new()
+	lbl_class_prompt.text = "2. SCEGLI IL TUO ARCHETIPO ESOSCHELETRO & ARMA INIZIALE:"
+	lbl_class_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_class_prompt.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(lbl_class_prompt, CyberTheme.COL_YELLOW, 3)
+	vbox.add_child(lbl_class_prompt)
+
+	var class_hbox := HBoxContainer.new()
+	class_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	class_hbox.add_theme_constant_override("separation", 10)
+	vbox.add_child(class_hbox)
+
+	var class_defs := [
+		{"id": "RONIN", "title": "⚡ CYBER-RONIN", "wep": "pistol_base", "wep_name": "Pistola Base", "bonus": "+30 VEL | +5% CRIT", "col": CyberTheme.COL_CYAN},
+		{"id": "VANGUARD", "title": "🛡️ VANGUARD", "wep": "shotgun", "wep_name": "Fucile a Pompa", "bonus": "+40 HP CORAZZA", "col": CyberTheme.COL_YELLOW},
+		{"id": "NETRUNNER", "title": "🔮 NETRUNNER", "wep": "homing_wand", "wep_name": "Conduttore Psion", "bonus": "+4 ATK GUIDATO", "col": CyberTheme.COL_MAGENTA}
+	]
+
+	var class_buttons: Array[Button] = []
+	for c_def in class_defs:
+		var cb := Button.new()
+		cb.custom_minimum_size = Vector2(195, 195)
+		cb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var cid: String = c_def["id"]
+		var cwep: String = c_def["wep"]
+		var ccol: Color = c_def["col"]
+		cb.text = "\n\n\n\n" + c_def["title"] + "\nArma: " + c_def["wep_name"] + "\n" + c_def["bonus"]
+		cb.add_theme_font_size_override("font_size", 13)
+		CyberTheme.style_button(cb, ccol, sel_state["class"] == cid)
+
+		var w_icon := Control.new()
+		w_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		w_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+		w_icon.draw.connect(func():
+			CyberTheme.draw_item_icon(w_icon, Vector2(cb.size.x * 0.5, 52.0), cwep, "ARMA", ccol, 84.0)
+		)
+		cb.add_child(w_icon)
+
+		cb.pressed.connect(func():
+			SoundFX.play_click()
+			sel_state["class"] = cid
+			for idx in range(class_buttons.size()):
+				var b_def: Dictionary = class_defs[idx]
+				CyberTheme.style_button(class_buttons[idx], b_def["col"], b_def["id"] == cid)
+		)
+		class_buttons.append(cb)
+		class_hbox.add_child(cb)
+
+	# 5. Selezione Colore Visiera / Aura Neon
+	var lbl_col_prompt := Label.new()
+	lbl_col_prompt.text = "3. COLORE AURA NEON & VISIERA:"
+	lbl_col_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_col_prompt.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(lbl_col_prompt, CyberTheme.COL_YELLOW, 3)
+	vbox.add_child(lbl_col_prompt)
+
+	var col_hbox := HBoxContainer.new()
+	col_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	col_hbox.add_theme_constant_override("separation", 10)
+	vbox.add_child(col_hbox)
+
+	var color_defs := [
+		{"id": "CYAN", "label": "🔹 CIANO", "col": CyberTheme.COL_CYAN},
+		{"id": "MAGENTA", "label": "🔸 MAGENTA", "col": CyberTheme.COL_MAGENTA},
+		{"id": "GOLD", "label": "⭐ ORO", "col": CyberTheme.COL_YELLOW},
+		{"id": "GREEN", "label": "🟢 BIO-VERDE", "col": CyberTheme.COL_GREEN}
+	]
+	var col_buttons: Array[Button] = []
+	for col_def in color_defs:
+		var col_btn := Button.new()
+		col_btn.custom_minimum_size = Vector2(142, 46)
+		var col_id: String = col_def["id"]
+		var col_val: Color = col_def["col"]
+		col_btn.text = col_def["label"]
+		col_btn.add_theme_font_size_override("font_size", 13)
+		CyberTheme.style_button(col_btn, col_val, sel_state["color"] == col_id)
+		col_btn.pressed.connect(func():
+			SoundFX.play_click()
+			sel_state["color"] = col_id
+			Global.player_color_id = col_id
+			for j in range(col_buttons.size()):
+				var d_j: Dictionary = color_defs[j]
+				CyberTheme.style_button(col_buttons[j], d_j["col"], d_j["id"] == col_id)
+		)
+		col_buttons.append(col_btn)
+		col_hbox.add_child(col_btn)
+
+	# 6. Pulsanti di Conferma Creazione (e Chiudi se già creato)
+	var action_hbox := HBoxContainer.new()
+	action_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	action_hbox.add_theme_constant_override("separation", 14)
+	vbox.add_child(action_hbox)
+
+	var btn_confirm := Button.new()
+	btn_confirm.custom_minimum_size = Vector2(440 if is_first_time else 340, 62)
+	btn_confirm.text = "⚡ CREA OPERATIVO & INIZIA DA ZERO ⚡" if is_first_time else "⚡ SALVA / RICREA DA ZERO ⚡"
+	btn_confirm.add_theme_font_size_override("font_size", 18)
+	CyberTheme.style_button(btn_confirm, CyberTheme.COL_YELLOW, true)
+	btn_confirm.pressed.connect(func():
+		SoundFX.play_win()
+		var final_name := name_input.text.strip_edges()
+		if final_name.is_empty():
+			final_name = "V-77"
+
+		var sys_save: Node = get_node_or_null("/root/SaveSystem")
+		if sys_save and sys_save.has_method("reset_save"):
+			sys_save.reset_save()
+
+		Global.profile_created = true
+		Global.player_name = final_name
+		Global.player_class = str(sel_state["class"])
+		Global.player_color_id = str(sel_state["color"])
+
+		var im: Node = get_node_or_null("/root/InventoryManager")
+		if im and im.has_method("init_starter_loadout"):
+			im.init_starter_loadout(Global.player_class)
+
+		if sys_save and sys_save.has_method("save_game"):
+			sys_save.save_game()
+
+		_update_top_bar()
+		_show_home_view()
+		overlay.queue_free()
+	)
+	action_hbox.add_child(btn_confirm)
+
+	if not is_first_time:
+		var btn_cancel := Button.new()
+		btn_cancel.custom_minimum_size = Vector2(180, 62)
+		btn_cancel.text = "ANNULLA"
+		btn_cancel.add_theme_font_size_override("font_size", 16)
+		CyberTheme.style_button(btn_cancel, CyberTheme.COL_CYAN, false)
+		btn_cancel.pressed.connect(func():
+			SoundFX.play_click()
+			overlay.queue_free()
+		)
+		action_hbox.add_child(btn_cancel)

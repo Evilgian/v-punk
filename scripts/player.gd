@@ -68,6 +68,16 @@ func _ready() -> void:
 		if im.equipped_ring1_id == "ring_crit" or im.equipped_ring2_id == "ring_crit":
 			bonus_damage += 4
 
+	# Bonus Archetipo / Classe Scelta dal Giocatore
+	match Global.player_class.to_upper():
+		"VANGUARD":
+			max_hp += 40
+		"NETRUNNER":
+			bonus_damage += 4
+		_: # RONIN
+			speed += 30.0
+			bonus_damage += 1
+
 	speed += WeaponDB.get_equipped_boots_speed_bonus() + speed_talent
 	max_hp += (Global.upgrade_hp_lvl * 20) + WeaponDB.get_equipped_armor_hp_bonus() + hp_talent + (25 if has_pet_shield else 0)
 	bonus_damage += (Global.upgrade_dmg_lvl * 2) + atk_talent

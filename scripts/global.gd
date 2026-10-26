@@ -1,7 +1,14 @@
 extends Node
 
-var total_credits: int = 200
-var total_coins: int = 1250
+# Identità Giocatore (Creazione Personaggio)
+var profile_created: bool = false
+var player_name: String = ""
+var player_class: String = "RONIN" # RONIN, VANGUARD, NETRUNNER
+var player_color_id: String = "CYAN" # CYAN, MAGENTA, GOLD, GREEN
+
+# Economia & Progressione (Partenza pulita da zero)
+var total_credits: int = 0
+var total_coins: int = 0
 var upgrade_dmg_lvl: int = 0
 var upgrade_hp_lvl: int = 0
 
@@ -9,45 +16,28 @@ var daily_ads_watched: int = 0
 var checkin_day: int = 1
 var checkin_claimed: bool = false
 
-var quest_kills: int = 15
-var quest_runs: int = 2
-var quest_talents: int = 1
+var quest_kills: int = 0
+var quest_runs: int = 0
+var quest_talents: int = 0
 var quests_claimed: Dictionary = {}
 
 const DMG_COST: int = 50
 const HP_COST: int = 50
 
-const SAVE_PATH: String = "user://v_punk_save.dat"
+func get_player_accent_color() -> Color:
+	match player_color_id.to_upper():
+		"MAGENTA": return Color(1.0, 0.12, 0.52, 1.0)
+		"GOLD": return Color(1.0, 0.86, 0.08, 1.0)
+		"GREEN": return Color(0.12, 1.0, 0.52, 1.0)
+		_: return Color(0.0, 0.95, 1.0, 1.0)
 
-func _ready() -> void:
-	load_data()
+func get_class_display_name() -> String:
+	match player_class.to_upper():
+		"VANGUARD": return "VANGUARD"
+		"NETRUNNER": return "NETRUNNER"
+		_: return "RONIN"
 
 func save_data() -> void:
 	var ss: Node = get_node_or_null("/root/SaveSystem")
 	if ss and ss.has_method("save_game"):
 		ss.save_game()
-
-func load_data() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		print("Nessun salvataggio trovato. Inizializzazione nuovo profilo.")
-		return
-
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file:
-		var json_text := file.get_as_text()
-		file.close()
-		var parsed = JSON.parse_string(json_text)
-		if parsed is Dictionary:
-			total_credits = int(parsed.get("total_credits", 200))
-			total_coins = int(parsed.get("total_coins", 1250))
-			upgrade_dmg_lvl = int(parsed.get("upgrade_dmg_lvl", 0))
-			upgrade_hp_lvl = int(parsed.get("upgrade_hp_lvl", 0))
-			daily_ads_watched = int(parsed.get("daily_ads_watched", 0))
-			checkin_day = int(parsed.get("checkin_day", 1))
-			checkin_claimed = bool(parsed.get("checkin_claimed", false))
-			quest_kills = int(parsed.get("quest_kills", 15))
-			quest_runs = int(parsed.get("quest_runs", 2))
-			quest_talents = int(parsed.get("quest_talents", 1))
-			if parsed.has("quests_claimed") and parsed["quests_claimed"] is Dictionary:
-				quests_claimed = parsed["quests_claimed"]
-			print("Salvataggio caricato! Gemme: ", total_credits, " | Monete: ", total_coins)

@@ -181,10 +181,25 @@ func _die() -> void:
 
 	var w: WorldData = WorldDB.get_selected_world()
 	var mult: float = w.reward_multiplier if w else 1.0
-	Global.total_credits += int(200.0 * mult)
-	Global.total_coins += int(500.0 * mult)
+	Global.total_credits += int(120.0 * mult)
+	Global.total_coins += int(350.0 * mult)
 	Global.quest_runs += 1
 	Global.quest_kills += 1
+
+	# Bottino Equipaggiamento garantito alla sconfitta del Boss!
+	var boss_loot_pool := [
+		{"id": "kevlar", "name": "Giubbotto Kevlar", "slot": "CORAZZA", "rarity": "COMMON"},
+		{"id": "ring_crit", "name": "Anello Critico", "slot": "ANELLO 1", "rarity": "COMMON"},
+		{"id": "ring_speed", "name": "Anello Velocità", "slot": "ANELLO 2", "rarity": "RARE"},
+		{"id": "drone_laser", "name": "Drone Laser", "slot": "PET 1", "rarity": "RARE"},
+		{"id": "shotgun", "name": "Fucile a Pompa", "slot": "ARMA", "rarity": "RARE"},
+		{"id": "katana", "name": "Katana Lame Veloci", "slot": "ARMA", "rarity": "EPIC"}
+	]
+	var drop_item: Dictionary = boss_loot_pool[randi() % boss_loot_pool.size()]
+	var im: Node = get_node_or_null("/root/InventoryManager")
+	if im and im.has_method("add_item"):
+		im.add_item(str(drop_item["id"]), str(drop_item["name"]), str(drop_item["slot"]), str(drop_item["rarity"]))
+
 	var ss: Node = get_node_or_null("/root/SaveSystem")
 	if ss and ss.has_method("save_game"): ss.save_game()
 
