@@ -212,6 +212,8 @@ func _draw() -> void:
 		draw_arc(Vector2.ZERO, 32.0, -anim_t * 2.0 + PI - 0.5, -anim_t * 2.0 + PI + 0.5, 16, Color(0.75, 0.3, 1.0, 0.65), 2.5)
 
 func apply_shake(intensity: float = 8.0) -> void:
+	if not Global.screen_shake_enabled:
+		return
 	shake_intensity = max(shake_intensity, intensity)
 
 func take_damage(amount: int) -> void:

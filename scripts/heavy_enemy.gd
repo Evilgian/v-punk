@@ -73,6 +73,7 @@ func _launch_parabolic_bomb() -> void:
 
 	var indicator := Node2D.new()
 	indicator.global_position = target_pos
+	indicator.add_to_group("projectiles")
 	indicator.script = load("res://scripts/bomb_indicator.gd") if ResourceLoader.exists("res://scripts/bomb_indicator.gd") else null
 	scene.add_child(indicator)
 
@@ -80,6 +81,7 @@ func _launch_parabolic_bomb() -> void:
 	var bomb_node := Node2D.new()
 	bomb_node.global_position = global_position
 	bomb_node.z_index = 12
+	bomb_node.add_to_group("projectiles")
 	bomb_node.draw.connect(func():
 		bomb_node.draw_circle(Vector2.ZERO, 14.0, Color(1.0, 0.25, 0.05, 0.35))
 		bomb_node.draw_circle(Vector2.ZERO, 9.0, Color(0.2, 0.1, 0.1, 1.0))
@@ -98,7 +100,8 @@ func _launch_parabolic_bomb() -> void:
 
 	tw.finished.connect(func():
 		if is_instance_valid(indicator): indicator.queue_free()
-		if is_instance_valid(bomb_node): bomb_node.queue_free()
+		if not is_instance_valid(bomb_node): return
+		bomb_node.queue_free()
 
 		SoundFX.play_explosion()
 		var vfx: Node = scene.get_node_or_null("/root/VFXManager")

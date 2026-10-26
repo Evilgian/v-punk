@@ -5,11 +5,13 @@ extends CharacterBody2D
 @export var enemy_projectile_scene: PackedScene = preload("res://scenes/EnemyProjectile.tscn")
 @export var ranged_enemy_scene: PackedScene = preload("res://scenes/RangedEnemy.tscn")
 @export var victory_scene: PackedScene = preload("res://scenes/Victory.tscn")
+@export var drop_scene: PackedScene = preload("res://scenes/Drop.tscn")
 
 @onready var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 @onready var shadow: Sprite2D = get_node_or_null("Shadow") as Sprite2D
 
 var max_hp: int = 500
+var is_final_boss: bool = true
 var is_attacking: bool = false
 var in_phase_2: bool = false
 var spawned_minions_75: bool = false
@@ -45,11 +47,12 @@ func _connect_to_hud() -> void:
 	max_hp = max(max_hp, hp)
 	var world: WorldData = WorldDB.get_selected_world()
 	var b_name: String = world.boss_name if world else "ROBO-TITAN"
+	var prefix: String = "⚠️ BOSS FINALE: " if is_final_boss else "⚠️ GUARDIANO DI SETTORE: "
 	var huds := get_tree().get_nodes_in_group("hud")
 	if not huds.is_empty():
 		var hud := huds[0]
 		if hud.has_method("show_boss_bar"):
-			hud.show_boss_bar("⚠️ BOSS: " + b_name.to_upper() + " ⚠️", max_hp)
+			hud.show_boss_bar(prefix + b_name.to_upper() + " ⚠️", max_hp)
 
 func _physics_process(delta: float) -> void:
 	anim_t += delta
@@ -173,6 +176,11 @@ func _die() -> void:
 	var col := get_node_or_null("CollisionShape2D")
 	if col: col.set_deferred("disabled", true)
 
+	# Svanimento immediato di tutti i proiettili alla morte del Boss
+	for proj in get_tree().get_nodes_in_group("projectiles"):
+		if is_instance_valid(proj):
+			proj.queue_free()
+
 	var huds := get_tree().get_nodes_in_group("hud")
 	if not huds.is_empty():
 		var hud := huds[0]
@@ -184,6 +192,31 @@ func _die() -> void:
 	var world_num: int = WorldDB.world_order.find(w.id if w else "world_1") + 1
 	if world_num <= 0: world_num = 1
 
+	Global.quest_kills += 1
+
+	# Caso 1: Boss Intermedio (Livello 10, 20, 30, 40) -> Rilascia ricco bottino a terra e apre il Portale per continuare!
+	if not is_final_boss:
+		Global.total_coins += int(150.0 * mult)
+		Global.total_credits += int(35.0 * mult)
+		var vfx: Node = get_node_or_null("/root/VFXManager")
+		if vfx and vfx.has_method("spawn_explosion"):
+			vfx.spawn_explosion(global_position, boss_col)
+		if vfx and vfx.has_method("spawn_floating_text"):
+			vfx.spawn_floating_text(global_position, "🏆 GUARDIANO SCONFITTO! +BOTTINO BOSS!", CyberTheme.COL_YELLOW)
+
+		if drop_scene:
+			var mid_drops := ["gear_drop", "upgrade_scroll", "heal"]
+			for i in range(mid_drops.size()):
+				var d := drop_scene.instantiate() as Area2D
+				if d:
+					d.global_position = global_position + Vector2((i - 1) * 42.0, randf_range(-12.0, 12.0))
+					if "drop_type" in d:
+						d.drop_type = mid_drops[i]
+					get_tree().current_scene.add_child.call_deferred(d)
+		queue_free()
+		return
+
+	# Caso 2: Boss Finale (Ultimo Livello del Mondo) -> Premi Completamento Mondo e Vittoria!
 	var reward_coins: int = int(600.0 * mult)
 	var reward_gems: int = int(200.0 * mult)
 	var reward_scrolls: int = 3 + world_num * 2
@@ -192,7 +225,6 @@ func _die() -> void:
 	Global.total_credits += reward_gems
 	Global.upgrade_scrolls += reward_scrolls
 	Global.quest_runs += 1
-	Global.quest_kills += 1
 
 	# 2 Drop Equipaggiamento Garantiti al Completamento del Mondo!
 	var dropped_items: Array = []

@@ -11,15 +11,15 @@ func _init_database() -> void:
 	worlds.clear()
 	world_order.clear()
 
-	# Mondo 1 - Foresta Bio-Cibernetica (25 Livelli)
+	# Mondo 1 - Foresta Bio-Cibernetica (20 Livelli: Santuario ogni 5, Boss a 10 e 20)
 	var w1 := WorldData.new()
 	w1.id = "world_1"
 	w1.display_name = "Mondo 1: Foresta Bio-Cyber"
-	w1.total_rooms = 25
+	w1.total_rooms = 20
 	w1.enemy_hp_multiplier = 1.0
 	w1.enemy_dmg_multiplier = 1.0
 	w1.reward_multiplier = 1.0
-	w1.description = "Settore 01 (25 Livelli): Giungla sintetico-mutante pattugliata dal Golem Silvano MK-I."
+	w1.description = "Settore 01 (20 Livelli): Giungla bio-sintetica. Santuario ogni 5 livelli, Boss al 10 e 20."
 	w1.biome_color = Color(0.04, 0.14, 0.08, 1.0)
 	w1.accent_color = Color(0.2, 1.0, 0.55, 1.0)
 	w1.trap_type = "SPIKES"
@@ -77,15 +77,15 @@ func _init_database() -> void:
 	w3.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_24.png"
 	_register_world(w3)
 
-	# Mondo 4 - Laboratorio Criogenico (35 Livelli)
+	# Mondo 4 - Laboratorio Criogenico (30 Livelli)
 	var w4 := WorldData.new()
 	w4.id = "world_4"
 	w4.display_name = "Mondo 4: Lab Criogenico"
-	w4.total_rooms = 35
+	w4.total_rooms = 30
 	w4.enemy_hp_multiplier = 3.1
 	w4.enemy_dmg_multiplier = 2.2
 	w4.reward_multiplier = 3.4
-	w4.description = "Settore 04 (35 Livelli): Reattore sub-zero con trappole criogeniche e Cryo-Valkyrie Zero."
+	w4.description = "Settore 04 (30 Livelli): Reattore sub-zero con trappole criogeniche e Cryo-Valkyrie Zero."
 	w4.biome_color = Color(0.03, 0.13, 0.22, 1.0)
 	w4.accent_color = Color(0.45, 0.90, 1.0, 1.0)
 	w4.trap_type = "CRYO"
@@ -99,15 +99,15 @@ func _init_database() -> void:
 	w4.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_30.png"
 	_register_world(w4)
 
-	# Mondo 5 - Fonderia Magmatica (35 Livelli)
+	# Mondo 5 - Fonderia Magmatica (40 Livelli)
 	var w5 := WorldData.new()
 	w5.id = "world_5"
 	w5.display_name = "Mondo 5: Fonderia Magmatica"
-	w5.total_rooms = 35
+	w5.total_rooms = 40
 	w5.enemy_hp_multiplier = 4.2
 	w5.enemy_dmg_multiplier = 2.7
 	w5.reward_multiplier = 4.6
-	w5.description = "Settore 05 (35 Livelli): Fornace geotermica di metallo fuso presidiata da Vulcan Overlord."
+	w5.description = "Settore 05 (40 Livelli): Fornace geotermica di metallo fuso presidiata da Vulcan Overlord."
 	w5.biome_color = Color(0.20, 0.05, 0.03, 1.0)
 	w5.accent_color = Color(1.0, 0.38, 0.1, 1.0)
 	w5.trap_type = "MAGMA"
@@ -143,15 +143,15 @@ func _init_database() -> void:
 	w6.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_42.png"
 	_register_world(w6)
 
-	# Mondo 7 - Cittadella Astrale (45 Livelli)
+	# Mondo 7 - Cittadella Astrale (50 Livelli)
 	var w7 := WorldData.new()
 	w7.id = "world_7"
 	w7.display_name = "Mondo 7: Cittadella Astrale"
-	w7.total_rooms = 45
+	w7.total_rooms = 50
 	w7.enemy_hp_multiplier = 7.5
 	w7.enemy_dmg_multiplier = 4.0
 	w7.reward_multiplier = 8.5
-	w7.description = "Settore 07 (45 Livelli): Santuario orbitale a plasma solare custodito da Archon Seraphim."
+	w7.description = "Settore 07 (50 Livelli): Santuario orbitale a plasma solare custodito da Archon Seraphim."
 	w7.biome_color = Color(0.07, 0.09, 0.22, 1.0)
 	w7.accent_color = Color(1.0, 0.86, 0.30, 1.0)
 	w7.trap_type = "TESLA"

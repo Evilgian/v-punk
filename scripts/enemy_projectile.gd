@@ -13,11 +13,12 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 func _draw() -> void:
-	# Disegna proiettile brillante sferico con alone luminoso (Glow Trail)
-	draw_line(-direction.normalized() * 12.0, Vector2.ZERO, Color(1.0, 0.25, 0.15, 0.45), 6.0)
-	draw_circle(Vector2.ZERO, 10.0, Color(1.0, 0.2, 0.2, 0.35))
-	draw_circle(Vector2.ZERO, 6.0, Color(1.0, 0.3, 0.1, 0.88))
-	draw_circle(Vector2.ZERO, 3.2, Color(1.0, 0.92, 0.55, 1.0))
+	# Sfera al plasma nemica con scia energetica e anello esterno ad alto contrasto
+	draw_line(-direction.normalized() * 18.0, Vector2.ZERO, Color(1.0, 0.18, 0.25, 0.42), 8.0)
+	draw_circle(Vector2.ZERO, 12.0, Color(1.0, 0.15, 0.25, 0.32))
+	draw_circle(Vector2.ZERO, 7.5, Color(1.0, 0.28, 0.12, 0.95))
+	draw_arc(Vector2.ZERO, 7.5, 0.0, TAU, 16, Color(1.0, 0.65, 0.2, 0.95), 1.8)
+	draw_circle(Vector2.ZERO, 3.8, Color(1.0, 0.95, 0.65, 1.0))
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta

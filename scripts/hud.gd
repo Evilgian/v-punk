@@ -103,6 +103,25 @@ func _apply_cyber_hud_styles() -> void:
 
 	if pause_overlay:
 		pause_overlay.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.02, 0.03, 0.07, 0.94), CyberTheme.COL_CYAN, 0.0, 2, 6, 12))
+		var p_vbox := pause_overlay.get_node_or_null("VBoxContainer") as VBoxContainer
+		if p_vbox and not p_vbox.get_node_or_null("BtnPauseSettings"):
+			var btn_ps := Button.new()
+			btn_ps.name = "BtnPauseSettings"
+			btn_ps.custom_minimum_size = Vector2(260, 56)
+			btn_ps.text = "⚙️ IMPOSTAZIONI & AUDIO"
+			CyberTheme.style_button(btn_ps, CyberTheme.COL_YELLOW, false)
+			btn_ps.pressed.connect(func():
+				SoundFX.play_click()
+				var sm_script := load("res://scripts/settings_modal.gd")
+				if sm_script:
+					var sm := CanvasLayer.new()
+					sm.set_script(sm_script)
+					sm.show_char_creator_btn = false
+					add_child(sm)
+			)
+			p_vbox.add_child(btn_ps)
+			if btn_main_menu:
+				p_vbox.move_child(btn_ps, btn_main_menu.get_index())
 		CyberTheme.apply_recursive_cyber_style(pause_overlay)
 
 func show_boss_bar(boss_name: String, max_hp: int) -> void:

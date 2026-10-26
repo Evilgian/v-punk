@@ -21,6 +21,13 @@ func save_game() -> void:
 			"player_class": Global.player_class,
 			"player_color_id": Global.player_color_id
 		},
+		"settings": {
+			"sfx_volume": Global.sfx_volume,
+			"music_volume": Global.music_volume,
+			"screen_shake_enabled": Global.screen_shake_enabled,
+			"google_account_linked": Global.google_account_linked,
+			"google_account_name": Global.google_account_name
+		},
 		"economy": {
 			"total_coins": Global.total_coins,
 			"total_credits": Global.total_credits,
@@ -88,6 +95,16 @@ func load_game() -> void:
 	Global.player_name = str(prof.get("player_name", "V-RONIN"))
 	Global.player_class = str(prof.get("player_class", "RONIN"))
 	Global.player_color_id = str(prof.get("player_color_id", "CYAN"))
+
+	if data.has("settings") and data["settings"] is Dictionary:
+		var st: Dictionary = data["settings"]
+		Global.sfx_volume = clampf(float(st.get("sfx_volume", 0.85)), 0.0, 1.0)
+		Global.music_volume = clampf(float(st.get("music_volume", 0.65)), 0.0, 1.0)
+		Global.screen_shake_enabled = bool(st.get("screen_shake_enabled", true))
+		Global.google_account_linked = bool(st.get("google_account_linked", false))
+		Global.google_account_name = str(st.get("google_account_name", ""))
+		if SoundFX and SoundFX.has_method("apply_volume_settings"):
+			SoundFX.apply_volume_settings()
 
 	# Restore Economy & Profile
 	if data.has("economy") and data["economy"] is Dictionary:

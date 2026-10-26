@@ -67,22 +67,26 @@ func _draw() -> void:
 
 	if weapon_type == "scythe":
 		var spin := lifetime * 18.0
-		draw_circle(Vector2.ZERO, 12.0, Color(0.8, 0.1, 1.0, 0.28))
-		draw_arc(Vector2.ZERO, 10.0, spin, spin + PI * 1.25, 20, Color(0.9, 0.2, 1.0, 0.95), 4.0)
-		draw_arc(Vector2.ZERO, 10.0, spin, spin + PI * 1.1, 16, Color.WHITE, 1.5)
+		draw_circle(Vector2.ZERO, 16.0, Color(0.85, 0.15, 1.0, 0.32))
+		draw_arc(Vector2.ZERO, 12.0, spin, spin + PI * 1.35, 24, Color(0.95, 0.25, 1.0, 0.98), 4.5)
+		draw_arc(Vector2.ZERO, 12.0, spin + PI, spin + PI * 2.35, 24, Color(0.0, 0.95, 1.0, 0.90), 3.5)
+		draw_circle(Vector2.ZERO, 4.5, Color.WHITE)
 	elif weapon_type == "plasma_cannon":
-		draw_circle(Vector2.ZERO, 14.0, Color(0.0, 0.85, 1.0, 0.32))
-		draw_circle(Vector2.ZERO, 9.0, Color(0.2, 0.95, 1.0, 0.9))
-		draw_circle(Vector2.ZERO, 5.0, Color.WHITE)
+		draw_line(Vector2(-24, 0), Vector2(0, 0), Color(0.0, 0.85, 1.0, 0.45), 10.0)
+		draw_circle(Vector2.ZERO, 16.0, Color(0.0, 0.88, 1.0, 0.35))
+		draw_circle(Vector2.ZERO, 10.0, Color(0.25, 0.96, 1.0, 0.95))
+		draw_circle(Vector2.ZERO, 5.5, Color.WHITE)
 	elif is_homing:
-		draw_circle(Vector2.ZERO, 9.0, Color(0.75, 0.25, 1.0, 0.35))
-		draw_line(Vector2(-12, 0), Vector2(6, 0), Color(0.85, 0.35, 1.0, 0.95), 5.0)
-		draw_circle(Vector2(4, 0), 4.0, Color.WHITE)
+		draw_line(Vector2(-22, 0), Vector2(4, 0), Color(0.85, 0.25, 1.0, 0.40), 8.0)
+		draw_circle(Vector2.ZERO, 11.0, Color(0.85, 0.25, 1.0, 0.38))
+		draw_line(Vector2(-14, 0), Vector2(7, 0), Color(0.95, 0.40, 1.0, 0.98), 5.0)
+		draw_circle(Vector2(5, 0), 4.5, Color.WHITE)
 	else:
-		# Dardo laser/plasma ad alta visibilità
-		draw_line(Vector2(-12, 0), Vector2(8, 0), Color(0.0, 0.94, 1.0, 0.38), 8.0)
-		draw_line(Vector2(-10, 0), Vector2(8, 0), Color(0.0, 0.95, 1.0, 0.95), 4.5)
-		draw_line(Vector2(-6, 0), Vector2(7, 0), Color(1.0, 1.0, 1.0, 1.0), 2.0)
+		# Dardo laser/plasma multi-strato con scia luminosa
+		draw_line(Vector2(-24, 0), Vector2(6, 0), Color(0.0, 0.94, 1.0, 0.22), 11.0)
+		draw_line(Vector2(-14, 0), Vector2(9, 0), Color(0.0, 0.96, 1.0, 0.95), 5.0)
+		draw_line(Vector2(-6, 0), Vector2(8, 0), Color(1.0, 1.0, 1.0, 1.0), 2.4)
+		draw_circle(Vector2(7, 0), 3.2, Color.WHITE)
 
 func _on_body_entered(body: Node2D) -> void:
 	if not is_instance_valid(body): return

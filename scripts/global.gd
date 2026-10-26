@@ -6,6 +6,13 @@ var player_name: String = ""
 var player_class: String = "RONIN" # RONIN, VANGUARD, NETRUNNER
 var player_color_id: String = "CYAN" # CYAN, MAGENTA, GOLD, GREEN
 
+# Impostazioni Audio, Vibrazione & Account Google Play
+var sfx_volume: float = 0.85
+var music_volume: float = 0.65
+var screen_shake_enabled: bool = true
+var google_account_linked: bool = false
+var google_account_name: String = ""
+
 # Economia & Progressione (Partenza pulita da zero)
 var total_credits: int = 0
 var total_coins: int = 0

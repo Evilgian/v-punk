@@ -164,7 +164,18 @@ func _ready() -> void:
 
 	var prof_card_ctrl: Control = find_child("ProfileCard", true, false) as Control
 	if prof_card_ctrl:
-		_connect_button(prof_card_ctrl, func(): _show_character_creation_modal(false))
+		_connect_button(prof_card_ctrl, _open_settings_modal)
+
+	var top_bar_hbox: HBoxContainer = find_child("TopBar", true, false) as HBoxContainer
+	if top_bar_hbox and not top_bar_hbox.get_node_or_null("BtnSettingsTop"):
+		var btn_set := Button.new()
+		btn_set.name = "BtnSettingsTop"
+		btn_set.custom_minimum_size = Vector2(56, 54)
+		btn_set.text = "⚙️"
+		btn_set.add_theme_font_size_override("font_size", 22)
+		CyberTheme.style_button(btn_set, CyberTheme.COL_CYAN, false)
+		btn_set.pressed.connect(_open_settings_modal)
+		top_bar_hbox.add_child(btn_set)
 
 	_update_top_bar()
 	_show_home_view()
@@ -1203,6 +1214,18 @@ func _on_nav_quests_pressed() -> void:
 func _on_btn_checkin_pressed() -> void:
 	SoundFX.play_click()
 	_show_checkin_view()
+
+func _open_settings_modal() -> void:
+	SoundFX.play_click()
+	var sm_script := load("res://scripts/settings_modal.gd")
+	if sm_script:
+		var sm := CanvasLayer.new()
+		sm.set_script(sm_script)
+		sm.show_char_creator_btn = true
+		sm.open_character_creator_requested.connect(func():
+			_show_character_creation_modal(false)
+		)
+		add_child(sm)
 
 func _on_btn_play_pressed() -> void:
 	var world: WorldData = WorldDB.get_selected_world()

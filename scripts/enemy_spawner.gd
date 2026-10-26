@@ -24,19 +24,40 @@ func start_room() -> void:
 	room_cleared = false
 	print("🏁 Avvio Stanza ", current_room, "/", current_world.total_rooms, " in ", current_world.display_name)
 
-	# Stanza del Boss (Ultima Stanza del Mondo Attivo)
-	if current_room == current_world.total_rooms:
+	# 1. Stanza del Boss (Ogni 10 Livelli: 10, 20, 30, 40, 50 e sempre all'Ultimo Livello del Mondo)
+	var is_boss_stage: bool = (current_room == current_world.total_rooms) or (current_room % 10 == 0)
+	if is_boss_stage:
 		total_room_enemies = 1
-		print("⚠️ BOSS SPAWN: ", current_world.boss_name, " nella Stanza ", current_room)
+		var is_final: bool = (current_room == current_world.total_rooms)
+		print("⚠️ BOSS SPAWN: ", current_world.boss_name, " nella Stanza ", current_room, " (Finale: ", is_final, ")")
 		if boss_scene:
 			var boss := boss_scene.instantiate() as Node2D
 			if boss:
 				boss.global_position = Vector2(360, 360)
+				if "is_final_boss" in boss:
+					boss.is_final_boss = is_final
+				var progress_ratio: float = clampf(float(current_room) / float(max(1, current_world.total_rooms)), 0.55, 1.0)
 				if "hp" in boss:
-					boss.hp = int(boss.hp * current_world.enemy_hp_multiplier)
+					boss.hp = int(float(boss.hp) * current_world.enemy_hp_multiplier * progress_ratio)
 				if "max_hp" in boss:
 					boss.max_hp = boss.hp
 				get_tree().current_scene.add_child.call_deferred(boss)
+		_update_hud_counter()
+		return
+
+	# 2. Stanza Santuario / Cyber-Valchiria (Ogni 5 Livelli nel mezzo: 5, 15, 25, 35, 45)
+	var is_sanctuary_stage: bool = (current_room % 10 == 5) and (current_room < current_world.total_rooms)
+	if is_sanctuary_stage:
+		total_room_enemies = 0
+		room_cleared = true
+		print("👼 SANTUARIO CYBER-VALCHIRIA nella Stanza ", current_room)
+		var sanct_script := load("res://scripts/sanctuary_node.gd")
+		if sanct_script:
+			var sanct := Node2D.new()
+			sanct.set_script(sanct_script)
+			sanct.global_position = Vector2(360, 540)
+			get_tree().current_scene.add_child.call_deferred(sanct)
+		spawn_door()
 		_update_hud_counter()
 		return
 
@@ -130,8 +151,17 @@ func _process(_delta: float) -> void:
 
 	if not room_cleared and remaining_enemies == 0:
 		room_cleared = true
+		_clear_all_projectiles()
 		_vacuum_room_xp()
 		spawn_door()
+
+func _clear_all_projectiles() -> void:
+	var vfx: Node = get_node_or_null("/root/VFXManager")
+	for proj in get_tree().get_nodes_in_group("projectiles"):
+		if is_instance_valid(proj):
+			if proj is Node2D and vfx and vfx.has_method("spawn_burst"):
+				vfx.spawn_burst((proj as Node2D).global_position, Color(0.0, 0.95, 1.0, 0.7))
+			proj.queue_free()
 
 func _vacuum_room_xp() -> void:
 	var players := get_tree().get_nodes_in_group("player")
@@ -146,11 +176,16 @@ func _vacuum_room_xp() -> void:
 
 func _update_hud_counter() -> void:
 	var remaining := get_tree().get_nodes_in_group("enemies").size()
+	var is_boss_st: bool = (current_room == current_world.total_rooms) or (current_room % 10 == 0)
+	var is_sanct_st: bool = (current_room % 10 == 5) and (current_room < current_world.total_rooms)
 	var huds := get_tree().get_nodes_in_group("hud")
 	for h in huds:
 		if "room_label" in h and h.room_label:
-			if remaining > 0:
-				h.room_label.text = "Stage " + str(current_room) + "/" + str(current_world.total_rooms) + " | Nemici: " + str(remaining) + "/" + str(total_room_enemies)
+			if is_sanct_st:
+				h.room_label.text = "Stage " + str(current_room) + "/" + str(current_world.total_rooms) + " | 👼 SANTUARIO RIFORNIMENTO"
+			elif remaining > 0:
+				var tag := "⚠️ BOSS" if is_boss_st else ("Nemici: " + str(remaining) + "/" + str(total_room_enemies))
+				h.room_label.text = "Stage " + str(current_room) + "/" + str(current_world.total_rooms) + " | " + tag
 			else:
 				h.room_label.text = "Stage " + str(current_room) + "/" + str(current_world.total_rooms) + " | 🚪 PORTALE APERTO!"
 
