@@ -1,0 +1,39 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/PNG/Retina/Tile/scifiTile_01.png" id="2_floor_texture"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player_scene"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="5_hud_scene"]
+[ext_resource type="PackedScene" path="res://scenes/EnemySpawner.tscn" id="6_spawner_scene"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main_script")
+
+[node name="MainCamera" type="Camera2D" parent="."]
+position = Vector2(360, 640)
+enabled = true
+
+[node name="CanvasLayerBG" type="CanvasLayer" parent="."]
+layer = -100
+
+[node name="DarkBG" type="ColorRect" parent="CanvasLayerBG"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.066, 0.066, 0.086, 1)
+
+[node name="Background" type="TextureRect" parent="."]
+texture_repeat = 2
+offset_right = 720.0
+offset_bottom = 1280.0
+texture = ExtResource("2_floor_texture")
+stretch_mode = 1
+
+[node name="Player" parent="." instance=ExtResource("3_player_scene")]
+position = Vector2(360, 1100)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud_scene")]
+
+[node name="EnemySpawner" parent="." instance=ExtResource("6_spawner_scene")]

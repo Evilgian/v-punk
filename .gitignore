@@ -1,0 +1,9 @@
+# Godot 4+ ignore
+.godot/
+build/
+V-Punk/
+*.apk
+*.aab
+*.tmp
+.DS_Store
+Thumbs.db

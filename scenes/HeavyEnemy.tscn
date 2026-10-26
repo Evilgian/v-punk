@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/heavy_enemy.gd" id="1_heavy_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/PNG/Retina/Unit/scifiUnit_10.png" id="2_heavy_texture"]
+[ext_resource type="PackedScene" path="res://scenes/Drop.tscn" id="3_drop_scene"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_heavy"]
+size = Vector2(48, 48)
+
+[node name="HeavyEnemy" type="CharacterBody2D"]
+script = ExtResource("1_heavy_script")
+drop_scene = ExtResource("3_drop_scene")
+
+[node name="Shadow" type="Sprite2D" parent="."]
+modulate = Color(0, 0, 0, 0.45)
+position = Vector2(0, 10)
+scale = Vector2(1.0, 0.45)
+texture = ExtResource("2_heavy_texture")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_heavy_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_heavy")

@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/loot_crate.gd" id="1_crate_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/PNG/Retina/Structure/scifiStructure_01.png" id="2_crate_texture"]
+[ext_resource type="PackedScene" path="res://scenes/Drop.tscn" id="3_drop_scene"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_crate"]
+size = Vector2(40, 40)
+
+[node name="LootCrate" type="StaticBody2D"]
+script = ExtResource("1_crate_script")
+drop_scene = ExtResource("3_drop_scene")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_crate_texture")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_crate")
