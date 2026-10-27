@@ -23,7 +23,7 @@ func _setup_cyber_bgm() -> void:
 
 	for i in range(total_samples):
 		var t := float(i) / float(sample_rate)
-		var note_idx := min(int(i / step_samples), notes.size() - 1)
+		var note_idx: int = mini(int(i / step_samples), notes.size() - 1)
 		var freq: float = notes[note_idx]
 		var local_env := 1.0 - (float(i % step_samples) / float(step_samples)) * 0.65
 		var wave := (sin(TAU * freq * t) * 0.6 + sin(TAU * freq * 0.5 * t) * 0.4) * local_env * 0.16

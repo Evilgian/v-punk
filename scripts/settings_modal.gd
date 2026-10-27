@@ -43,7 +43,7 @@ func _build_ui() -> void:
 
 	# Header
 	var lbl_title := Label.new()
-	lbl_title.text = "// ⚙️ IMPOSTAZIONI DI SISTEMA & ACCOUNT //"
+	lbl_title.text = "// ⚙️ IMPOSTAZIONI DI SISTEMA [" + Global.GAME_VERSION + "] //"
 	lbl_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_title.add_theme_font_size_override("font_size", 21)
 	CyberTheme.style_label(lbl_title, CyberTheme.COL_YELLOW, 4)

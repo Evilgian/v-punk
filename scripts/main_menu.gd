@@ -245,7 +245,7 @@ func _setup_dynamic_styles() -> void:
 
 	var title_lbl: Label = find_child("TitleLabel", true, false) as Label
 	if title_lbl:
-		title_lbl.text = "// V-PUNK : ROGUE PROTOCOL //"
+		title_lbl.text = "// V-PUNK : ROGUE PROTOCOL [" + Global.GAME_VERSION + "] //"
 		title_lbl.add_theme_color_override("font_color", CyberTheme.COL_YELLOW)
 		title_lbl.add_theme_color_override("font_outline_color", Color(0.95, 0.05, 0.45, 0.95))
 		title_lbl.add_theme_constant_override("outline_size", 5)
@@ -260,6 +260,7 @@ var top_avatar_holo: Node2D = null
 var char_modal_layer: CanvasLayer = null
 var char_preview_holo: Node2D = null
 var char_preview_panel: PanelContainer = null
+var char_preview_status_lbl: Label = null
 var char_name_input: LineEdit = null
 var char_selected_class: String = "RONIN"
 var char_selected_color: String = "CYAN"
@@ -1305,11 +1306,11 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	main_panel.add_child(vbox)
 
-	# 1. Titolo Terminale
+	# 1. Titolo Terminale con Versione Build Visibile
 	var lbl_hdr := Label.new()
-	lbl_hdr.text = "// TERMINALE IDENTITÀ NEURALE : CREAZIONE OPERATIVO //"
+	lbl_hdr.text = "// CREAZIONE OPERATIVO [" + Global.GAME_VERSION + "] //"
 	lbl_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_hdr.add_theme_font_size_override("font_size", 18)
+	lbl_hdr.add_theme_font_size_override("font_size", 19)
 	CyberTheme.style_label(lbl_hdr, CyberTheme.COL_YELLOW, 4)
 	vbox.add_child(lbl_hdr)
 
@@ -1322,21 +1323,34 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 
 	# 2. Podio Olografico 3D Anteprima in Tempo Reale
 	char_preview_panel = PanelContainer.new()
-	char_preview_panel.custom_minimum_size = Vector2(220, 175)
+	char_preview_panel.custom_minimum_size = Vector2(260, 195)
 	char_preview_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	char_preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), Global.get_player_accent_color(), 0.03, 2, 6, 10))
 	vbox.add_child(char_preview_panel)
 
+	var preview_vbox := VBoxContainer.new()
+	preview_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	preview_vbox.add_theme_constant_override("separation", 2)
+	preview_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	char_preview_panel.add_child(preview_vbox)
+
 	var preview_ctrl := Control.new()
-	preview_ctrl.custom_minimum_size = Vector2(200, 160)
+	preview_ctrl.custom_minimum_size = Vector2(220, 152)
 	preview_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	char_preview_panel.add_child(preview_ctrl)
+	preview_vbox.add_child(preview_ctrl)
 
 	char_preview_holo = Node2D.new()
-	char_preview_holo.position = Vector2(100, 88)
+	char_preview_holo.position = Vector2(110, 82)
 	char_preview_holo.scale = Vector2(2.2, 2.2)
 	char_preview_holo.draw.connect(_on_draw_char_preview_holo)
 	preview_ctrl.add_child(char_preview_holo)
+
+	char_preview_status_lbl = Label.new()
+	char_preview_status_lbl.text = "CLASSE: " + char_selected_class + " | AURA: " + char_selected_color
+	char_preview_status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	char_preview_status_lbl.add_theme_font_size_override("font_size", 12)
+	CyberTheme.style_label(char_preview_status_lbl, Global.get_player_accent_color(), 3)
+	preview_vbox.add_child(char_preview_status_lbl)
 
 	# 3. Inserimento Nome Operativo (Callsign)
 	var lbl_name_prompt := Label.new()
@@ -1359,10 +1373,16 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	char_name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	char_name_input.add_theme_font_size_override("font_size", 17)
 	char_name_input.add_theme_stylebox_override("normal", CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.98), CyberTheme.COL_CYAN, 0.03, 2, 6, 4))
+	char_name_input.text_submitted.connect(func(_t: String):
+		char_name_input.release_focus()
+		DisplayServer.virtual_keyboard_hide()
+	)
 	name_hbox.add_child(char_name_input)
 
 	var btn_rand_name := Button.new()
 	btn_rand_name.custom_minimum_size = Vector2(140, 46)
+	btn_rand_name.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	btn_rand_name.focus_mode = Control.FOCUS_NONE
 	btn_rand_name.text = "🎲 CASUALE"
 	btn_rand_name.add_theme_font_size_override("font_size", 14)
 	CyberTheme.style_button(btn_rand_name, CyberTheme.COL_MAGENTA, false)
@@ -1386,6 +1406,8 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 		var cb := Button.new()
 		cb.custom_minimum_size = Vector2(190, 175)
 		cb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cb.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		cb.focus_mode = Control.FOCUS_NONE
 		var cid: String = str(c_def["id"])
 		var cwep: String = str(c_def["wep"])
 		var ccol: Color = c_def["col"]
@@ -1421,6 +1443,8 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	for col_def in CHAR_COLOR_DEFS:
 		var col_btn := Button.new()
 		col_btn.custom_minimum_size = Vector2(142, 48)
+		col_btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		col_btn.focus_mode = Control.FOCUS_NONE
 		var col_id: String = str(col_def["id"])
 		var col_val: Color = col_def["col"]
 		var col_lbl: String = str(col_def["label"])
@@ -1438,6 +1462,8 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 
 	var btn_confirm := Button.new()
 	btn_confirm.custom_minimum_size = Vector2(440 if is_first_time else 340, 62)
+	btn_confirm.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	btn_confirm.focus_mode = Control.FOCUS_NONE
 	btn_confirm.text = "⚡ CREA OPERATIVO & INIZIA DA ZERO ⚡" if is_first_time else "⚡ SALVA / RICREA DA ZERO ⚡"
 	btn_confirm.add_theme_font_size_override("font_size", 18)
 	CyberTheme.style_button(btn_confirm, CyberTheme.COL_YELLOW, true)
@@ -1447,6 +1473,8 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	if not is_first_time:
 		var btn_cancel := Button.new()
 		btn_cancel.custom_minimum_size = Vector2(180, 62)
+		btn_cancel.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_cancel.focus_mode = Control.FOCUS_NONE
 		btn_cancel.text = "ANNULLA"
 		btn_cancel.add_theme_font_size_override("font_size", 16)
 		CyberTheme.style_button(btn_cancel, CyberTheme.COL_CYAN, false)
@@ -1472,25 +1500,39 @@ func _on_draw_char_preview_holo() -> void:
 	if char_selected_class == "VANGUARD": w_preview = "shotgun"
 	elif char_selected_class == "NETRUNNER": w_preview = "homing_wand"
 	Global.player_color_id = char_selected_color
+	var aura_col := Global.get_player_accent_color()
+	char_preview_holo.draw_circle(Vector2.ZERO, 32.0, Color(aura_col.r, aura_col.g, aura_col.b, 0.22))
 	CyberModels.draw_hero(char_preview_holo, w_preview, menu_anim_t, true, true, -PI * 0.5 + sin(menu_anim_t * 2.0) * 0.25)
 
 func _on_char_rand_name_pressed() -> void:
+	if is_instance_valid(char_name_input):
+		char_name_input.release_focus()
+	DisplayServer.virtual_keyboard_hide()
 	SoundFX.play_click()
 	var random_names := ["V-77", "AKIRA-9", "KIRA-X", "ZERO-V", "NYX-2077", "RAVEN", "GHOST-X", "SILVERHAND"]
 	if is_instance_valid(char_name_input):
 		char_name_input.text = random_names[randi() % random_names.size()]
 
 func _on_char_class_selected(cid: String) -> void:
+	if is_instance_valid(char_name_input):
+		char_name_input.release_focus()
+	DisplayServer.virtual_keyboard_hide()
 	SoundFX.play_click()
 	char_selected_class = cid
 	for c_def in CHAR_CLASS_DEFS:
 		var id_k: String = str(c_def["id"])
 		if char_class_btns.has(id_k) and is_instance_valid(char_class_btns[id_k]):
 			CyberTheme.style_button(char_class_btns[id_k], c_def["col"], id_k == cid)
+	if is_instance_valid(char_preview_status_lbl):
+		char_preview_status_lbl.text = "CLASSE: " + char_selected_class + " | AURA: " + char_selected_color
+		CyberTheme.style_label(char_preview_status_lbl, Global.get_player_accent_color(), 3)
 	if is_instance_valid(char_preview_holo):
 		char_preview_holo.queue_redraw()
 
 func _on_char_color_selected(col_id: String) -> void:
+	if is_instance_valid(char_name_input):
+		char_name_input.release_focus()
+	DisplayServer.virtual_keyboard_hide()
 	SoundFX.play_click()
 	char_selected_color = col_id
 	Global.player_color_id = col_id
@@ -1500,10 +1542,16 @@ func _on_char_color_selected(col_id: String) -> void:
 			_style_color_choice_btn(char_color_btns[id_k], col_def["col"], str(col_def["label"]), id_k == col_id)
 	if is_instance_valid(char_preview_panel):
 		char_preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), Global.get_player_accent_color(), 0.03, 2, 6, 10))
+	if is_instance_valid(char_preview_status_lbl):
+		char_preview_status_lbl.text = "CLASSE: " + char_selected_class + " | AURA: " + char_selected_color
+		CyberTheme.style_label(char_preview_status_lbl, Global.get_player_accent_color(), 3)
 	if is_instance_valid(char_preview_holo):
 		char_preview_holo.queue_redraw()
 
 func _on_char_confirm_pressed() -> void:
+	if is_instance_valid(char_name_input):
+		char_name_input.release_focus()
+	DisplayServer.virtual_keyboard_hide()
 	SoundFX.play_win()
 	var final_name := "V-77"
 	if is_instance_valid(char_name_input):
@@ -1535,6 +1583,9 @@ func _on_char_confirm_pressed() -> void:
 	_show_home_view()
 
 func _on_char_cancel_pressed() -> void:
+	if is_instance_valid(char_name_input):
+		char_name_input.release_focus()
+	DisplayServer.virtual_keyboard_hide()
 	SoundFX.play_click()
 	if is_instance_valid(char_modal_layer):
 		char_modal_layer.queue_free()

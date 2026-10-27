@@ -62,29 +62,43 @@ jobs:
           # Inserisce anche il keystore direttamente nel preset Android
           sed -i "s|custom_template/release=\"\"|custom_template/release=\"\"\nkeystore/debug=\"$HOME/.android/debug.keystore\"\nkeystore/debug_user=\"androiddebugkey\"\nkeystore/debug_password=\"android\"|g" export_presets.cfg
 
-      - name: Importa Risorse & Compila V-Punk.apk
+      - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
+          VERSION_TAG="v1.2.${{ github.run_number }}"
+          VERSION_NAME="1.2.${{ github.run_number }}"
+          VERSION_CODE="${{ github.run_number }}"
+          echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
+
+          sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
+          sed -i "s/version\/code=.*/version\/code=$VERSION_CODE/g" export_presets.cfg
+          sed -i "s/version\/name=\".*\"/version\/name=\"$VERSION_NAME\"/g" export_presets.cfg
           sed -i 's/"4.7"/"4.3"/g' project.godot
           sed -i 's/"4.6"/"4.3"/g' project.godot
-          godot --headless --import || true
-          godot --headless --export-debug "Android" build/android/V-Punk.apk
-          ls -lh build/android/V-Punk.apk
 
-      - name: Carica V-Punk.apk negli Artifacts
+          godot --headless --import || true
+          godot --headless --export-debug "Android" "build/android/V-Punk-$VERSION_TAG.apk"
+          cp "build/android/V-Punk-$VERSION_TAG.apk" "build/android/V-Punk.apk"
+          ls -lh build/android/
+
+      - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-Android-APK
-          path: build/android/V-Punk.apk
+          name: V-Punk-v1.2.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v1.2.${{ github.run_number }}.apk
 
-      - name: Pubblica V-Punk.apk nella sezione Releases di GitHub
+      - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
-          name: "V-PUNK: Rogue Protocol — Ultima Build APK"
+          tag_name: v1.2.${{ github.run_number }}
+          name: "⚡ V-PUNK: Rogue Protocol — Release v1.2.${{ github.run_number }}"
+          make_latest: true
           body: |
-            ### ⚡ V-PUNK: Rogue Protocol (Android APK)
-            Scarica **`V-Punk.apk`** qui sotto sul tuo smartphone Android ed aprilo per installare e giocare!
-          files: build/android/V-Punk.apk
+            ### ⚡ V-PUNK: Rogue Protocol — Versione `v1.2.${{ github.run_number }}` (Android APK)
+            - **Versione in-game**: `v1.2.${{ github.run_number }}` (visibile nel Terminale di Creazione Operativo, nel Menu Principale e nelle Impostazioni).
+            - Scarica **`V-Punk-v1.2.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android ed aprilo per installare e giocare!
+          files: |
+            build/android/V-Punk-v1.2.${{ github.run_number }}.apk
+            build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
