@@ -41,18 +41,19 @@ func _build_ui() -> void:
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	panel.add_child(vbox)
 
-	# Header
+	# Header (senza versione in bella vista)
 	var lbl_title := Label.new()
-	lbl_title.text = "// ⚙️ IMPOSTAZIONI DI SISTEMA [" + Global.GAME_VERSION + "] //"
+	lbl_title.text = "// ⚙️ IMPOSTAZIONI //"
 	lbl_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_title.add_theme_font_size_override("font_size", 21)
+	lbl_title.add_theme_font_size_override("font_size", 23)
 	CyberTheme.style_label(lbl_title, CyberTheme.COL_YELLOW, 4)
 	vbox.add_child(lbl_title)
 
 	var lbl_sub := Label.new()
-	lbl_sub.text = "Configura Audio, Cloud Save Google Play e Telemetria Operativo"
+	lbl_sub.text = "Audio, Salvataggio Cloud Google Play e Profilo Operativo"
 	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_sub.add_theme_font_size_override("font_size", 13)
+	lbl_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl_sub.add_theme_font_size_override("font_size", 15)
 	CyberTheme.style_label(lbl_sub, CyberTheme.COL_CYAN, 2)
 	vbox.add_child(lbl_sub)
 
@@ -191,7 +192,7 @@ func _build_ui() -> void:
 
 	# Pulsante Chiudi
 	var btn_close := Button.new()
-	btn_close.custom_minimum_size = Vector2(360, 58)
+	btn_close.custom_minimum_size = Vector2(380, 60)
 	btn_close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_close.add_theme_font_size_override("font_size", 18)
 	btn_close.text = "✓ SALVA E TORNA AL GIOCO"
@@ -203,6 +204,14 @@ func _build_ui() -> void:
 		queue_free()
 	)
 	vbox.add_child(btn_close)
+
+	# Nota discreta di build in fondo alle Impostazioni (non invasiva)
+	var lbl_ver := Label.new()
+	lbl_ver.text = "Build " + Global.GAME_VERSION
+	lbl_ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_ver.add_theme_font_size_override("font_size", 12)
+	lbl_ver.add_theme_color_override("font_color", Color(0.46, 0.54, 0.66, 0.65))
+	vbox.add_child(lbl_ver)
 
 func _create_volume_row(label_text: String, cur_val: float, accent: Color, on_change: Callable) -> VBoxContainer:
 	var row_vbox := VBoxContainer.new()

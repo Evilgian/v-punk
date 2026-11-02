@@ -193,6 +193,57 @@ func get_equipped_item_in_slot(slot_type: String) -> Dictionary:
 
 	return {"id": target_id, "name": target_id.capitalize(), "slot": slot_type, "rarity": "COMMON"}
 
+func get_item_power_score(item: Dictionary) -> int:
+	var iid: String = str(item.get("id", ""))
+	if iid.is_empty():
+		return -1
+	var rar: String = str(item.get("rarity", "COMMON")).to_upper()
+	var rar_idx: int = maxi(0, RARITY_ORDER.find(rar))
+	var lvl: int = get_item_level(iid)
+	var base_tier: int = 10
+	match iid:
+		"plasma_cannon", "scythe": base_tier = 90
+		"katana", "laser_rifle", "nano_armor": base_tier = 60
+		"homing_wand", "smg", "shotgun", "drone_shield", "drone_laser": base_tier = 35
+		"ring_crit", "ring_speed", "kevlar": base_tier = 20
+	return rar_idx * 1000 + lvl * 25 + base_tier
+
+func can_improve_loadout() -> bool:
+	var slots := ["ARMA", "CORAZZA", "ANELLO 1", "ANELLO 2", "PET 1", "PET 2"]
+	for s in slots:
+		var cur_eq: Dictionary = get_equipped_item_in_slot(s)
+		var cur_score: int = get_item_power_score(cur_eq) if not cur_eq.is_empty() else -1
+		for item in inventory:
+			if int(item.get("count", 0)) <= 0 and not is_item_equipped(str(item.get("id", ""))):
+				continue
+			if str(item.get("slot", "")).to_upper() == s:
+				if get_item_power_score(item) > cur_score:
+					return true
+	return false
+
+func auto_equip_best() -> int:
+	var slots := ["ARMA", "CORAZZA", "ANELLO 1", "ANELLO 2", "PET 1", "PET 2"]
+	var changed: int = 0
+	for s in slots:
+		var cur_eq: Dictionary = get_equipped_item_in_slot(s)
+		var best_id: String = str(cur_eq.get("id", ""))
+		var best_score: int = get_item_power_score(cur_eq) if not best_id.is_empty() else -1
+		for item in inventory:
+			var iid: String = str(item.get("id", ""))
+			if iid.is_empty():
+				continue
+			if int(item.get("count", 0)) <= 0 and not is_item_equipped(iid):
+				continue
+			if str(item.get("slot", "")).to_upper() == s:
+				var sc: int = get_item_power_score(item)
+				if sc > best_score:
+					best_score = sc
+					best_id = iid
+		if not best_id.is_empty() and best_id != str(cur_eq.get("id", "")):
+			equip_item(best_id, s)
+			changed += 1
+	return changed
+
 ## Controlla se esiste un gruppo di 3 oggetti identici per la fusione
 func get_fusible_items() -> Array:
 	var fusible: Array = []

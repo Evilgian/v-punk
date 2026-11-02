@@ -169,88 +169,112 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 14
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 14
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
 
 [node name="MainVBox" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
-[node name="TopBar" type="HBoxContainer" parent="MarginContainer/MainVBox"]
-custom_minimum_size = Vector2(0, 48)
+[node name="TopHeaderBox" type="VBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
+theme_override_constants/separation = 6
 
-[node name="ProfileCard" type="PanelContainer" parent="MarginContainer/MainVBox/TopBar"]
+[node name="TopBar" type="HBoxContainer" parent="MarginContainer/MainVBox/TopHeaderBox"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ProfileCard" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
 
-[node name="Profile" type="HBoxContainer" parent="MarginContainer/MainVBox/TopBar/ProfileCard"]
+[node name="Profile" type="HBoxContainer" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar/ProfileCard"]
 layout_mode = 2
-theme_override_constants/separation = 6
-alignment = 1
+theme_override_constants/separation = 10
+alignment = 0
 
-[node name="Avatar" type="TextureRect" parent="MarginContainer/MainVBox/TopBar/ProfileCard/Profile"]
-custom_minimum_size = Vector2(32, 32)
+[node name="Avatar" type="TextureRect" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar/ProfileCard/Profile"]
+custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_vertical = 4
 texture = ExtResource("2_avatar_tex")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="LevelLabel" type="Label" parent="MarginContainer/MainVBox/TopBar/ProfileCard/Profile"]
+[node name="LevelLabel" type="Label" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar/ProfileCard/Profile"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 14
-text = "Lv. 1"
+theme_override_font_sizes/font_size = 18
+text = "Operativo • Lv. 1"
+text_overrun_behavior = 3
 
-[node name="BtnCheckinTop" type="Button" parent="MarginContainer/MainVBox/TopBar"]
-custom_minimum_size = Vector2(85, 36)
+[node name="BtnCheckinTop" type="Button" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
+custom_minimum_size = Vector2(126, 54)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 16
 text = "🎁 PREMI"
 
-[node name="CurrenciesCard" type="PanelContainer" parent="MarginContainer/MainVBox/TopBar"]
+[node name="BtnSettingsTop" type="Button" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
+custom_minimum_size = Vector2(58, 54)
 layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "⚙️"
+
+[node name="ResourceBar" type="HBoxContainer" parent="MarginContainer/MainVBox/TopHeaderBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PillScrolls" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
 
-[node name="Currencies" type="HBoxContainer" parent="MarginContainer/MainVBox/TopBar/CurrenciesCard"]
+[node name="EnergyLabel" type="Label" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar/PillScrolls"]
 layout_mode = 2
-theme_override_constants/separation = 10
-alignment = 2
-
-[node name="EnergyLabel" type="Label" parent="MarginContainer/MainVBox/TopBar/CurrenciesCard/Currencies"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.15, 0.9, 0.45, 1)
-theme_override_font_sizes/font_size = 14
-text = "⚡30/30"
-
-[node name="CoinsLabel" type="Label" parent="MarginContainer/MainVBox/TopBar/CurrenciesCard/Currencies"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 14
-text = "🪙 1,250"
-
-[node name="GemsLabel" type="Label" parent="MarginContainer/MainVBox/TopBar/CurrenciesCard/Currencies"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 14
-text = "💎 200"
-
-[node name="Header" type="VBoxContainer" parent="MarginContainer/MainVBox"]
-custom_minimum_size = Vector2(0, 32)
-layout_mode = 2
-
-[node name="TitleLabel" type="Label" parent="MarginContainer/MainVBox/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 22
-text = "⚡ V-PUNK: ROGUE PROTOCOL ⚡"
+theme_override_colors/font_color = Color(0.15, 0.95, 0.55, 1)
+theme_override_font_sizes/font_size = 17
+text = "⚙️ Nuclei: 0"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PillCoins" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
+
+[node name="CoinsLabel" type="Label" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar/PillCoins"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.1, 1)
+theme_override_font_sizes/font_size = 17
+text = "🪙 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PillGems" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
+
+[node name="GemsLabel" type="Label" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar/PillGems"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0.94, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "💎 0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="CentralContainer" type="PanelContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
@@ -259,33 +283,34 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_central")
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainVBox/CentralContainer"]
 layout_mode = 2
+horizontal_scroll_mode = 0
 
 [node name="ContentVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
+theme_override_constants/separation = 12
 
 [node name="SectionTitle" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 17
-text = "CAMPAGNA PRINCIPALE"
+theme_override_font_sizes/font_size = 20
+text = "SETTORE OPERATIVO"
 horizontal_alignment = 1
 
 [node name="HomeView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="WorldCard" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView"]
-custom_minimum_size = Vector2(0, 520)
+custom_minimum_size = Vector2(0, 440)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 alignment = 1
 
 [node name="PreviewHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
@@ -294,140 +319,143 @@ theme_override_constants/separation = 10
 alignment = 1
 
 [node name="BtnPrevWorld" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(54, 150)
+custom_minimum_size = Vector2(58, 165)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 28
 text = "◀"
 
 [node name="PreviewIcon" type="TextureButton" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(510, 220)
+custom_minimum_size = Vector2(496, 204)
 layout_mode = 2
 texture_normal = ExtResource("3_world_preview")
 ignore_texture_size = true
 stretch_mode = 5
 
 [node name="BtnNextWorld" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(54, 150)
+custom_minimum_size = Vector2(58, 165)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 28
 text = "▶"
 
 [node name="WorldName" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 26
 text = "Cyber-Sector 01"
 horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="WorldInfo" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 text = "Stanze: 10 | HP Nemici: x1.0"
 horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="WorldDesc" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 16
 text = "Settore industriale sotto controllo droni."
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="BtnPlayHome" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
-custom_minimum_size = Vector2(480, 66)
+custom_minimum_size = Vector2(530, 72)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
-text = "⚡ AVVIA MISSIONE (⚡5) ⚡"
+text = "⚡ GIOCA ORA ⚡"
 
 [node name="EquippedSummaryCard" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView"]
-custom_minimum_size = Vector2(0, 340)
+custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_summary_card")
 
 [node name="EquippedSummaryLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/EquippedSummaryCard"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 14
-text = "EQUIPAGGIATO: Pistola Base | Armatura: Kevlar"
+theme_override_font_sizes/font_size = 16
+text = "EQUIPAGGIATO: Pistola Base"
 horizontal_alignment = 1
 vertical_alignment = 0
 
 [node name="InventoryView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 14
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
 
 [node name="HeroSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
-custom_minimum_size = Vector2(0, 360)
+custom_minimum_size = Vector2(0, 380)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hero_panel")
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 alignment = 1
 
 [node name="HeroGrid" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="LeftSlots" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="SlotWeapon" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots"]
-custom_minimum_size = Vector2(180, 86)
+custom_minimum_size = Vector2(204, 92)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
 [node name="Lbl" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots/SlotWeapon"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "ARMA"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotRing1" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots"]
-custom_minimum_size = Vector2(180, 86)
+custom_minimum_size = Vector2(204, 92)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
 [node name="Lbl" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots/SlotRing1"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "ANELLO 1"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotPet1" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots"]
-custom_minimum_size = Vector2(180, 86)
+custom_minimum_size = Vector2(204, 92)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
 [node name="Lbl" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots/SlotPet1"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "PET 1"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="HeroPodium" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid"]
-custom_minimum_size = Vector2(220, 260)
+custom_minimum_size = Vector2(198, 252)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_podium")
 
 [node name="HeroCenter" type="TextureRect" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/HeroPodium"]
-custom_minimum_size = Vector2(190, 220)
+custom_minimum_size = Vector2(180, 215)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -437,103 +465,104 @@ stretch_mode = 5
 
 [node name="RightSlots" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="SlotArmor" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots"]
-custom_minimum_size = Vector2(180, 86)
+custom_minimum_size = Vector2(204, 92)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
 [node name="Lbl" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots/SlotArmor"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "CORAZZA"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotRing2" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots"]
-custom_minimum_size = Vector2(180, 86)
+custom_minimum_size = Vector2(204, 92)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
 [node name="Lbl" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots/SlotRing2"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "ANELLO 2"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotPet2" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots"]
-custom_minimum_size = Vector2(180, 86)
+custom_minimum_size = Vector2(204, 92)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
 [node name="Lbl" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots/SlotPet2"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 14
 text = "PET 2"
 horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="StatsBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 18
 alignment = 1
 
 [node name="AtkLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 text = "⚔️ ATK: 15"
 
 [node name="HpLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 text = "❤️ HP: 150"
 
 [node name="CritLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.2, 1, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 text = "🎯 CRIT: 10%"
 
 [node name="SpeedLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 text = "⚡ VEL: 330"
 
 [node name="ForgeSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
-custom_minimum_size = Vector2(0, 125)
+custom_minimum_size = Vector2(0, 140)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/ForgeSection"]
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="Title" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/ForgeSection/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 17
+theme_override_font_sizes/font_size = 19
 text = "🔨 FUCINA RIPPERDOC: FUSIONE 3-IN-1"
 horizontal_alignment = 1
 
 [node name="MergeStatusLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/ForgeSection/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.92, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 15
 text = "Possiedi 3 oggetti identici per fondere."
 horizontal_alignment = 1
+autowrap_mode = 2
 
 [node name="BtnMergeAll" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/ForgeSection/VBox"]
-custom_minimum_size = Vector2(280, 46)
+custom_minimum_size = Vector2(340, 52)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
@@ -542,23 +571,26 @@ text = "⚡ FONDI TUTTI 3-IN-1 ⚡"
 [node name="InventoryTitle" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 17
-text = "ARSENALE & IMPIANTI POSSEDUTI (CLICCA PER EQUIPAGGIARE)"
+theme_override_font_sizes/font_size = 18
+text = "🎒 DOTAZIONE POSSEDUTA (1 TOCCO PER EQUIPAGGIARE)"
 horizontal_alignment = 1
 
 [node name="InventoryGrid" type="GridContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 12
-columns = 3
+columns = 2
 
 [node name="UpgradesView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 16
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
 
 [node name="TalentGrid" type="GridContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/UpgradesView"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 columns = 2
@@ -566,53 +598,60 @@ columns = 2
 [node name="QuestsView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="QuestsSubNav" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/QuestsView"]
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="BtnQuestDaily" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/QuestsView/QuestsSubNav"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 15
 text = "GIORNALIERE"
 
 [node name="BtnQuestWeekly" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/QuestsView/QuestsSubNav"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 15
 text = "SETTIMANALI"
 
 [node name="BtnQuestMonthly" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/QuestsView/QuestsSubNav"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 15
 text = "MENSILI"
 
 [node name="QuestsContainer" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/QuestsView"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="CheckinView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 visible = false
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 16
 
 [node name="CheckinGrid" type="GridContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/CheckinView"]
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
-columns = 4
+columns = 3
 
 [node name="BtnClaimCheckin" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/CheckinView"]
-custom_minimum_size = Vector2(250, 50)
+custom_minimum_size = Vector2(360, 58)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 19
 theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
@@ -621,7 +660,8 @@ text = "RISCATTA OGGI"
 [node name="ShopView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 18
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
 
 [node name="CratesSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 custom_minimum_size = Vector2(0, 320)
@@ -637,28 +677,28 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 20
-text = "🎁 FORZIERI CYBER-ARMERIA (3D LOOT CRATES)"
+text = "🎁 FORZIERI CYBER-ARMERIA"
 horizontal_alignment = 1
 
 [node name="HBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 18
 alignment = 1
 
 [node name="BtnBuyNormalCrate" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox/HBox"]
-custom_minimum_size = Vector2(280, 230)
+custom_minimum_size = Vector2(290, 235)
 layout_mode = 2
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 16
 text = "\n\n\n\n\nCASSA MILITECH\nArmi & Corazze Rare\n[ 100 💎 ]"
 
 [node name="BtnBuyEpicCrate" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox/HBox"]
-custom_minimum_size = Vector2(280, 230)
+custom_minimum_size = Vector2(290, 235)
 layout_mode = 2
-theme_override_font_sizes/font_size = 15
-text = "\n\n\n\n\nCASSA ARASAKA OVERLORD\nKatana / Falce / Cannone Plasma\n[ 300 💎 ]"
+theme_override_font_sizes/font_size = 16
+text = "\n\n\n\n\nCASSA ARASAKA OVERLORD\nKatana / Falce / Plasma\n[ 300 💎 ]"
 
 [node name="FreeAdsSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
-custom_minimum_size = Vector2(0, 185)
+custom_minimum_size = Vector2(0, 175)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
@@ -676,22 +716,22 @@ horizontal_alignment = 1
 
 [node name="AdHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 20
 alignment = 1
 
 [node name="AdCountLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox/AdHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 text = "Rimasti oggi: 3 / 3"
 
 [node name="BtnWatchAd" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox/AdHBox"]
-custom_minimum_size = Vector2(260, 56)
+custom_minimum_size = Vector2(270, 56)
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 text = "▶ SINCRONIZZA (+20 💎)"
 
 [node name="IapSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
-custom_minimum_size = Vector2(0, 260)
+custom_minimum_size = Vector2(0, 250)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
@@ -704,42 +744,42 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 19
-text = "💳 BANCA CORPORATIVA: RICARICA CREDITI GEMME"
+text = "💳 BANCA CORPORATIVA: CREDITI GEMME"
 horizontal_alignment = 1
 
 [node name="IapHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="BtnIap1" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox/IapHBox"]
-custom_minimum_size = Vector2(185, 140)
+custom_minimum_size = Vector2(198, 146)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "💎 100 GEMME\nPacchetto Recluta\n[ $0.99 ]"
+text = "💎 100 GEMME\nRecluta\n[ $0.99 ]"
 
 [node name="BtnIap2" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox/IapHBox"]
-custom_minimum_size = Vector2(185, 140)
+custom_minimum_size = Vector2(198, 146)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "💎 500 GEMME\nCassa Mercenario\n[ $4.99 ]"
+text = "💎 500 GEMME\nMercenario\n[ $4.99 ]"
 
 [node name="BtnIap3" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox/IapHBox"]
-custom_minimum_size = Vector2(185, 140)
+custom_minimum_size = Vector2(198, 146)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "💎 1200 GEMME\nForziere Night City\n[ $9.99 ]"
+text = "💎 1200 GEMME\nNight City\n[ $9.99 ]"
 
 [node name="ShopResultLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 
 [node name="FooterNavBar" type="HBoxContainer" parent="MarginContainer/MainVBox"]
-custom_minimum_size = Vector2(0, 68)
+custom_minimum_size = Vector2(0, 82)
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 alignment = 1
 
 [node name="BtnNavShop" type="PanelContainer" parent="MarginContainer/MainVBox/FooterNavBar"]
@@ -751,8 +791,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnNavShop"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 11
-text = "NEGOZIO"
+theme_override_font_sizes/font_size = 15
+text = "🛒
+NEGOZIO"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -765,8 +806,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnNavEquip"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 11
-text = "EQUIP"
+theme_override_font_sizes/font_size = 15
+text = "🎒
+EQUIP"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -780,8 +822,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 12
-text = "CAMPAGNA"
+theme_override_font_sizes/font_size = 16
+text = "⚔️
+GIOCA"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -794,8 +837,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnUpgrades"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 11
-text = "TALENTI"
+theme_override_font_sizes/font_size = 15
+text = "🧬
+TALENTI"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -808,7 +852,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnNavQuests"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 11
-text = "MISSIONI"
+theme_override_font_sizes/font_size = 15
+text = "🎯
+MISSIONI"
 horizontal_alignment = 1
 vertical_alignment = 1

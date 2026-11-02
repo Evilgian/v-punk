@@ -32,6 +32,7 @@ var has_pet_shield: bool = false
 var pet_shoot_timer: float = 0.0
 var anim_t: float = 0.0
 var aim_angle: float = -PI * 0.5
+var target_aim_angle: float = -PI * 0.5
 
 var is_shooting: bool = false
 var shoot_timer: Timer
@@ -119,7 +120,7 @@ func add_extra_projectiles(amt: int = 1) -> void:
 	extra_projectiles += amt
 	print("🔥 Stacking Abilità: extra_projectiles = ", extra_projectiles)
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	var move_dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var x := 0.0
 	var y := 0.0
@@ -157,12 +158,17 @@ func _physics_process(_delta: float) -> void:
 
 	is_shooting = (velocity.length() < 10.0)
 
-	if velocity.length() > 10.0:
-		aim_angle = velocity.angle()
-	elif is_shooting:
-		var closest := get_closest_enemy()
-		if closest:
-			aim_angle = (closest.global_position - global_position).angle()
+	# L'eroe mantiene SEMPRE lo sguardo e l'arma puntati verso il nemico più vicino
+	# (sia mentre spara da fermo, sia mentre corre o schiva!), e a stanza pulita guarda il Portale a Nord.
+	var closest := get_closest_enemy()
+	if closest:
+		target_aim_angle = (closest.global_position - global_position).angle()
+	elif velocity.length() > 10.0:
+		target_aim_angle = velocity.angle()
+	else:
+		target_aim_angle = -PI * 0.5
+
+	aim_angle = lerp_angle(aim_angle, target_aim_angle, minf(1.0, delta * 18.0))
 
 func _process(delta: float) -> void:
 	anim_t += delta
@@ -189,8 +195,10 @@ func _process(delta: float) -> void:
 		active_cam.offset = Vector2.ZERO
 
 func _draw() -> void:
-	# Modello Procedurale Cyber-Ronin Exo-Suit + Arma Equipaggiata
-	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, velocity.length() > 10.0, is_shooting, aim_angle)
+	# Modello 3D Articolato Cyber-Ronin Exo-Suit + Locomozione e Mira Continua sui Nemici
+	var norm_vel: Vector2 = velocity / maxf(1.0, speed * speed_modifier)
+	var firing_active: bool = is_shooting and (get_closest_enemy() != null)
+	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, velocity.length() > 10.0, firing_active, aim_angle, norm_vel)
 
 	# Droni Compagni Orbitanti (Pet 1 & Pet 2) in Prospettiva Ellittica 2.5D + Ombra a Terra
 	if has_pet_laser:
