@@ -150,9 +150,10 @@ func _physics_process(_delta: float) -> void:
 	velocity = move_dir * speed * speed_modifier
 	move_and_slide()
 
-	# Clamp Eroe tassativo dentro i confini visibili dello schermo 720x1280
-	global_position.x = clamp(global_position.x, 32.0, 688.0)
-	global_position.y = clamp(global_position.y, 40.0, 1240.0)
+	# Clamp Eroe tassativo dentro i confini 3D del ponte (con accesso alla nicchia Stargate in alto)
+	global_position.x = clampf(global_position.x, 54.0, 666.0)
+	var min_y_bound: float = 96.0 if (global_position.x >= 290.0 and global_position.x <= 430.0) else 122.0
+	global_position.y = clampf(global_position.y, min_y_bound, 1232.0)
 
 	is_shooting = (velocity.length() < 10.0)
 
@@ -191,9 +192,11 @@ func _draw() -> void:
 	# Modello Procedurale Cyber-Ronin Exo-Suit + Arma Equipaggiata
 	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, velocity.length() > 10.0, is_shooting, aim_angle)
 
-	# Droni Compagni Orbitanti (Pet 1 & Pet 2) con Modelli 3D-Shaded
+	# Droni Compagni Orbitanti (Pet 1 & Pet 2) in Prospettiva Ellittica 2.5D + Ombra a Terra
 	if has_pet_laser:
-		var p1 := Vector2.RIGHT.rotated(anim_t * 2.5) * 42.0
+		var ang1: float = anim_t * 2.5
+		var p1 := Vector2(cos(ang1) * 48.0, -18.0 + sin(ang1) * 22.0)
+		CyberModels.draw_ground_shadow(self, Vector2(p1.x, p1.y + 34.0), 9.0, 0.38)
 		var dt1 := CyberTheme.get_model_texture("res://assets/cyber_models/drone_laser.png")
 		if dt1:
 			draw_texture_rect(dt1, Rect2(p1 - Vector2(16, 16), Vector2(32, 32)), false)
@@ -202,14 +205,18 @@ func _draw() -> void:
 			draw_circle(p1, 4.5, Color(0.0, 0.95, 1.0, 0.95))
 
 	if has_pet_shield:
-		var p2 := Vector2.RIGHT.rotated(-anim_t * 2.0 + PI) * 42.0
+		var ang2: float = -anim_t * 2.0 + PI
+		var p2 := Vector2(cos(ang2) * 48.0, -18.0 + sin(ang2) * 22.0)
+		CyberModels.draw_ground_shadow(self, Vector2(p2.x, p2.y + 34.0), 9.0, 0.38)
 		var dt2 := CyberTheme.get_model_texture("res://assets/cyber_models/drone_shield.png")
 		if dt2:
 			draw_texture_rect(dt2, Rect2(p2 - Vector2(16, 16), Vector2(32, 32)), false)
 		else:
 			draw_circle(p2, 9.0, Color(0.75, 0.25, 1.0, 0.25))
 			draw_circle(p2, 4.5, Color(0.85, 0.35, 1.0, 0.95))
-		draw_arc(Vector2.ZERO, 32.0, -anim_t * 2.0 + PI - 0.5, -anim_t * 2.0 + PI + 0.5, 16, Color(0.75, 0.3, 1.0, 0.65), 2.5)
+		draw_set_transform(Vector2(0, 14), 0.0, Vector2(1.0, 0.44))
+		draw_arc(Vector2.ZERO, 36.0, ang2 - 0.6, ang2 + 0.6, 16, Color(0.75, 0.3, 1.0, 0.70), 2.5)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func apply_shake(intensity: float = 8.0) -> void:
 	if not Global.screen_shake_enabled:

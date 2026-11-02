@@ -11,15 +11,15 @@ func _init_database() -> void:
 	worlds.clear()
 	world_order.clear()
 
-	# Mondo 1 - Foresta Bio-Cibernetica (20 Livelli: Santuario ogni 5, Boss a 10 e 20)
+	# Mondo 1 - Settore Tutorial Guidato: Foresta Bio-Cibernetica (10 Livelli: Guida Interattiva, Santuario al 5, Boss al 10)
 	var w1 := WorldData.new()
 	w1.id = "world_1"
-	w1.display_name = "Mondo 1: Foresta Bio-Cyber"
-	w1.total_rooms = 20
-	w1.enemy_hp_multiplier = 1.0
-	w1.enemy_dmg_multiplier = 1.0
-	w1.reward_multiplier = 1.0
-	w1.description = "Settore 01 (20 Livelli): Giungla bio-sintetica. Santuario ogni 5 livelli, Boss al 10 e 20."
+	w1.display_name = "Mondo 1: Foresta Bio-Cyber [Tutorial]"
+	w1.total_rooms = 10
+	w1.enemy_hp_multiplier = 0.90
+	w1.enemy_dmg_multiplier = 0.80
+	w1.reward_multiplier = 1.2
+	w1.description = "🎓 SETTORE ADDESTRAMENTO (10 Livelli): Impara movimento, fuoco automatico, coperture 3D, Santuario (Lv.5) e Boss Finale (Lv.10) per sbloccare il Mondo 2!"
 	w1.biome_color = Color(0.04, 0.14, 0.08, 1.0)
 	w1.accent_color = Color(0.2, 1.0, 0.55, 1.0)
 	w1.trap_type = "SPIKES"

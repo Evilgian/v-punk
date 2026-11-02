@@ -60,8 +60,8 @@ func _draw() -> void:
 
 	if hp < max_hp and max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-		draw_rect(Rect2(Vector2(-22, -38), Vector2(44, 5)), Color(0.08, 0.08, 0.12, 0.85), true)
-		draw_rect(Rect2(Vector2(-22, -38), Vector2(44.0 * ratio, 5)), Color(1.0, 0.55, 0.1, 0.95), true)
+		draw_rect(Rect2(Vector2(-22, -60), Vector2(44, 5)), Color(0.08, 0.08, 0.12, 0.85), true)
+		draw_rect(Rect2(Vector2(-22, -60), Vector2(44.0 * ratio, 5)), Color(1.0, 0.55, 0.1, 0.95), true)
 
 func _launch_parabolic_bomb() -> void:
 	if not is_instance_valid(player): return

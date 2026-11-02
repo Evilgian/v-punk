@@ -71,6 +71,18 @@ var btn_quest_monthly: Button = null
 enum ViewMode { HOME, INVENTORY, UPGRADES, QUESTS, CHECKIN, SHOP }
 var current_view: ViewMode = ViewMode.HOME
 var current_quest_tab: String = "DAILY"
+var current_equip_tab: String = "ARSENAL" # "ARSENAL", "UPGRADE", "MERGE"
+
+var equip_sub_nav: HBoxContainer = null
+var btn_equip_tab_arsenal: Button = null
+var btn_equip_tab_upgrade: Button = null
+var btn_equip_tab_merge: Button = null
+var hero_section_panel: Control = null
+var forge_section_panel: Control = null
+var inventory_title_lbl: Label = null
+var upgrade_workshop_box: VBoxContainer = null
+var merge_workshop_box: VBoxContainer = null
+var upgrade_feedback_msg: String = ""
 
 func _ready() -> void:
 	btn_nav_shop = find_child("BtnNavShop", true, false) as Control
@@ -152,9 +164,21 @@ func _ready() -> void:
 
 	if btn_claim_checkin: btn_claim_checkin.pressed.connect(_on_claim_checkin_pressed)
 
-	if btn_quest_daily: btn_quest_daily.pressed.connect(func(): _switch_quest_tab("DAILY"))
-	if btn_quest_weekly: btn_quest_weekly.pressed.connect(func(): _switch_quest_tab("WEEKLY"))
-	if btn_quest_monthly: btn_quest_monthly.pressed.connect(func(): _switch_quest_tab("MONTHLY"))
+	if btn_quest_daily:
+		btn_quest_daily.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_quest_daily.pressed.connect(func(): _switch_quest_tab("DAILY"))
+	if btn_quest_weekly:
+		btn_quest_weekly.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_quest_weekly.pressed.connect(func(): _switch_quest_tab("WEEKLY"))
+	if btn_quest_monthly:
+		btn_quest_monthly.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_quest_monthly.pressed.connect(func(): _switch_quest_tab("MONTHLY"))
+
+	_style_subnav_btn(btn_quest_daily, true)
+	_style_subnav_btn(btn_quest_weekly, false)
+	_style_subnav_btn(btn_quest_monthly, false)
+
+	_setup_equip_subtabs()
 
 	if btn_merge_all: btn_merge_all.pressed.connect(_on_merge_all_pressed)
 
@@ -575,14 +599,50 @@ func _rebuild_home_loadout_dashboard() -> void:
 
 	dash.add_child(hbox)
 
+	var quick_row := HBoxContainer.new()
+	quick_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	quick_row.add_theme_constant_override("separation", 8)
+
 	var btn_quick_equip := Button.new()
-	btn_quick_equip.custom_minimum_size = Vector2(460, 48)
-	btn_quick_equip.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	btn_quick_equip.text = "⚙️ GESTISCI ARSENALE 3D, CORAZZE & IMPIANTI (6 SLOT) ▶"
-	btn_quick_equip.add_theme_font_size_override("font_size", 15)
+	btn_quick_equip.custom_minimum_size = Vector2(204, 46)
+	btn_quick_equip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quick_equip.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	btn_quick_equip.text = "🎒 ARSENALE (6 SLOT)"
+	btn_quick_equip.add_theme_font_size_override("font_size", 13)
 	CyberTheme.style_button(btn_quick_equip, CyberTheme.COL_CYAN, false)
-	btn_quick_equip.pressed.connect(_on_nav_equip_pressed)
-	dash.add_child(btn_quick_equip)
+	btn_quick_equip.pressed.connect(func():
+		current_equip_tab = "ARSENAL"
+		_on_nav_equip_pressed()
+	)
+	quick_row.add_child(btn_quick_equip)
+
+	var btn_quick_upg := Button.new()
+	btn_quick_upg.custom_minimum_size = Vector2(204, 46)
+	btn_quick_upg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quick_upg.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	btn_quick_upg.text = "⬆️ POTENZIA LV."
+	btn_quick_upg.add_theme_font_size_override("font_size", 13)
+	CyberTheme.style_button(btn_quick_upg, CyberTheme.COL_YELLOW, false)
+	btn_quick_upg.pressed.connect(func():
+		current_equip_tab = "UPGRADE"
+		_on_nav_equip_pressed()
+	)
+	quick_row.add_child(btn_quick_upg)
+
+	var btn_quick_mrg := Button.new()
+	btn_quick_mrg.custom_minimum_size = Vector2(204, 46)
+	btn_quick_mrg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_quick_mrg.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	btn_quick_mrg.text = "🔨 FUSIONE 3-IN-1"
+	btn_quick_mrg.add_theme_font_size_override("font_size", 13)
+	CyberTheme.style_button(btn_quick_mrg, CyberTheme.COL_MAGENTA, false)
+	btn_quick_mrg.pressed.connect(func():
+		current_equip_tab = "MERGE"
+		_on_nav_equip_pressed()
+	)
+	quick_row.add_child(btn_quick_mrg)
+
+	dash.add_child(quick_row)
 
 	summary_card.add_child(dash)
 
@@ -691,7 +751,130 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 	)
 	slot_panel.add_child(model_ctrl)
 
+func _setup_equip_subtabs() -> void:
+	if not inventory_view:
+		return
+	hero_section_panel = inventory_view.get_node_or_null("HeroSection") as Control
+	forge_section_panel = inventory_view.get_node_or_null("ForgeSection") as Control
+	inventory_title_lbl = inventory_view.get_node_or_null("InventoryTitle") as Label
+
+	# Barra Sub-Tab Scheda EQUIP: 1. ARSENALE | 2. POTENZIA LV. | 3. FUSIONE RARITÀ
+	if not inventory_view.get_node_or_null("EquipSubNav"):
+		equip_sub_nav = HBoxContainer.new()
+		equip_sub_nav.name = "EquipSubNav"
+		equip_sub_nav.custom_minimum_size = Vector2(0, 46)
+		equip_sub_nav.add_theme_constant_override("separation", 8)
+		equip_sub_nav.alignment = BoxContainer.ALIGNMENT_CENTER
+
+		btn_equip_tab_arsenal = Button.new()
+		btn_equip_tab_arsenal.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn_equip_tab_arsenal.custom_minimum_size = Vector2(0, 44)
+		btn_equip_tab_arsenal.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_equip_tab_arsenal.text = "🎒 ARSENALE"
+		btn_equip_tab_arsenal.add_theme_font_size_override("font_size", 13)
+		btn_equip_tab_arsenal.pressed.connect(func(): _switch_equip_tab("ARSENAL"))
+		equip_sub_nav.add_child(btn_equip_tab_arsenal)
+
+		btn_equip_tab_upgrade = Button.new()
+		btn_equip_tab_upgrade.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn_equip_tab_upgrade.custom_minimum_size = Vector2(0, 44)
+		btn_equip_tab_upgrade.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_equip_tab_upgrade.text = "⬆️ POTENZIA LV."
+		btn_equip_tab_upgrade.add_theme_font_size_override("font_size", 13)
+		btn_equip_tab_upgrade.pressed.connect(func(): _switch_equip_tab("UPGRADE"))
+		equip_sub_nav.add_child(btn_equip_tab_upgrade)
+
+		btn_equip_tab_merge = Button.new()
+		btn_equip_tab_merge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn_equip_tab_merge.custom_minimum_size = Vector2(0, 44)
+		btn_equip_tab_merge.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_equip_tab_merge.text = "🔨 FUSIONE"
+		btn_equip_tab_merge.add_theme_font_size_override("font_size", 13)
+		btn_equip_tab_merge.pressed.connect(func(): _switch_equip_tab("MERGE"))
+		equip_sub_nav.add_child(btn_equip_tab_merge)
+
+		inventory_view.add_child(equip_sub_nav)
+		inventory_view.move_child(equip_sub_nav, 0)
+
+	if not inventory_view.get_node_or_null("UpgradeWorkshopBox"):
+		upgrade_workshop_box = VBoxContainer.new()
+		upgrade_workshop_box.name = "UpgradeWorkshopBox"
+		upgrade_workshop_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		upgrade_workshop_box.add_theme_constant_override("separation", 10)
+		upgrade_workshop_box.visible = false
+		inventory_view.add_child(upgrade_workshop_box)
+
+	if not inventory_view.get_node_or_null("MergeWorkshopBox"):
+		merge_workshop_box = VBoxContainer.new()
+		merge_workshop_box.name = "MergeWorkshopBox"
+		merge_workshop_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		merge_workshop_box.add_theme_constant_override("separation", 10)
+		merge_workshop_box.visible = false
+		inventory_view.add_child(merge_workshop_box)
+
+	# Rendi cliccabili anche i 6 Slot Attivi attorno all'Eroe per ispezionare/potenziare subito l'equip attivo
+	var active_slots := [
+		{"node": "SlotWeapon", "slot": "ARMA"},
+		{"node": "SlotArmor", "slot": "CORAZZA"},
+		{"node": "SlotRing1", "slot": "ANELLO 1"},
+		{"node": "SlotRing2", "slot": "ANELLO 2"},
+		{"node": "SlotPet1", "slot": "PET 1"},
+		{"node": "SlotPet2", "slot": "PET 2"}
+	]
+	for s_cfg in active_slots:
+		var sp := find_child(str(s_cfg["node"]), true, false) as Control
+		var stype := str(s_cfg["slot"])
+		if sp:
+			_connect_button(sp, func():
+				var im: Node = get_node_or_null("/root/InventoryManager")
+				if im and im.has_method("get_equipped_item_in_slot"):
+					var eq_d: Dictionary = im.get_equipped_item_in_slot(stype)
+					if not eq_d.is_empty() and not str(eq_d.get("id", "")).is_empty():
+						SoundFX.play_click()
+						_open_item_action_modal(eq_d)
+			)
+
+func _switch_equip_tab(tab_id: String) -> void:
+	SoundFX.play_click()
+	current_equip_tab = tab_id
+	upgrade_feedback_msg = ""
+	_populate_inventory()
+
 func _populate_inventory() -> void:
+	var im: Node = get_node_or_null("/root/InventoryManager")
+	var fusible: Array = []
+	if im and im.has_method("get_fusible_items"):
+		fusible = im.get_fusible_items()
+
+	# Aggiorna stile e badge delle 3 Sub-Tab EQUIP
+	if btn_equip_tab_arsenal:
+		CyberTheme.style_button(btn_equip_tab_arsenal, CyberTheme.COL_YELLOW if current_equip_tab == "ARSENAL" else CyberTheme.COL_CYAN, current_equip_tab == "ARSENAL")
+	if btn_equip_tab_upgrade:
+		btn_equip_tab_upgrade.text = "⬆️ POTENZIA LV. (⚙️" + str(Global.upgrade_scrolls) + ")"
+		CyberTheme.style_button(btn_equip_tab_upgrade, CyberTheme.COL_YELLOW if current_equip_tab == "UPGRADE" else CyberTheme.COL_CYAN, current_equip_tab == "UPGRADE")
+	if btn_equip_tab_merge:
+		btn_equip_tab_merge.text = ("🔨 FUSIONE 🔴(" + str(fusible.size()) + ")") if not fusible.is_empty() else "🔨 FUSIONE RARITÀ"
+		CyberTheme.style_button(btn_equip_tab_merge, CyberTheme.COL_YELLOW if current_equip_tab == "MERGE" else CyberTheme.COL_MAGENTA, current_equip_tab == "MERGE")
+
+	var show_arsenal: bool = (current_equip_tab == "ARSENAL")
+	var show_upgrade: bool = (current_equip_tab == "UPGRADE")
+	var show_merge: bool = (current_equip_tab == "MERGE")
+
+	if section_title and current_view == ViewMode.INVENTORY:
+		if show_arsenal:
+			section_title.text = "EQUIPAGGIAMENTO — ARSENALE EROE (6 SLOT)"
+		elif show_upgrade:
+			section_title.text = "OFFICINA — POTENZIAMENTO LIVELLI EQUIP"
+		else:
+			section_title.text = "FUCINA RIPPERDOC — FUSIONE RARITÀ 3-IN-1"
+
+	if hero_section_panel: hero_section_panel.visible = show_arsenal
+	if inventory_title_lbl: inventory_title_lbl.visible = show_arsenal
+	if inventory_grid: inventory_grid.visible = show_arsenal
+	if upgrade_workshop_box: upgrade_workshop_box.visible = show_upgrade
+	if forge_section_panel: forge_section_panel.visible = show_merge
+	if merge_workshop_box: merge_workshop_box.visible = show_merge
+
 	# Update 6 Active Slots visuals around hero
 	_update_active_slot_ui("SlotWeapon", "ARMA")
 	_update_active_slot_ui("SlotArmor", "CORAZZA")
@@ -706,7 +889,6 @@ func _populate_inventory() -> void:
 	var crit_bonus: int = int(tm.get_bonus_value("crit")) if (tm and tm.has_method("get_bonus_value")) else 0
 	var speed_bonus: int = int(tm.get_bonus_value("speed")) if (tm and tm.has_method("get_bonus_value")) else 0
 
-	var im: Node = get_node_or_null("/root/InventoryManager")
 	var wep_lvl: int = im.get_item_level(WeaponDB.equipped_weapon_id) if (im and im.has_method("get_item_level")) else 1
 	var arm_lvl: int = im.get_item_level(WeaponDB.equipped_armor_id) if (im and not WeaponDB.equipped_armor_id.is_empty() and im.has_method("get_item_level")) else 1
 
@@ -724,17 +906,15 @@ func _populate_inventory() -> void:
 	if hero_crit_label != null: hero_crit_label.text = "🎯 CRIT: " + str(total_crit) + "%"
 	if hero_speed_label != null: hero_speed_label.text = "⚡ VEL: " + str(total_speed) + " | ⚙️ " + str(Global.upgrade_scrolls)
 
-	var fusible: Array = []
-	if im and im.has_method("get_fusible_items"): fusible = im.get_fusible_items()
-
 	if merge_status_label:
+		merge_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		if not fusible.is_empty():
 			var f_item: Dictionary = fusible[0]
-			merge_status_label.text = "🔴 Fusione Disponibile! 3x " + str(f_item["name"]) + " (" + str(f_item["rarity"]) + ")"
+			merge_status_label.text = "🔴 FUSIONE PRONTA! Unisci 3 copie identiche per salire di rarità: COMUNE ➔ RARO ➔ EPICO ➔ LEGGENDARIO\nPronto ora: 3x " + str(f_item["name"]) + " (" + str(f_item["rarity"]) + ")"
 		else:
-			merge_status_label.text = "Tocca un oggetto per Equipaggiarlo o Potenziarne il Livello (⚙️ Nuclei: " + str(Global.upgrade_scrolls) + ")."
+			merge_status_label.text = "Unisci 3 copie dello stesso oggetto e rarità per evolverlo: COMUNE ➔ RARO ➔ EPICO ➔ LEGGENDARIO."
 
-	if inventory_grid:
+	if show_arsenal and inventory_grid:
 		for child in inventory_grid.get_children(): child.queue_free()
 
 		var items: Array = []
@@ -745,11 +925,329 @@ func _populate_inventory() -> void:
 			var is_eq: bool = im.is_item_equipped(item_id) if (im and im.has_method("is_item_equipped")) else false
 			var i_lvl: int = im.get_item_level(item_id) if (im and im.has_method("get_item_level")) else 1
 			var card := _create_gear_grid_card(item_id, str(item["name"]), str(item["slot"]), item.get("rarity", "COMMON"), is_eq, int(item.get("count", 1)), i_lvl)
+			card.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 			card.pressed.connect(func():
 				SoundFX.play_click()
 				_open_item_action_modal(item)
 			)
 			inventory_grid.add_child(card)
+	elif show_upgrade:
+		_populate_upgrade_workshop(im)
+	elif show_merge:
+		_populate_merge_workshop(im)
+
+func _populate_upgrade_workshop(im: Node) -> void:
+	if not upgrade_workshop_box:
+		return
+	for child in upgrade_workshop_box.get_children():
+		child.queue_free()
+
+	# Banner superiore con saldo risorse e istruzioni Officina
+	var hdr_card := PanelContainer.new()
+	hdr_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.08, 0.16, 0.96), CyberTheme.COL_CYAN, 0.03, 2, 8, 8))
+
+	var hdr_margin := MarginContainer.new()
+	hdr_margin.add_theme_constant_override("margin_left", 14)
+	hdr_margin.add_theme_constant_override("margin_right", 14)
+	hdr_margin.add_theme_constant_override("margin_top", 10)
+	hdr_margin.add_theme_constant_override("margin_bottom", 10)
+	hdr_card.add_child(hdr_margin)
+
+	var hdr_vbox := VBoxContainer.new()
+	hdr_vbox.add_theme_constant_override("separation", 6)
+	hdr_margin.add_child(hdr_vbox)
+
+	var res_lbl := Label.new()
+	res_lbl.text = "⚙️ OFFICINA LIVELLI  —  🪙 Monete: " + str(Global.total_coins) + "   |   ⚙️ Nuclei: " + str(Global.upgrade_scrolls)
+	res_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	res_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	res_lbl.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(res_lbl, CyberTheme.COL_YELLOW, 3)
+	hdr_vbox.add_child(res_lbl)
+
+	var info_lbl := Label.new()
+	info_lbl.text = "Aumenta direttamente il livello di Armi, Corazze, Anelli e Droni per potenziare le statistiche permanenti. Ottieni ⚙️ Nuclei sconfiggendo nemici, aprendo Casse Rifornimento e battendo i Boss!"
+	info_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info_lbl.add_theme_font_size_override("font_size", 12)
+	CyberTheme.style_label(info_lbl, Color(0.86, 0.94, 1.0, 1.0), 2)
+	hdr_vbox.add_child(info_lbl)
+
+	if not upgrade_feedback_msg.is_empty():
+		var fb_lbl := Label.new()
+		fb_lbl.text = upgrade_feedback_msg
+		fb_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		fb_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		fb_lbl.add_theme_font_size_override("font_size", 13)
+		CyberTheme.style_label(fb_lbl, CyberTheme.COL_GREEN if "COMPLETATO" in upgrade_feedback_msg else CyberTheme.COL_MAGENTA, 3)
+		hdr_vbox.add_child(fb_lbl)
+
+	upgrade_workshop_box.add_child(hdr_card)
+
+	if not im or not ("inventory" in im):
+		return
+
+	# Raggruppa per item_id (mantenendo la rarità più alta posseduta) e mostra gli equipaggiati in cima
+	var unique_map: Dictionary = {}
+	var rar_rank := {"COMMON": 0, "RARE": 1, "EPIC": 2, "LEGENDARY": 3}
+	for raw_item in im.inventory:
+		if int(raw_item.get("count", 0)) <= 0 and not im.is_item_equipped(str(raw_item.get("id", ""))):
+			continue
+		var iid: String = str(raw_item.get("id", ""))
+		if iid.is_empty():
+			continue
+		var cur_rar: String = str(raw_item.get("rarity", "COMMON")).to_upper()
+		if not unique_map.has(iid) or int(rar_rank.get(cur_rar, 0)) > int(rar_rank.get(str(unique_map[iid].get("rarity", "COMMON")).to_upper(), 0)):
+			unique_map[iid] = raw_item
+
+	var sorted_items: Array = []
+	for k in unique_map.keys():
+		if im.is_item_equipped(str(k)):
+			sorted_items.append(unique_map[k])
+	for k in unique_map.keys():
+		if not im.is_item_equipped(str(k)):
+			sorted_items.append(unique_map[k])
+
+	for u_item in sorted_items:
+		var item_id: String = str(u_item.get("id", ""))
+		var item_name: String = str(u_item.get("name", item_id))
+		var slot_name: String = str(u_item.get("slot", "ARMA"))
+		var rar_str: String = str(u_item.get("rarity", "COMMON"))
+		var rar_col := _get_rarity_color(rar_str)
+		var is_eq: bool = im.is_item_equipped(item_id)
+		var cur_lvl: int = im.get_item_level(item_id)
+		var coin_cost: int = im.get_upgrade_coin_cost(item_id)
+		var scroll_cost: int = im.get_upgrade_scroll_cost(item_id)
+		var can_afford: bool = (Global.total_coins >= coin_cost and Global.upgrade_scrolls >= scroll_cost)
+		var stat_desc: String = im.get_item_stat_description(item_id, slot_name)
+
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var b_col := CyberTheme.COL_YELLOW if is_eq else rar_col
+		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), b_col, 0.04, 2, 6, 8 if is_eq else 3))
+
+		var m_box := MarginContainer.new()
+		m_box.add_theme_constant_override("margin_left", 10)
+		m_box.add_theme_constant_override("margin_right", 10)
+		m_box.add_theme_constant_override("margin_top", 8)
+		m_box.add_theme_constant_override("margin_bottom", 8)
+		card.add_child(m_box)
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		m_box.add_child(row)
+
+		var icon_ctrl := Control.new()
+		icon_ctrl.custom_minimum_size = Vector2(68, 68)
+		icon_ctrl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		icon_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_ctrl.draw.connect(func():
+			CyberTheme.draw_item_icon(icon_ctrl, Vector2(34, 34), item_id, slot_name, b_col, 62.0)
+		)
+		row.add_child(icon_ctrl)
+
+		var mid_v := VBoxContainer.new()
+		mid_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		mid_v.add_theme_constant_override("separation", 3)
+		row.add_child(mid_v)
+
+		var l_title := Label.new()
+		l_title.text = ("⚡ [EQUIP] " if is_eq else "") + item_name + " (" + rar_str + ")"
+		l_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l_title.add_theme_font_size_override("font_size", 15)
+		CyberTheme.style_label(l_title, CyberTheme.COL_YELLOW if is_eq else Color.WHITE, 3)
+		mid_v.add_child(l_title)
+
+		var l_lvl := Label.new()
+		l_lvl.text = slot_name + "  •  Livello: Lv. " + str(cur_lvl) + "  ➔  Lv. " + str(cur_lvl + 1)
+		l_lvl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l_lvl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l_lvl.add_theme_font_size_override("font_size", 13)
+		CyberTheme.style_label(l_lvl, CyberTheme.COL_CYAN, 2)
+		mid_v.add_child(l_lvl)
+
+		var l_stat := Label.new()
+		l_stat.text = stat_desc
+		l_stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l_stat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l_stat.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_label(l_stat, Color(0.84, 0.94, 0.90, 1.0), 2)
+		mid_v.add_child(l_stat)
+
+		var right_v := VBoxContainer.new()
+		right_v.custom_minimum_size = Vector2(128, 0)
+		right_v.alignment = BoxContainer.ALIGNMENT_CENTER
+		right_v.add_theme_constant_override("separation", 5)
+		row.add_child(right_v)
+
+		var cost_lbl := Label.new()
+		cost_lbl.text = "🪙 " + str(coin_cost) + " • ⚙️ " + str(scroll_cost)
+		cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cost_lbl.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_label(cost_lbl, CyberTheme.COL_GREEN if can_afford else Color(1.0, 0.45, 0.55, 1.0), 2)
+		right_v.add_child(cost_lbl)
+
+		var btn_up := Button.new()
+		btn_up.custom_minimum_size = Vector2(128, 42)
+		btn_up.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_up.text = "⬆️ POTENZIA" if can_afford else "RISORSE INSUFF."
+		btn_up.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_button(btn_up, CyberTheme.COL_YELLOW if can_afford else CyberTheme.COL_CYAN, can_afford)
+		btn_up.pressed.connect(func():
+			var res: Dictionary = im.upgrade_item_level(item_id)
+			upgrade_feedback_msg = str(res.get("message", ""))
+			if res.get("success", false):
+				SoundFX.play_pickup()
+				_update_top_bar()
+				_populate_inventory()
+			else:
+				SoundFX.play_hit()
+				_populate_inventory()
+		)
+		right_v.add_child(btn_up)
+
+		upgrade_workshop_box.add_child(card)
+
+func _populate_merge_workshop(im: Node) -> void:
+	if not merge_workshop_box:
+		return
+	for child in merge_workshop_box.get_children():
+		child.queue_free()
+
+	if not im or not ("inventory" in im):
+		return
+
+	# Ordina gli stack mettendo in cima quelli pronti alla fusione (count >= 3 e non LEGENDARY)
+	var ready_stacks: Array = []
+	var partial_stacks: Array = []
+	for st in im.inventory:
+		var cnt: int = int(st.get("count", 0))
+		if cnt <= 0:
+			continue
+		var r_str: String = str(st.get("rarity", "COMMON")).to_upper()
+		if cnt >= 3 and r_str != "LEGENDARY":
+			ready_stacks.append(st)
+		else:
+			partial_stacks.append(st)
+
+	var all_stacks: Array = []
+	all_stacks.append_array(ready_stacks)
+	all_stacks.append_array(partial_stacks)
+
+	for st_item in all_stacks:
+		var item_id: String = str(st_item.get("id", ""))
+		var item_name: String = str(st_item.get("name", item_id))
+		var slot_name: String = str(st_item.get("slot", "ARMA"))
+		var rar_str: String = str(st_item.get("rarity", "COMMON")).to_upper()
+		var cnt: int = int(st_item.get("count", 1))
+		var is_max_rar: bool = (rar_str == "LEGENDARY")
+		var next_rar: String = im.get_next_rarity(rar_str) if im.has_method("get_next_rarity") else rar_str
+		var is_ready: bool = (cnt >= 3 and not is_max_rar)
+		var rar_col := _get_rarity_color(rar_str)
+		var next_col := _get_rarity_color(next_rar)
+
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var b_col := CyberTheme.COL_YELLOW if is_ready else rar_col
+		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), b_col, 0.04, 2, 6, 10 if is_ready else 2))
+
+		var m_box := MarginContainer.new()
+		m_box.add_theme_constant_override("margin_left", 10)
+		m_box.add_theme_constant_override("margin_right", 10)
+		m_box.add_theme_constant_override("margin_top", 8)
+		m_box.add_theme_constant_override("margin_bottom", 8)
+		card.add_child(m_box)
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		m_box.add_child(row)
+
+		var icon_ctrl := Control.new()
+		icon_ctrl.custom_minimum_size = Vector2(68, 68)
+		icon_ctrl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		icon_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_ctrl.draw.connect(func():
+			CyberTheme.draw_item_icon(icon_ctrl, Vector2(34, 34), item_id, slot_name, b_col, 62.0)
+		)
+		row.add_child(icon_ctrl)
+
+		var mid_v := VBoxContainer.new()
+		mid_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		mid_v.add_theme_constant_override("separation", 4)
+		row.add_child(mid_v)
+
+		var l_title := Label.new()
+		l_title.text = item_name + "  [" + slot_name + "]"
+		l_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l_title.add_theme_font_size_override("font_size", 15)
+		CyberTheme.style_label(l_title, Color.WHITE, 3)
+		mid_v.add_child(l_title)
+
+		var l_evo := Label.new()
+		l_evo.text = "🌟 RARITÀ MASSIMA (LEGGENDARIO)" if is_max_rar else ("Evoluzione: " + rar_str + "  ➔  " + next_rar)
+		l_evo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		l_evo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l_evo.add_theme_font_size_override("font_size", 13)
+		CyberTheme.style_label(l_evo, next_col, 2)
+		mid_v.add_child(l_evo)
+
+		var pbar := ProgressBar.new()
+		pbar.custom_minimum_size = Vector2(0, 16)
+		pbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pbar.max_value = 3
+		pbar.value = 3 if is_max_rar else mini(cnt, 3)
+		pbar.show_percentage = false
+		var sb_bg := CyberTheme.make_cyber_box(Color(0.03, 0.04, 0.09, 0.95), Color(0.25, 0.35, 0.50, 0.7), 0.08, 1, 3, 0)
+		var sb_fill := StyleBoxFlat.new()
+		sb_fill.bg_color = CyberTheme.COL_GREEN if is_ready else rar_col
+		sb_fill.skew = Vector2(0.08, 0.0)
+		pbar.add_theme_stylebox_override("background", sb_bg)
+		pbar.add_theme_stylebox_override("fill", sb_fill)
+		mid_v.add_child(pbar)
+
+		var right_v := VBoxContainer.new()
+		right_v.custom_minimum_size = Vector2(124, 0)
+		right_v.alignment = BoxContainer.ALIGNMENT_CENTER
+		right_v.add_theme_constant_override("separation", 4)
+		row.add_child(right_v)
+
+		var cnt_lbl := Label.new()
+		cnt_lbl.text = ("Copie: " + str(cnt)) if is_max_rar else ("Copie: " + str(cnt) + " / 3")
+		cnt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cnt_lbl.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_label(cnt_lbl, CyberTheme.COL_YELLOW if is_ready else Color(0.82, 0.88, 0.96, 1.0), 2)
+		right_v.add_child(cnt_lbl)
+
+		var btn_mrg := Button.new()
+		btn_mrg.custom_minimum_size = Vector2(124, 42)
+		btn_mrg.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_mrg.disabled = not is_ready
+		if is_max_rar:
+			btn_mrg.text = "MAX RARITÀ"
+		elif is_ready:
+			btn_mrg.text = "⚡ FONDI 3-IN-1"
+		else:
+			btn_mrg.text = "MANCANO " + str(3 - cnt)
+		btn_mrg.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_button(btn_mrg, CyberTheme.COL_YELLOW if is_ready else CyberTheme.COL_MAGENTA, is_ready)
+		btn_mrg.pressed.connect(func():
+			var res: Dictionary = im.merge_items(item_id, rar_str)
+			if res.get("success", false):
+				SoundFX.play_win()
+				_trigger_rewards_popup("🔨", "FUSIONE COMPLETATA!", item_name + " ➔ " + next_rar)
+				_update_top_bar()
+				_populate_inventory()
+			else:
+				SoundFX.play_hit()
+		)
+		right_v.add_child(btn_mrg)
+
+		merge_workshop_box.add_child(card)
 
 func _create_gear_grid_card(item_id: String, item_name: String, slot_name: String, rarity_val: Variant, is_eq: bool, count: int = 1, item_lvl: int = 1) -> Button:
 	var btn := Button.new()
@@ -1070,10 +1568,11 @@ func _switch_quest_tab(tab_name: String) -> void:
 
 func _style_subnav_btn(btn: Button, is_active: bool) -> void:
 	if not btn: return
-	btn.add_theme_color_override("font_color", Color(0, 0.94, 1, 1) if is_active else Color(0.6, 0.6, 0.6, 1))
+	CyberTheme.style_button(btn, CyberTheme.COL_YELLOW if is_active else CyberTheme.COL_CYAN, is_active)
 
 func _populate_quests() -> void:
 	if not quests_container: return
+	quests_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for child in quests_container.get_children(): child.queue_free()
 
 	var rm: Node = get_node_or_null("/root/RewardManager")
@@ -1098,87 +1597,127 @@ func _populate_quests() -> void:
 			"checkin_day": current_val = Global.checkin_day
 			_: current_val = int(q.get("current_amt", q.get("current_amount", q.get("progress", 0))))
 
-		var max_val: int = int(q.get("target_amt", q.get("target_amount", q.get("target", q.get("max", 1)))))
+		var max_val: int = maxi(1, int(q.get("target_amt", q.get("target_amount", q.get("target", q.get("max", 1))))))
+		var clamped_val: int = mini(current_val, max_val)
 		var is_claimed: bool = Global.quests_claimed.get(q_id, false)
+		var is_ready: bool = (current_val >= max_val)
 		var q_title: String = str(q.get("title", "Missione"))
 		var q_desc: String = str(q.get("desc", q.get("description", q_title)))
 
 		var card := PanelContainer.new()
-		card.custom_minimum_size = Vector2(0, 152)
-		var q_col := CyberTheme.COL_CYAN if not is_claimed else Color(0.25, 0.28, 0.35, 0.8)
-		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), q_col, 0.05, 2, 6, 8 if not is_claimed else 0))
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.custom_minimum_size = Vector2(0, 126)
+		var q_col := CyberTheme.COL_YELLOW if (is_ready and not is_claimed) else (CyberTheme.COL_CYAN if not is_claimed else Color(0.28, 0.32, 0.42, 0.85))
+		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), q_col, 0.04, 2, 6, 8 if not is_claimed else 0))
+
+		var margin := MarginContainer.new()
+		margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		margin.add_theme_constant_override("margin_left", 10)
+		margin.add_theme_constant_override("margin_right", 10)
+		margin.add_theme_constant_override("margin_top", 8)
+		margin.add_theme_constant_override("margin_bottom", 8)
+		card.add_child(margin)
 
 		var hbox := HBoxContainer.new()
-		hbox.add_theme_constant_override("separation", 14)
+		hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_theme_constant_override("separation", 10)
 		hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		margin.add_child(hbox)
 
+		# 1. Icona Modello 3D compatta a sinistra
 		var q_icon_ctrl := Control.new()
-		q_icon_ctrl.custom_minimum_size = Vector2(92, 92)
+		q_icon_ctrl.custom_minimum_size = Vector2(64, 64)
+		q_icon_ctrl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		q_icon_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var q_m_id := "weapon_plasma_cannon" if "kills" in stat_type else ("armor_nano_armor" if "runs" in stat_type else "drone_laser")
 		q_icon_ctrl.draw.connect(func():
-			CyberTheme.draw_item_icon(q_icon_ctrl, Vector2(46, 46), q_m_id, "", q_col, 80.0)
+			CyberTheme.draw_item_icon(q_icon_ctrl, Vector2(32, 32), q_m_id, "", q_col, 58.0)
 		)
 		hbox.add_child(q_icon_ctrl)
 
+		# 2. Colonna Centrale Espandibile con Testo a Capo Automatico (Zero Overflow!)
 		var vbox := VBoxContainer.new()
 		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-		vbox.add_theme_constant_override("separation", 6)
+		vbox.add_theme_constant_override("separation", 4)
 
 		var lbl_title := Label.new()
 		lbl_title.text = q_title
-		lbl_title.add_theme_font_size_override("font_size", 17)
-		CyberTheme.style_label(lbl_title, CyberTheme.COL_CYAN, 3)
+		lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl_title.add_theme_font_size_override("font_size", 15)
+		CyberTheme.style_label(lbl_title, CyberTheme.COL_YELLOW if (is_ready and not is_claimed) else CyberTheme.COL_CYAN, 3)
 		vbox.add_child(lbl_title)
 
 		var lbl_desc := Label.new()
-		lbl_desc.text = q_desc + "  [" + str(min(current_val, max_val)) + " / " + str(max_val) + "]"
-		lbl_desc.add_theme_font_size_override("font_size", 14)
+		lbl_desc.text = q_desc
+		lbl_desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl_desc.add_theme_font_size_override("font_size", 12)
 		CyberTheme.style_label(lbl_desc, Color(0.88, 0.94, 1.0, 1.0), 2)
 		vbox.add_child(lbl_desc)
 
 		var pbar := ProgressBar.new()
 		pbar.custom_minimum_size = Vector2(0, 18)
-		pbar.max_value = max(1, max_val)
-		pbar.value = min(current_val, max_val)
+		pbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pbar.max_value = max_val
+		pbar.value = clamped_val
 		pbar.show_percentage = false
+		var pb_bg := CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.95), Color(0.22, 0.34, 0.50, 0.8), 0.10, 1, 3, 0)
+		var pb_fill := StyleBoxFlat.new()
+		pb_fill.bg_color = CyberTheme.COL_GREEN if is_ready else CyberTheme.COL_CYAN
+		pb_fill.skew = Vector2(0.10, 0.0)
+		pbar.add_theme_stylebox_override("background", pb_bg)
+		pbar.add_theme_stylebox_override("fill", pb_fill)
+
+		var pbar_lbl := Label.new()
+		pbar_lbl.text = str(clamped_val) + " / " + str(max_val)
+		pbar_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		pbar_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		pbar_lbl.add_theme_font_size_override("font_size", 11)
+		CyberTheme.style_label(pbar_lbl, Color.WHITE, 3)
+		pbar.add_child(pbar_lbl)
+		pbar_lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		vbox.add_child(pbar)
 
 		hbox.add_child(vbox)
 
-		# Reward Badge
+		# 3. Colonna Destra Compatta Impilata (Badge Ricompensa + Pulsante Azione -> rientra sempre nei 720px!)
+		var right_col := VBoxContainer.new()
+		right_col.custom_minimum_size = Vector2(118, 0)
+		right_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		right_col.alignment = BoxContainer.ALIGNMENT_CENTER
+		right_col.add_theme_constant_override("separation", 5)
+
 		var badge := PanelContainer.new()
-		badge.custom_minimum_size = Vector2(104, 62)
-		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		badge.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.09, 0.12, 0.22, 0.95), CyberTheme.COL_MAGENTA, 0.08, 2, 5, 4))
+		badge.custom_minimum_size = Vector2(118, 30)
+		badge.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.09, 0.12, 0.22, 0.95), CyberTheme.COL_MAGENTA, 0.06, 1, 4, 2))
 
 		var badge_lbl := Label.new()
 		badge_lbl.text = ("🪙 +" if q["reward_type"] == "coins" else "💎 +") + str(q["reward_amt"])
 		badge_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		badge_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		badge_lbl.add_theme_font_size_override("font_size", 15)
+		badge_lbl.add_theme_font_size_override("font_size", 13)
 		CyberTheme.style_label(badge_lbl, CyberTheme.COL_YELLOW if q["reward_type"] == "coins" else CyberTheme.COL_CYAN, 3)
 		badge.add_child(badge_lbl)
-
-		hbox.add_child(badge)
+		right_col.add_child(badge)
 
 		var btn_claim := Button.new()
-		btn_claim.custom_minimum_size = Vector2(130, 62)
-		btn_claim.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		var is_ready: bool = current_val >= max_val
+		btn_claim.custom_minimum_size = Vector2(118, 42)
+		btn_claim.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		btn_claim.add_theme_font_size_override("font_size", 12)
 
 		if is_claimed:
 			btn_claim.disabled = true
-			btn_claim.text = "COMPLETATA"
+			btn_claim.text = "✅ PRESA"
 			CyberTheme.style_button(btn_claim, CyberTheme.COL_CYAN, false)
 		elif is_ready:
 			btn_claim.disabled = false
-			btn_claim.text = "RISCATTA"
+			btn_claim.text = "⚡ RISCATTA"
 			CyberTheme.style_button(btn_claim, CyberTheme.COL_YELLOW, true)
 		else:
 			btn_claim.disabled = true
-			btn_claim.text = str(current_val) + "/" + str(max_val)
+			btn_claim.text = "IN CORSO"
 			CyberTheme.style_button(btn_claim, CyberTheme.COL_CYAN, false)
 
 		btn_claim.pressed.connect(func():
@@ -1195,8 +1734,8 @@ func _populate_quests() -> void:
 				_populate_quests()
 		)
 
-		hbox.add_child(btn_claim)
-		card.add_child(hbox)
+		right_col.add_child(btn_claim)
+		hbox.add_child(right_col)
 		quests_container.add_child(card)
 
 # --- NAV BUTTON HANDLERS ---

@@ -13,6 +13,12 @@ var current_room: int = 1
 var room_cleared: bool = false
 var current_world: WorldData
 var total_room_enemies: int = 0
+var spawn_grace_frames: int = 2
+
+func _spawn_into_arena(node: Node) -> void:
+	var target: Node = get_parent() if get_parent() != null else get_tree().current_scene
+	if target:
+		target.add_child.call_deferred(node)
 
 func _ready() -> void:
 	add_to_group("spawner")
@@ -22,6 +28,7 @@ func _ready() -> void:
 
 func start_room() -> void:
 	room_cleared = false
+	spawn_grace_frames = 2
 	print("🏁 Avvio Stanza ", current_room, "/", current_world.total_rooms, " in ", current_world.display_name)
 
 	# 1. Stanza del Boss (Ogni 10 Livelli: 10, 20, 30, 40, 50 e sempre all'Ultimo Livello del Mondo)
@@ -36,12 +43,12 @@ func start_room() -> void:
 				boss.global_position = Vector2(360, 360)
 				if "is_final_boss" in boss:
 					boss.is_final_boss = is_final
-				var progress_ratio: float = clampf(float(current_room) / float(max(1, current_world.total_rooms)), 0.55, 1.0)
+				var progress_ratio: float = clampf(float(current_room) / float(maxi(1, current_world.total_rooms)), 0.55, 1.0)
 				if "hp" in boss:
 					boss.hp = int(float(boss.hp) * current_world.enemy_hp_multiplier * progress_ratio)
 				if "max_hp" in boss:
 					boss.max_hp = boss.hp
-				get_tree().current_scene.add_child.call_deferred(boss)
+				_spawn_into_arena(boss)
 		_update_hud_counter()
 		return
 
@@ -55,33 +62,40 @@ func start_room() -> void:
 		if sanct_script:
 			var sanct: Node2D = sanct_script.new()
 			sanct.global_position = Vector2(360, 540)
-			get_tree().current_scene.add_child.call_deferred(sanct)
+			_spawn_into_arena(sanct)
 		spawn_door()
 		_update_hud_counter()
 		return
 
-	# Level Design Strutturato (Ostacoli Perimetrali Simmetrici, Area Centrale Sgombra)
+	# Level Design Strutturato (Ostacoli Perimetrali Simmetrici, Area Centrale Sgombra + Progressione Tutorial in Mondo 1)
+	var is_tutorial_world: bool = (current_world.id == "world_1")
 	var chosen_obstacles: Array[Vector2] = []
 	if obstacle_scene:
 		var obstacle_positions: Array[Vector2] = [
-			Vector2(160, 340), Vector2(560, 340), # 2 Pilastri Angoli Superiori
-			Vector2(140, 640), Vector2(580, 640), # 2 Blocchi di Copertura Laterali
-			Vector2(160, 920), Vector2(560, 920)  # 2 Pilastri Angoli Inferiori
+			Vector2(175, 360), Vector2(545, 360), # 2 Pilastri Angoli Superiori
+			Vector2(155, 650), Vector2(565, 650), # 2 Blocchi di Copertura Laterali
+			Vector2(175, 920), Vector2(545, 920)  # 2 Pilastri Angoli Inferiori
 		]
-		obstacle_positions.shuffle()
-		var count := randi_range(3, 4)
-		for i in range(count):
-			var pos: Vector2 = obstacle_positions[i]
-			chosen_obstacles.append(pos)
+		if is_tutorial_world and current_room == 1:
+			chosen_obstacles = [Vector2(175, 520), Vector2(545, 520)]
+		elif is_tutorial_world and current_room == 2:
+			chosen_obstacles = [Vector2(210, 480), Vector2(510, 480)]
+		else:
+			obstacle_positions.shuffle()
+			var count: int = randi_range(3, 4)
+			for i in range(count):
+				chosen_obstacles.append(obstacle_positions[i])
+
+		for pos in chosen_obstacles:
 			var obstacle := obstacle_scene.instantiate() as Node2D
 			if obstacle:
 				obstacle.global_position = pos
-				get_tree().current_scene.add_child.call_deferred(obstacle)
+				_spawn_into_arena(obstacle)
 
-	# Generazione procedurale trappole ambientali bioma ai bordi
-	if trap_scene:
-		var trap_positions := [Vector2(220, 480), Vector2(500, 480), Vector2(360, 860)]
-		var trap_count := randi_range(1, 2)
+	# Generazione trappole ambientali bioma (nel Tutorial Mondo 1 entrano in scena dalla Stanza 3!)
+	if trap_scene and (not is_tutorial_world or current_room >= 3):
+		var trap_positions := [Vector2(230, 500), Vector2(490, 500), Vector2(360, 840)]
+		var trap_count: int = 2 if (is_tutorial_world and current_room == 3) else randi_range(1, 2)
 		for i in range(trap_count):
 			var trap := trap_scene.instantiate() as Node2D
 			if trap:
@@ -90,18 +104,18 @@ func start_room() -> void:
 					trap.trap_type = current_world.trap_type
 				if "damage" in trap:
 					trap.damage = 10.0 * current_world.enemy_dmg_multiplier
-				get_tree().current_scene.add_child.call_deferred(trap)
+				_spawn_into_arena(trap)
 
-	# Generazione procedurale Casse di Rifornimento (LootCrate)
-	if loot_crate_scene:
-		var crate_pos := Vector2(randf_range(260, 460), 260)
+	# Generazione Casse di Rifornimento (LootCrate — nel Tutorial Stanza 2 è ben visibile al centro-alto)
+	if loot_crate_scene and (not is_tutorial_world or current_room >= 2):
+		var crate_pos := Vector2(360, 290) if (is_tutorial_world and current_room == 2) else Vector2(randf_range(260, 460), 280)
 		var crate := loot_crate_scene.instantiate() as Node2D
 		if crate:
 			crate.global_position = crate_pos
-			get_tree().current_scene.add_child.call_deferred(crate)
+			_spawn_into_arena(crate)
 
 	# Stanze Standard: Nemici con moltiplicatori HP e Danno bioma + progressione graduale stanza per stanza
-	total_room_enemies = 3 + min(int(current_room / 2), 9)
+	total_room_enemies = 3 if (is_tutorial_world and current_room == 1) else (3 + mini(int(current_room / 2), 9))
 	var room_hp_scale: float = 1.0 + float(current_room - 1) * 0.04
 	var room_dmg_scale: float = 1.0 + float(current_room - 1) * 0.025
 	print("Generazione di ", total_room_enemies, " nemici nella Stanza ", current_room)
@@ -111,7 +125,11 @@ func start_room() -> void:
 		var scene_to_spawn: PackedScene = enemy_scene
 
 		var roll := randf()
-		if current_room >= 3 and roll <= 0.25 and heavy_enemy_scene:
+		if is_tutorial_world and current_room == 1:
+			scene_to_spawn = enemy_scene
+		elif is_tutorial_world and current_room == 2:
+			scene_to_spawn = ranged_enemy_scene if (i < 2 and ranged_enemy_scene != null) else enemy_scene
+		elif current_room >= 3 and roll <= 0.25 and heavy_enemy_scene:
 			scene_to_spawn = heavy_enemy_scene
 		elif current_room >= 2 and roll <= 0.50 and ranged_enemy_scene:
 			scene_to_spawn = ranged_enemy_scene
@@ -128,23 +146,27 @@ func start_room() -> void:
 					enemy.max_hp = enemy.hp
 				if "damage" in enemy:
 					enemy.damage = int(float(enemy.damage) * current_world.enemy_dmg_multiplier * room_dmg_scale)
-				get_tree().current_scene.add_child.call_deferred(enemy)
+				_spawn_into_arena(enemy)
 
 	_update_hud_counter()
 
 func _get_safe_spawn_pos(obstacles: Array[Vector2]) -> Vector2:
 	for attempt in range(15):
-		var candidate := Vector2(randf_range(90.0, 630.0), randf_range(160.0, 720.0))
+		var candidate := Vector2(randf_range(105.0, 615.0), randf_range(190.0, 720.0))
 		var safe := true
 		for obs_pos in obstacles:
-			if candidate.distance_to(obs_pos) < 75.0:
+			if candidate.distance_to(obs_pos) < 78.0:
 				safe = false
 				break
 		if safe:
 			return candidate
-	return Vector2(360.0 + randf_range(-100.0, 100.0), randf_range(220.0, 520.0))
+	return Vector2(360.0 + randf_range(-100.0, 100.0), randf_range(230.0, 520.0))
 
 func _process(_delta: float) -> void:
+	if spawn_grace_frames > 0:
+		spawn_grace_frames -= 1
+		return
+
 	var remaining_enemies := get_tree().get_nodes_in_group("enemies").size()
 	_update_hud_counter()
 
@@ -193,8 +215,8 @@ func spawn_door() -> void:
 	if door_scene:
 		var door := door_scene.instantiate() as Node2D
 		if door:
-			door.global_position = Vector2(360, 100)
-			get_tree().current_scene.add_child.call_deferred(door)
+			door.global_position = Vector2(360, 118)
+			_spawn_into_arena(door)
 
 func next_room() -> void:
 	# Ripulitura ostacoli, casse, trappole e proiettili residui (eccetto le 4 pareti perimetrali)

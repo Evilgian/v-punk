@@ -64,8 +64,8 @@ func _draw() -> void:
 
 	if hp < max_hp and max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-		draw_rect(Rect2(Vector2(-18, -32), Vector2(36, 4)), Color(0.08, 0.08, 0.12, 0.85), true)
-		draw_rect(Rect2(Vector2(-18, -32), Vector2(36.0 * ratio, 4)), Color(0.9, 0.3, 1.0, 0.95), true)
+		draw_rect(Rect2(Vector2(-18, -52), Vector2(36, 4)), Color(0.08, 0.08, 0.12, 0.85), true)
+		draw_rect(Rect2(Vector2(-18, -52), Vector2(36.0 * ratio, 4)), Color(0.9, 0.3, 1.0, 0.95), true)
 
 func _on_shoot_timer_timeout() -> void:
 	if not is_shooting:

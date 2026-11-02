@@ -65,6 +65,10 @@ func _draw() -> void:
 		draw_arc(Vector2(-2, 0), 22.0, -PI * 0.36, PI * 0.36, 20, Color(1.0, 1.0, 1.0, 0.95 * alpha), 2.5)
 		return
 
+	# Ombra 2.5D proiettata sul pavimento sotto il proiettile in volo (dà percezione d'altezza 3D)
+	var shadow_off := Vector2(0, 18).rotated(-rotation)
+	draw_circle(shadow_off, 5.5, Color(0, 0, 0, 0.32))
+
 	if weapon_type == "scythe":
 		var spin := lifetime * 18.0
 		draw_circle(Vector2.ZERO, 16.0, Color(0.85, 0.15, 1.0, 0.32))

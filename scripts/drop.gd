@@ -21,8 +21,9 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var bob := sin(anim_t * 5.0) * 2.8
+	var bob := sin(anim_t * 5.0) * 3.2 - 6.0
 	var center := Vector2(0, bob)
+	CyberModels.draw_ground_shadow(self, Vector2(0, 8), 11.0, 0.45)
 
 	if drop_type == "heal":
 		# Medikit Nanobot (Verde brillante)

@@ -60,8 +60,8 @@ func _draw() -> void:
 
 	if hp < max_hp and max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-		draw_rect(Rect2(Vector2(-18, -32), Vector2(36, 4)), Color(0.08, 0.08, 0.12, 0.85), true)
-		draw_rect(Rect2(Vector2(-18, -32), Vector2(36.0 * ratio, 4)), Color(1.0, 0.25, 0.3, 0.95), true)
+		draw_rect(Rect2(Vector2(-18, -44), Vector2(36, 4)), Color(0.08, 0.08, 0.12, 0.85), true)
+		draw_rect(Rect2(Vector2(-18, -44), Vector2(36.0 * ratio, 4)), Color(1.0, 0.25, 0.3, 0.95), true)
 
 func take_damage(amount: int) -> void:
 	if max_hp < hp: max_hp = hp

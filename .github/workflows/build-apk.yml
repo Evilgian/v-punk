@@ -65,8 +65,8 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v1.2.${{ github.run_number }}"
-          VERSION_NAME="1.2.${{ github.run_number }}"
+          VERSION_TAG="v1.3.${{ github.run_number }}"
+          VERSION_NAME="1.3.${{ github.run_number }}"
           VERSION_CODE="${{ github.run_number }}"
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
@@ -84,14 +84,14 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v1.2.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v1.2.${{ github.run_number }}.apk
+          name: V-Punk-v1.3.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v1.3.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.${{ github.run_number }}
-          name: "⚡ V-PUNK: Rogue Protocol — Release v1.2.${{ github.run_number }}"
+          tag_name: v1.3.${{ github.run_number }}
+          name: "⚡ V-PUNK: Rogue Protocol — Release v1.3.${{ github.run_number }}"
           make_latest: true
           body: |
             ### ⚡ V-PUNK: Rogue Protocol — Versione `v1.2.${{ github.run_number }}` (Android APK)
