@@ -1,75 +1,123 @@
 extends Node
 
 var available_perks: Array[PerkData] = []
+## Abilità proposte nell'ultima scelta: evitate nella successiva per non vedere sempre le stesse
+var last_offer_ids: Array[String] = []
+
+const RARITY_WEIGHT := {"COMMON": 10.0, "RARE": 6.5, "EPIC": 3.5, "LEGENDARY": 1.6}
 
 func _ready() -> void:
 	_init_perks()
 
+func _add(id: String, display_name: String, desc: String, perk_type: String, rarity: String, max_stacks: int) -> void:
+	var p := PerkData.new()
+	p.id = id
+	p.display_name = display_name
+	p.description = desc
+	p.perk_type = perk_type
+	p.rarity = rarity
+	p.max_stacks = max_stacks
+	available_perks.append(p)
+
 func _init_perks() -> void:
 	available_perks.clear()
 
-	# 1. Doppio Sparo / Multishot Cumulativo
-	var front := PerkData.new()
-	front.id = "front_arrow"
-	front.display_name = "🎯 Multishot Cumulativo"
-	front.description = "Aggiunge +1 proiettile frontale ad arco (Cumulabile)."
-	available_perks.append(front)
+	# --- BALISTICA: pattern di fuoco ---
+	_add("front_arrow", "🎯 Multishot", "+1 proiettile frontale a ventaglio stretto.", "BALISTICA", "RARE", 3)
+	_add("diagonal_arrow", "🏹 Sparo Diagonale", "2 proiettili extra a ±45°.", "BALISTICA", "RARE", 1)
+	_add("spread_shot", "🔱 Ventaglio Cyber", "2 proiettili extra a ±18°.", "BALISTICA", "COMMON", 1)
+	_add("rear_arrow", "↩️ Colpo alle Spalle", "Spara anche un proiettile all'indietro.", "BALISTICA", "COMMON", 1)
+	_add("side_arrows", "↔️ Fuoco Laterale", "2 proiettili extra a 90° ai fianchi.", "BALISTICA", "COMMON", 1)
+	_add("bouncy_wall", "🧱 Rimbalzo Pareti", "I proiettili rimbalzano 2 volte su muri e coperture.", "BALISTICA", "COMMON", 1)
+	_add("piercing", "⚡ Colpo Perforante", "I proiettili trapassano tutti i nemici.", "BALISTICA", "EPIC", 1)
+	_add("homing_rounds", "🛰️ Munizioni Smart", "I proiettili inseguono il nemico più vicino.", "BALISTICA", "EPIC", 1)
+	_add("giant_shots", "🔵 Proiettili Titanici", "Proiettili più grandi del 25% e +3 danno.", "BALISTICA", "COMMON", 2)
 
-	# 2. Sparo Diagonale (Diagonal Arrow)
-	var diag := PerkData.new()
-	diag.id = "diagonal_arrow"
-	diag.display_name = "🏹 Sparo Diagonale"
-	diag.description = "Spara 2 proiettili aggiuntivi a ±45°."
-	available_perks.append(diag)
+	# --- POTENZA ---
+	_add("attack_speed", "🔥 Overclock Cadenza", "Cadenza di fuoco +20%.", "POTENZA", "COMMON", 4)
+	_add("damage_up", "💥 Sovraccarico Plasma", "+8 danno a ogni colpo.", "POTENZA", "COMMON", 5)
+	_add("crit_up", "🎲 Bersaglio Critico", "+12% probabilità di colpo critico (danno x2).", "POTENZA", "RARE", 3)
 
-	# 3. Ventaglio Tattico (Spread Shot)
-	var spread := PerkData.new()
-	spread.id = "spread_shot"
-	spread.display_name = "🔱 Ventaglio Cyber"
-	spread.description = "Spara 2 proiettili angolari a ±18°."
-	available_perks.append(spread)
+	# --- ELEMENTALI / EFFETTI AL COLPO ---
+	_add("explosive", "💣 Testate Esplosive", "I colpi esplodono e danneggiano i nemici vicini.", "ELEMENTALE", "EPIC", 2)
+	_add("chain_lightning", "🌩️ Fulmine a Catena", "Ogni colpo folgora 2 nemici vicini (35% danno).", "ELEMENTALE", "EPIC", 2)
+	_add("freeze_shot", "❄️ Criogenia", "I colpi rallentano i nemici del 45% per 1,5 s.", "ELEMENTALE", "RARE", 1)
+	_add("burn_shot", "🔥 Napalm Neon", "I colpi incendiano: 3 danni bruciatura extra nel tempo.", "ELEMENTALE", "RARE", 2)
 
-	# 4. Rimbalzo Pareti (Bouncy Wall)
-	var bounce := PerkData.new()
-	bounce.id = "bouncy_wall"
-	bounce.display_name = "🧱 Rimbalzo Pareti"
-	bounce.description = "I proiettili rimbalzano sulle pareti perimetrali."
-	available_perks.append(bounce)
+	# --- SUPPORTO / DIFESA ---
+	_add("orbit_blades", "🌀 Lame Orbitali", "Una lama al plasma ruota attorno a te e trancia i nemici.", "SUPPORTO", "LEGENDARY", 3)
+	_add("energy_shield", "🛡️ Scudo Energetico", "Blocca 1 colpo; si ricarica ogni 7 secondi.", "DIFESA", "EPIC", 2)
+	_add("vampire", "🩸 Nanobot Vampiri", "25% di probabilità di curarti a ogni colpo a segno.", "DIFESA", "RARE", 3)
+	_add("dodge", "💨 Riflessi Sintetici", "+12% probabilità di schivare i danni.", "DIFESA", "RARE", 3)
+	_add("regen", "💚 Rigenerazione", "Recuperi HP automaticamente ogni 3 secondi.", "DIFESA", "COMMON", 3)
+	_add("max_hp_up", "❤️ Telaio Rinforzato", "+30 HP massimi (e curati di 30).", "DIFESA", "COMMON", 4)
+	_add("move_speed", "👟 Servo-Gambe", "Velocità di movimento +10%.", "DIFESA", "COMMON", 3)
+	_add("heal", "➕ Riparazione Nanobot", "Ripristina subito il 35% degli HP massimi.", "DIFESA", "COMMON", 99)
 
-	# 5. Trapasso Energetico (Piercing)
-	var pierce := PerkData.new()
-	pierce.id = "piercing"
-	pierce.display_name = "⚡ Colpo Perforante"
-	pierce.description = "I proiettili trapassano i nemici colpendo più bersagli."
-	available_perks.append(pierce)
+	print("PerkDB inizializzato con ", available_perks.size(), " potenziamenti!")
 
-	# 6. Velocità d'Attacco (Attack Speed Up)
-	var aspeed := PerkData.new()
-	aspeed.id = "attack_speed"
-	aspeed.display_name = "🔥 Overclock Cadenza"
-	aspeed.description = "Riduce il tempo di ricarica sparo del 20%."
-	available_perks.append(aspeed)
+func get_perk(perk_id: String) -> PerkData:
+	for p in available_perks:
+		if p.id == perk_id:
+			return p
+	return null
 
-	# 7. Sovraccarico Danno (Damage Up)
-	var dmg := PerkData.new()
-	dmg.id = "damage_up"
-	dmg.display_name = "💥 Sovraccarico Plasma"
-	dmg.description = "Aumenta il danno base dei colpi di +8."
-	available_perks.append(dmg)
+## Selezione intelligente e pesata:
+## - esclude le abilità già al massimo dei livelli
+## - propone la cura solo se gli HP sono sotto l'80%
+## - evita le stesse carte appena proposte
+## - le abilità già possedute hanno peso minore → più varietà di build
+func get_random_perks(count: int = 3, player: Node = null) -> Array[PerkData]:
+	var stacks: Dictionary = {}
+	var hp_ratio: float = 1.0
+	if player:
+		if "perk_stacks" in player:
+			stacks = player.perk_stacks
+		if "current_hp" in player and "max_hp" in player and int(player.max_hp) > 0:
+			hp_ratio = float(player.current_hp) / float(player.max_hp)
 
-	# 8. Cura Istantanea (Heal)
-	var heal := PerkData.new()
-	heal.id = "heal"
-	heal.display_name = "❤️ Riparazione Nanobot"
-	heal.description = "Ripristina immediatamente il 35% degli HP massimi."
-	available_perks.append(heal)
+	var pool: Array[PerkData] = []
+	for p in available_perks:
+		var owned: int = int(stacks.get(p.id, 0))
+		if owned >= p.max_stacks:
+			continue
+		if p.id == "heal" and hp_ratio > 0.80:
+			continue
+		pool.append(p)
 
-	print("PerkDB inizializzato con ", available_perks.size(), " potenziamenti Archero!")
+	# Evita di riproporre le stesse carte della scelta precedente (se ne restano abbastanza)
+	var fresh: Array[PerkData] = []
+	for p in pool:
+		if not last_offer_ids.has(p.id):
+			fresh.append(p)
+	if fresh.size() >= count:
+		pool = fresh
 
-func get_random_perks(count: int = 3) -> Array[PerkData]:
-	var shuffled := available_perks.duplicate()
-	shuffled.shuffle()
 	var result: Array[PerkData] = []
-	for i in range(min(count, shuffled.size())):
-		result.append(shuffled[i])
+	var used_types: Dictionary = {}
+	while result.size() < count and not pool.is_empty():
+		var total: float = 0.0
+		var weights: Array[float] = []
+		for p in pool:
+			var w: float = float(RARITY_WEIGHT.get(p.rarity, 5.0))
+			w *= pow(0.65, float(stacks.get(p.id, 0)))
+			if used_types.has(p.perk_type):
+				w *= 0.55 # favorisce categorie diverse nella stessa scelta
+			weights.append(w)
+			total += w
+		var roll: float = randf() * total
+		var idx: int = 0
+		for i in range(weights.size()):
+			roll -= weights[i]
+			if roll <= 0.0:
+				idx = i
+				break
+		var chosen: PerkData = pool[idx]
+		result.append(chosen)
+		used_types[chosen.perk_type] = true
+		pool.remove_at(idx)
+
+	last_offer_ids.clear()
+	for p in result:
+		last_offer_ids.append(p.id)
 	return result

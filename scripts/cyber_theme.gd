@@ -343,8 +343,10 @@ static func apply_recursive_cyber_style(root: Node) -> void:
 	for child in root.get_children():
 		apply_recursive_cyber_style(child)
 
-## Aggiunge il post-processing HDR Glow/Bloom Cyberpunk alla scena corrente
-static func attach_cyber_bloom(parent: Node) -> void:
+## Aggiunge il post-processing HDR Glow/Bloom Cyberpunk alla scena corrente.
+## In partita (in_game = true) il glow è molto più contenuto e non usa il blend "Screen",
+## che velava eroe e nemici facendoli sembrare semi-trasparenti e slavati.
+static func attach_cyber_bloom(parent: Node, in_game: bool = false) -> void:
 	if not parent: return
 	if parent.get_node_or_null("CyberWorldEnv") != null: return
 
@@ -353,11 +355,18 @@ static func attach_cyber_bloom(parent: Node) -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CANVAS
 	env.glow_enabled = true
-	env.glow_intensity = 0.62
-	env.glow_strength = 0.92
-	env.glow_bloom = 0.14
-	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
-	env.glow_hdr_threshold = 0.86
+	if in_game:
+		env.glow_intensity = 0.30
+		env.glow_strength = 0.80
+		env.glow_bloom = 0.0
+		env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+		env.glow_hdr_threshold = 1.15
+	else:
+		env.glow_intensity = 0.62
+		env.glow_strength = 0.92
+		env.glow_bloom = 0.14
+		env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+		env.glow_hdr_threshold = 0.86
 	we.environment = env
 	parent.add_child(we)
 

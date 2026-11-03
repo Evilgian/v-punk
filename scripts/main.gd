@@ -15,7 +15,7 @@ func _ready() -> void:
 	if background:
 		background.visible = false
 
-	CyberTheme.attach_cyber_bloom(self)
+	CyberTheme.attach_cyber_bloom(self, true)
 
 	var current_world: WorldData = WorldDB.get_selected_world()
 	if current_world:
@@ -34,7 +34,6 @@ func _ready() -> void:
 
 	_init_ambient_motes()
 	_setup_perimeter_walls()
-	_setup_cinematic_vignette()
 
 	# Nel Mondo 1 attiva automaticamente il Sistema Tutorial Interattivo Guidato
 	if WorldDB.selected_world_id == "world_1":
@@ -43,35 +42,6 @@ func _ready() -> void:
 			var tut_node: Node2D = tut_script.new()
 			tut_node.name = "TutorialOverlay"
 			add_child.call_deferred(tut_node)
-
-## Illuminazione zenitale morbida + vignettatura leggerissima solo agli angoli estremi (massima visibilità in-game!)
-func _setup_cinematic_vignette() -> void:
-	var layer := CanvasLayer.new()
-	layer.name = "VignetteLayer"
-	layer.layer = 1
-	add_child(layer)
-	if hud:
-		move_child(layer, hud.get_index())
-
-	var grad := Gradient.new()
-	grad.set_color(0, Color(0.75, 0.90, 1.0, 0.05))
-	grad.set_color(1, Color(0.01, 0.02, 0.06, 0.16))
-	grad.add_point(0.80, Color(0, 0, 0, 0.0))
-	var tex := GradientTexture2D.new()
-	tex.gradient = grad
-	tex.fill = GradientTexture2D.FILL_RADIAL
-	tex.fill_from = Vector2(0.5, 0.48)
-	tex.fill_to = Vector2(1.08, 1.08)
-	tex.width = 256
-	tex.height = 256
-
-	var rect := TextureRect.new()
-	rect.texture = tex
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rect.stretch_mode = TextureRect.STRETCH_SCALE
-	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	layer.add_child(rect)
-	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 func _init_ambient_motes() -> void:
 	ambient_motes.clear()
@@ -136,12 +106,13 @@ func _draw() -> void:
 		var tx: int = 42 + col_i * tile_w
 		for row_i in range(11):
 			var ty: int = 112 + row_i * tile_h
-			var depth_f: float = 0.96 + 0.22 * (float(row_i) / 10.0)
+			# Pavimento a luminosità media (mai sovraesposto): eroe e nemici con contorno scuro ne risaltano nettamente
+			var depth_f: float = 0.94 + 0.12 * (float(row_i) / 10.0)
 			var tile_mod := Color(
-				clampf((floor_base.r * 2.4 + 0.78) * depth_f, 0.92, 1.42),
-				clampf((floor_base.g * 2.4 + 0.80) * depth_f, 0.94, 1.44),
-				clampf((floor_base.b * 2.4 + 0.86) * depth_f, 0.98, 1.48),
-				0.96
+				clampf((floor_base.r * 1.6 + 0.62) * depth_f, 0.78, 1.02),
+				clampf((floor_base.g * 1.6 + 0.64) * depth_f, 0.80, 1.04),
+				clampf((floor_base.b * 1.6 + 0.70) * depth_f, 0.84, 1.08),
+				1.0
 			)
 			var tr := Rect2(Vector2(tx + 2, ty + 2), Vector2(tile_w - 4, tile_h - 4))
 			if floor_tex:

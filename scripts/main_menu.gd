@@ -2181,8 +2181,8 @@ func _show_welcome_entrance_screen() -> void:
 	holo_stage.add_child(holo_ctrl)
 
 	welcome_holo = Node2D.new()
-	welcome_holo.position = Vector2(67, 82)
-	welcome_holo.scale = Vector2(1.95, 1.95)
+	welcome_holo.position = Vector2(67, 88)
+	welcome_holo.scale = Vector2(1.6, 1.6)
 	welcome_holo.draw.connect(func():
 		var aura_c := Global.get_player_accent_color()
 		welcome_holo.draw_set_transform(Vector2(0, 18), 0.0, Vector2(1.0, 0.40))
@@ -2371,8 +2371,8 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	preview_vbox.add_child(preview_ctrl)
 
 	char_preview_holo = Node2D.new()
-	char_preview_holo.position = Vector2(180, 96)
-	char_preview_holo.scale = Vector2(2.35, 2.35)
+	char_preview_holo.position = Vector2(180, 104)
+	char_preview_holo.scale = Vector2(2.0, 2.0)
 	char_preview_holo.draw.connect(_on_draw_char_preview_holo)
 	preview_ctrl.add_child(char_preview_holo)
 

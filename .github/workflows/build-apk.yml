@@ -95,10 +95,10 @@ jobs:
           make_latest: true
           body: |
             ### ⚡ V-PUNK: Rogue Protocol — Versione `v1.5.${{ github.run_number }}` (Android APK)
-            - **Nuovo Logo 3D HD con Titolo & Boot Splash Full-HD**: Nuovo emblema 3D Cyber-Samurai + stemma "V" con titolo `V-PUNK: ROGUE PROTOCOL` integrato sotto, icone Android adattive HD e schermata di avvio nitida a tutta altezza.
-            - **Schermata d'Entrata 3D & Studio Creazione Personaggio**: All'apertura dell'app accoglie con Key-Art 3D Night City, Camera Olografica 3D interattiva dell'Operativo in tempo reale, card 3D scolpite per le classi (`Cyber-Ronin`, `Vanguard`, `Netrunner`) e personalizzazione Callsign + Aura.
-            - **Rarità Chiare & Stato Equipaggiato Distinto**: Colori netti per rarità (`★ COMUNE` Argento, `★★ RARO` Blu Elettrico, `★★★ EPICO` Viola Ametista, `★★★★ LEGGENDARIO` Oro Reale) + badge verde smeraldo `✓ INDOSSATO`.
-            - **UI 3D Scolpita, Arena Luminosa, Boss Cinematografico & Valchiria a Prossimità**.
+            - **Personaggio & Boss 3D Aggressivi & Dettagliati**: Nuovo modello Cyber-Ronin Exo-Slayer con elmo cornuto, visiera neon a V, armature a piastre metalliche e locomozione articolata; Boss Robo-Titan ridisegnato come Dreadnought mecha con teschio cornuto, fornace ardente e lanciamissili; nemici 3D potenziati (Mantis Stalker, Hover-Wasp, Goliath).
+            - **Visibilità Cristallina & Nessuna Opacità**: Rimosse le doppie vignettature scure e il bloom eccessivo che causava l'effetto "fantasma/opaco"; unità risaltate con contorni solidi ad alto contrasto e pavimento bilanciato.
+            - **24 Abilità di Livello Uniche & Varie**: Espanso l'albero perk da 8 a 24 abilità (Lame Orbitali, Scudo Energetico, Fulmini a Catena, Munizioni Smart, Fuoco a 360°, Criogenia, Vampirismo) con pesi bilanciati per evitare ripetizioni.
+            - **Logo 3D HD, Entrata Studio & Rarità Chiare**.
             - Scarica **`V-Punk-v1.5.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android ed aprilo per installare e giocare!
           files: |
             build/android/V-Punk-v1.5.${{ github.run_number }}.apk

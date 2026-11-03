@@ -21,6 +21,9 @@ func _ready() -> void:
 	boss_hp_bar = find_child("BossHPBar", true, false) as ProgressBar
 	boss_hp_label = find_child("BossHPLabel", true, false) as Label
 
+	var vig := get_node_or_null("VignetteOverlay") as CanvasItem
+	if vig:
+		vig.visible = false
 	if boss_container: boss_container.hide()
 	if pause_overlay: pause_overlay.hide()
 

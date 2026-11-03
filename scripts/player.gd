@@ -34,6 +34,27 @@ var anim_t: float = 0.0
 var aim_angle: float = -PI * 0.5
 var target_aim_angle: float = -PI * 0.5
 
+# --- Abilità Neurali della run (scelte al Level Up) ---
+var perk_stacks: Dictionary = {}
+var has_rear_arrow: bool = false
+var has_side_arrows: bool = false
+var has_homing_rounds: bool = false
+var shot_scale: float = 1.0
+var crit_chance: float = 0.0
+var explosive_stacks: int = 0
+var chain_stacks: int = 0
+var has_freeze: bool = false
+var burn_stacks: int = 0
+var vampire_stacks: int = 0
+var dodge_chance: float = 0.0
+var regen_stacks: int = 0
+var regen_timer: float = 0.0
+var orbit_blades: int = 0
+var orbit_hit_cd: Dictionary = {}
+var shield_max: int = 0
+var shield_charges: int = 0
+var shield_recharge_t: float = 0.0
+
 var is_shooting: bool = false
 var shoot_timer: Timer
 var joystick_node: Control
@@ -118,7 +139,125 @@ func _ready() -> void:
 
 func add_extra_projectiles(amt: int = 1) -> void:
 	extra_projectiles += amt
-	print("🔥 Stacking Abilità: extra_projectiles = ", extra_projectiles)
+
+## Applica un'Abilità Neurale scelta al Level Up (tutte cumulabili fino a max_stacks)
+func apply_perk(perk_id: String) -> void:
+	perk_stacks[perk_id] = int(perk_stacks.get(perk_id, 0)) + 1
+	match perk_id:
+		"front_arrow": extra_projectiles += 1
+		"diagonal_arrow": has_diagonal_arrow = true
+		"spread_shot": has_spread_shot = true
+		"rear_arrow": has_rear_arrow = true
+		"side_arrows": has_side_arrows = true
+		"bouncy_wall": has_bouncy_wall = true
+		"piercing": has_piercing = true
+		"homing_rounds": has_homing_rounds = true
+		"giant_shots":
+			shot_scale += 0.25
+			bonus_damage += 3
+		"attack_speed":
+			fire_rate = max(0.08, fire_rate * 0.8)
+			if shoot_timer: shoot_timer.wait_time = fire_rate
+		"damage_up": bonus_damage += 8
+		"crit_up": crit_chance = minf(0.75, crit_chance + 0.12)
+		"explosive": explosive_stacks += 1
+		"chain_lightning": chain_stacks += 1
+		"freeze_shot": has_freeze = true
+		"burn_shot": burn_stacks += 1
+		"orbit_blades": orbit_blades += 1
+		"energy_shield":
+			shield_max += 1
+			shield_charges = shield_max
+		"vampire": vampire_stacks += 1
+		"dodge": dodge_chance = minf(0.45, dodge_chance + 0.12)
+		"regen": regen_stacks += 1
+		"max_hp_up":
+			max_hp += 30
+			current_hp = min(max_hp, current_hp + 30)
+		"move_speed": speed_modifier += 0.10
+		"heal":
+			current_hp = min(max_hp, current_hp + int(max_hp * 0.35))
+	hp_changed.emit(current_hp, max_hp)
+
+func heal(amount: int) -> void:
+	if amount <= 0 or current_hp <= 0: return
+	var before := current_hp
+	current_hp = min(max_hp, current_hp + amount)
+	if current_hp != before:
+		hp_changed.emit(current_hp, max_hp)
+		var vfx: Node = get_node_or_null("/root/VFXManager")
+		if vfx and vfx.has_method("spawn_floating_text"):
+			vfx.spawn_floating_text(global_position + Vector2(60, -40), "+" + str(current_hp - before) + " HP", Color(0.2, 1.0, 0.5, 1.0))
+
+## Effetti delle abilità "al colpo" (chiamato dai proiettili del giocatore)
+func on_projectile_hit(body: Node, dmg: int, hit_pos: Vector2) -> void:
+	if vampire_stacks > 0 and randf() < 0.25:
+		heal(vampire_stacks * 2)
+
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	if explosive_stacks > 0:
+		var vfx: Node = get_node_or_null("/root/VFXManager")
+		if vfx and vfx.has_method("spawn_explosion"):
+			vfx.spawn_explosion(hit_pos, Color(1.0, 0.45, 0.1, 1.0))
+		var splash := maxi(1, int(dmg * 0.40 * explosive_stacks))
+		for e in enemies:
+			if e != body and is_instance_valid(e) and e is Node2D and e.has_method("take_damage"):
+				if (e as Node2D).global_position.distance_to(hit_pos) <= 62.0:
+					e.take_damage(splash)
+
+	if chain_stacks > 0:
+		var targets: Array = []
+		for e in enemies:
+			if e != body and is_instance_valid(e) and e is Node2D and e.has_method("take_damage"):
+				var d := (e as Node2D).global_position.distance_to(hit_pos)
+				if d <= 190.0:
+					targets.append({"n": e, "d": d})
+		targets.sort_custom(func(a, b): return a["d"] < b["d"])
+		var zap := maxi(1, int(dmg * 0.35 * chain_stacks))
+		var prev := hit_pos
+		for i in range(mini(2, targets.size())):
+			var tn: Node2D = targets[i]["n"]
+			_spawn_lightning(prev, tn.global_position)
+			prev = tn.global_position
+			tn.take_damage(zap)
+
+	if has_freeze and is_instance_valid(body) and "speed" in body:
+		if not body.has_meta("base_speed"):
+			body.set_meta("base_speed", body.speed)
+		var base_spd: float = float(body.get_meta("base_speed"))
+		body.speed = base_spd * 0.55
+		var until := Time.get_ticks_msec() + 1500
+		body.set_meta("slow_until", until)
+		get_tree().create_timer(1.55, false).timeout.connect(func():
+			if is_instance_valid(body) and int(body.get_meta("slow_until", 0)) <= Time.get_ticks_msec():
+				body.speed = float(body.get_meta("base_speed", body.speed))
+		)
+
+	if burn_stacks > 0 and is_instance_valid(body):
+		var burn_dmg := maxi(1, int(dmg * 0.12 * burn_stacks) + 1)
+		for t_i in range(3):
+			get_tree().create_timer(0.45 * float(t_i + 1), false).timeout.connect(func():
+				if is_instance_valid(body) and body.has_method("take_damage") and "hp" in body and int(body.hp) > 0:
+					body.take_damage(burn_dmg)
+			)
+
+func _spawn_lightning(a: Vector2, b: Vector2) -> void:
+	var scene := get_tree().current_scene
+	if not scene: return
+	var line := Line2D.new()
+	line.width = 4.0
+	line.default_color = Color(0.55, 0.9, 1.0, 1.0)
+	line.z_index = 18
+	var pts := PackedVector2Array([a])
+	for s in range(1, 5):
+		var p := a.lerp(b, float(s) / 5.0) + Vector2(randf_range(-9, 9), randf_range(-9, 9))
+		pts.append(p)
+	pts.append(b)
+	line.points = pts
+	scene.add_child(line)
+	var tw := line.create_tween()
+	tw.tween_property(line, "modulate:a", 0.0, 0.22)
+	tw.tween_callback(line.queue_free)
 
 func _physics_process(delta: float) -> void:
 	var move_dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -177,6 +316,40 @@ func _process(delta: float) -> void:
 	if invulnerable_time > 0.0:
 		invulnerable_time -= delta
 
+	# Gestione Scudo Energetico (ricarica ogni 7s se sotto il massimo)
+	if shield_max > 0 and shield_charges < shield_max:
+		shield_recharge_t += delta
+		if shield_recharge_t >= 7.0:
+			shield_recharge_t = 0.0
+			shield_charges += 1
+			var vfx: Node = get_node_or_null("/root/VFXManager")
+			if vfx and vfx.has_method("spawn_floating_text"):
+				vfx.spawn_floating_text(global_position + Vector2(60, -40), "🛡️ SCUDO PRONTO", Color(0.1, 0.9, 1.0, 1.0))
+
+	# Gestione Rigenerazione passiva HP
+	if regen_stacks > 0 and current_hp > 0 and current_hp < max_hp:
+		regen_timer += delta
+		if regen_timer >= 3.0:
+			regen_timer = 0.0
+			heal(regen_stacks * 3)
+
+	# Gestione Lame Orbitali
+	if orbit_blades > 0:
+		var cur_msec: int = Time.get_ticks_msec()
+		var blade_dmg: int = maxi(5, int((weapon_base_damage + bonus_damage) * 0.75))
+		var enemies: Array[Node] = get_tree().get_nodes_in_group("enemies")
+		for b_i in range(orbit_blades):
+			var b_ang := anim_t * 3.2 + float(b_i) * (TAU / float(orbit_blades))
+			var b_pos := global_position + Vector2(cos(b_ang) * 52.0, sin(b_ang) * 26.0)
+			for e in enemies:
+				if is_instance_valid(e) and e is Node2D and e.has_method("take_damage"):
+					if (e as Node2D).global_position.distance_to(b_pos) <= 28.0:
+						var eid := (e as Node2D).get_instance_id()
+						if cur_msec - int(orbit_hit_cd.get(eid, 0)) >= 450:
+							orbit_hit_cd[eid] = cur_msec
+							e.take_damage(blade_dmg)
+							SoundFX.play_hit()
+
 	if has_pet_laser:
 		pet_shoot_timer += delta
 		if pet_shoot_timer >= 1.3:
@@ -198,7 +371,24 @@ func _draw() -> void:
 	# Modello 3D Articolato Cyber-Ronin Exo-Suit + Locomozione e Mira Continua sui Nemici
 	var norm_vel: Vector2 = velocity / maxf(1.0, speed * speed_modifier)
 	var firing_active: bool = is_shooting and (get_closest_enemy() != null)
-	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, velocity.length() > 10.0, firing_active, aim_angle, norm_vel)
+	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, velocity.length() > 10.0, firing_active, aim_angle, norm_vel, 86.0)
+
+	# Disegna Lame Orbitali
+	if orbit_blades > 0:
+		for b_i in range(orbit_blades):
+			var b_ang := anim_t * 3.2 + float(b_i) * (TAU / float(orbit_blades))
+			var b_pos := Vector2(cos(b_ang) * 52.0, sin(b_ang) * 26.0)
+			draw_circle(b_pos, 7.0, Color(0.1, 0.95, 1.0, 0.35))
+			draw_circle(b_pos, 4.0, Color(0.9, 0.98, 1.0, 0.95))
+			draw_line(b_pos, b_pos + Vector2(-sin(b_ang), cos(b_ang) * 0.5) * 12.0, Color(0.0, 0.9, 1.0, 0.8), 2.5)
+
+	# Disegna Scudo Energetico attivo attorno all'eroe
+	if shield_charges > 0:
+		var s_alpha := 0.45 + sin(anim_t * 4.0) * 0.15
+		draw_set_transform(Vector2(0, 4), 0.0, Vector2(1.0, 0.65))
+		draw_arc(Vector2.ZERO, 36.0, 0.0, TAU, 32, Color(0.1, 0.85, 1.0, s_alpha), 2.8)
+		draw_circle(Vector2.ZERO, 34.0, Color(0.05, 0.45, 0.9, 0.08))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	# Droni Compagni Orbitanti (Pet 1 & Pet 2) in Prospettiva Ellittica 2.5D + Ombra a Terra
 	if has_pet_laser:
@@ -234,6 +424,25 @@ func apply_shake(intensity: float = 8.0) -> void:
 func take_damage(amount: int) -> void:
 	if invulnerable_time > 0.0:
 		return
+
+	# Schivata Cybernetica
+	if dodge_chance > 0.0 and randf() < dodge_chance:
+		invulnerable_time = 0.20
+		var vfx: Node = get_node_or_null("/root/VFXManager")
+		if vfx and vfx.has_method("spawn_floating_text"):
+			vfx.spawn_floating_text(global_position + Vector2(40, -30), "💨 SCHIVATO!", Color(0.3, 0.95, 1.0, 1.0))
+		return
+
+	# Scudo Energetico Assorbe il Colpo
+	if shield_charges > 0:
+		shield_charges -= 1
+		invulnerable_time = 0.40
+		SoundFX.play_hit()
+		var vfx: Node = get_node_or_null("/root/VFXManager")
+		if vfx and vfx.has_method("spawn_floating_text"):
+			vfx.spawn_floating_text(global_position + Vector2(40, -30), "🛡️ ASSORBITO!", Color(0.2, 0.85, 1.0, 1.0))
+		return
+
 	invulnerable_time = 0.25
 
 	current_hp = max(0, current_hp - amount)
@@ -320,13 +529,29 @@ func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0
 		if "is_piercing" in projectile and has_piercing:
 			projectile.is_piercing = true
 
+		if has_homing_rounds and "is_homing" in projectile:
+			projectile.is_homing = true
+
+		if shot_scale != 1.0:
+			projectile.scale *= shot_scale
+
 		if "bounces_left" in projectile and has_bouncy_wall:
 			projectile.bounces_left = 2
 
 		if "damage" in projectile:
 			var base_dmg: int = weapon_base_damage + bonus_damage
 			var raw_dmg: float = (base_dmg * 1.5 if eq_w == "katana" else float(base_dmg)) * dmg_mult
+			# Calcolo critico con perk crit_up
+			var is_crit: bool = (randf() <= (0.15 + crit_chance))
+			if is_crit: raw_dmg *= 2.0
 			projectile.damage = max(1, int(raw_dmg))
+			if projectile.has_meta("is_crit"): projectile.set_meta("is_crit", is_crit)
+
+		if projectile.has_signal("body_entered"):
+			projectile.body_entered.connect(func(hit_b):
+				if is_instance_valid(hit_b) and hit_b.is_in_group("enemies"):
+					on_projectile_hit(hit_b, projectile.damage, projectile.global_position)
+			)
 
 		get_tree().current_scene.add_child(projectile)
 		if dmg_mult >= 1.0:
@@ -366,3 +591,10 @@ func _on_shoot_timer_timeout() -> void:
 		if has_spread_shot:
 			_spawn_projectile(base_dir.rotated(deg_to_rad(18.0)))
 			_spawn_projectile(base_dir.rotated(deg_to_rad(-18.0)))
+
+		if has_rear_arrow:
+			_spawn_projectile(base_dir.rotated(PI))
+
+		if has_side_arrows:
+			_spawn_projectile(base_dir.rotated(PI * 0.5))
+			_spawn_projectile(base_dir.rotated(-PI * 0.5))

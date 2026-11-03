@@ -2,13 +2,14 @@ class_name CyberModels
 extends RefCounted
 
 # ==============================================================================
-# RENDERING 2.5D "ARCHERO-STYLE": i personaggi sono modelli 3D-shaded (PBR pre-renderizzati)
-# disegnati IN PIEDI (non ruotati dall'alto), con ombra ellittica a terra, anello olografico
-# in prospettiva, rimbalzo di camminata, specchiatura verso il bersaglio e arma che ruota
-# attorno alla mano. Il giocatore percepisce volume e profondità invece di sagome piatte.
+# RENDERING 2.5D "ARCHERO-STYLE" v2: modelli 3D pre-renderizzati ad alto dettaglio
+# (Cyber-Ronin Exo-Slayer, Robo-Titan, Mantis Stalker, Hover-Wasp, Goliath) con contorno
+# scuro solido, animazione procedurale (falcata gambe, inclinazione busto, rinculo,
+# respirazione) e ombre a terra. Nessuna trasparenza sui corpi: massima leggibilità.
 # ==============================================================================
 
 const PERSPECTIVE_Y: float = 0.42 # Schiacciamento verticale degli elementi a terra (camera inclinata ~65°)
+const HERO_LEG_SPLIT: float = 0.54 # Frazione di altezza dove il busto si separa dalle gambe (vita)
 
 ## Ombra morbida ellittica a terra (3 strati sfumati = ambient occlusion)
 static func draw_ground_shadow(c: CanvasItem, center: Vector2, radius: float, strength: float = 0.5) -> void:
@@ -22,8 +23,8 @@ static func draw_ground_shadow(c: CanvasItem, center: Vector2, radius: float, st
 static func draw_ground_ring(c: CanvasItem, center: Vector2, radius: float, col: Color, anim_t: float, width: float = 2.4) -> void:
 	c.draw_set_transform(center, 0.0, Vector2(1.0, PERSPECTIVE_Y))
 	c.draw_circle(Vector2.ZERO, radius, Color(col.r, col.g, col.b, 0.10))
-	c.draw_arc(Vector2.ZERO, radius, anim_t * 2.2, anim_t * 2.2 + PI * 1.35, 32, Color(col.r, col.g, col.b, 0.85), width)
-	c.draw_arc(Vector2.ZERO, radius, anim_t * 2.2 + PI * 1.5, anim_t * 2.2 + PI * 1.85, 12, Color(1, 1, 1, 0.6), width * 0.8)
+	c.draw_arc(Vector2.ZERO, radius, anim_t * 2.2, anim_t * 2.2 + PI * 1.35, 32, Color(col.r, col.g, col.b, 0.90), width)
+	c.draw_arc(Vector2.ZERO, radius, anim_t * 2.2 + PI * 1.5, anim_t * 2.2 + PI * 1.85, 12, Color(1, 1, 1, 0.7), width * 0.8)
 	c.draw_arc(Vector2.ZERO, radius * 0.72, -anim_t * 1.6, -anim_t * 1.6 + PI, 20, Color(col.r, col.g, col.b, 0.45), 1.4)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -46,335 +47,246 @@ static func _draw_part(c: CanvasItem, tex: Texture2D, pivot: Vector2, rot: float
 	c.draw_texture_rect(tex, local_rect, false, modulate)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+## Sprite con "piedi" come perno: squash & stretch, inclinazione e specchiatura
+static func _draw_grounded_sprite(c: CanvasItem, tex: Texture2D, feet: Vector2, height: float, rot: float, flip_h: bool, squash: Vector2 = Vector2.ONE, modulate: Color = Color.WHITE) -> void:
+	if not tex:
+		return
+	var w: float = height * float(tex.get_width()) / float(tex.get_height())
+	var sx: float = -squash.x if flip_h else squash.x
+	c.draw_set_transform_matrix(Transform2D(rot, Vector2(sx, squash.y), 0.0, feet))
+	c.draw_texture_rect(tex, Rect2(Vector2(-w * 0.5, -height), Vector2(w, height)), false, modulate)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
 # ==============================================================================
-# 1. EROE: RIG 3D ARTICOLATO MULTI-ANGOLO (FRONTE / PROFILO / SPALLE) + CORSA REALE
+# 1. EROE: CYBER-RONIN EXO-SLAYER (FRONTE / PROFILO / SPALLE) + RIG BUSTO/GAMBE ANIMATO
 # ==============================================================================
-static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving: bool, is_shooting: bool, aim_angle: float, move_vec: Vector2 = Vector2.ZERO) -> void:
+static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving: bool, is_shooting: bool, aim_angle: float, move_vec: Vector2 = Vector2.ZERO, body_h: float = 68.0) -> void:
 	var aura := Global.get_player_accent_color()
 	var sin_a: float = sin(aim_angle)
 	var cos_a: float = cos(aim_angle)
+	var k: float = body_h / 68.0 # fattore di scala per effetti accessori
 
-	# Determina posa 3D in base alla direzione del nemico:
-	# - Nord / NE / NW (sin_a < -0.30): visto di SPALLE / 3-4 SPALLE verso i nemici!
-	# - Est / Ovest (abs(sin_a) <= 0.38): visto di PROFILO 3/4 verso il bersaglio!
-	# - Sud / Menu Podium (sin_a > 0.38): visto FRONTALE / 3-4 FRONTE!
+	# Posa 3D in base alla direzione del bersaglio: di SPALLE verso i nemici a Nord,
+	# di PROFILO verso Est/Ovest, FRONTALE verso Sud (e sul podio del menu).
 	var pose: String = "SIDE"
-	if sin_a < -0.30:
+	if sin_a < -0.45:
 		pose = "BACK"
-	elif sin_a > 0.38:
+	elif sin_a > 0.55:
 		pose = "FRONT"
-
 	var face_left: bool = cos_a < -0.05
-	var turn_x: float = cos_a * 4.5 # Parallasse 3D testa/spalle quando mira in diagonale
 
 	var mv: Vector2 = move_vec.limit_length(1.0) if is_moving else Vector2.ZERO
 	if is_moving and mv.length_squared() < 0.01:
 		mv = Vector2(cos_a, sin_a)
 
-	# Fisica di locomozione: falcata gambe, sollevamento ginocchia, inclinazione busto e rinculo
-	var stride_phase: float = anim_t * 15.5
+	# Fisica di locomozione: falcata, rimbalzo, inclinazione nella corsa, rinculo e respirazione
+	var stride_phase: float = anim_t * 14.5
 	var stride_s: float = sin(stride_phase)
 	var stride_c: float = cos(stride_phase)
-	var bob: float = absf(stride_s) * 4.2 if is_moving else sin(anim_t * 3.2) * 1.1
-	var lean_rot: float = clampf(mv.x * 0.19, -0.20, 0.20) if is_moving else 0.0
+	var bob: float = (absf(stride_s) * 3.6 if is_moving else sin(anim_t * 3.0) * 0.9) * k
+	var lean_rot: float = clampf(mv.x * 0.16, -0.18, 0.18) if is_moving else 0.0
 	var recoil_kick: float = 1.0 if (is_shooting and fmod(anim_t * 14.0, 1.0) < 0.30) else 0.0
-	var body_shift: Vector2 = (Vector2(mv.x * 3.2, mv.y * 1.8) if is_moving else Vector2.ZERO) - Vector2(cos_a, sin_a * 0.5) * (2.6 * recoil_kick)
+	var body_shift: Vector2 = Vector2(mv.x * 2.4 * k, 0.0) - Vector2(cos_a, 0.0) * (2.2 * recoil_kick * k)
+	var breathe: float = 1.0 + (sin(anim_t * 3.0) * 0.012 if not is_moving else 0.0)
 
-	# Ombra dinamica, controluce olografico e anello direzionale a terra (massima leggibilità dell'Eroe!)
-	draw_ground_shadow(c, Vector2(body_shift.x * 0.4, 17.0), 20.0 - (bob * 0.35 if is_moving else 0.0), 0.55)
-	draw_ground_ring(c, Vector2(0, 17.0), 28.0, aura, anim_t, 3.0 if is_shooting else 2.4)
-	# Alone rim-light dietro la sagoma dell'eroe così spicca sempre su qualunque pavimento
-	c.draw_circle(Vector2(body_shift.x, -12.0 - bob + body_shift.y), 28.0, Color(aura.r, aura.g, aura.b, 0.18))
-	c.draw_circle(Vector2(body_shift.x, -12.0 - bob + body_shift.y), 18.0, Color(1.0, 1.0, 1.0, 0.10))
+	var feet := Vector2(body_shift.x, 18.0 * k)
 
-	# Indicatore direzionale di mira a terra (freccia olografica verso il bersaglio attivo)
+	# Ombra dinamica, anello direzionale a terra e freccia di mira
+	draw_ground_shadow(c, Vector2(body_shift.x * 0.4, feet.y), 19.0 * k - (bob * 0.3), 0.62)
+	draw_ground_ring(c, Vector2(0, feet.y), 27.0 * k, aura, anim_t, (3.0 if is_shooting else 2.4))
 	var dir_2d := Vector2(cos_a, sin_a * PERSPECTIVE_Y)
-	var tip_p := Vector2(0, 17.0) + dir_2d * 32.0
-	var side_p := Vector2(-sin_a, cos_a * PERSPECTIVE_Y) * 5.5
+	var tip_p := Vector2(0, feet.y) + dir_2d * 34.0 * k
+	var side_p := Vector2(-sin_a, cos_a * PERSPECTIVE_Y) * 6.0 * k
 	c.draw_colored_polygon(PackedVector2Array([
 		tip_p,
-		Vector2(0, 17.0) + dir_2d * 23.0 + side_p,
-		Vector2(0, 17.0) + dir_2d * 23.0 - side_p
-	]), Color(aura.r, aura.g, aura.b, 0.92))
+		Vector2(0, feet.y) + dir_2d * 24.0 * k + side_p,
+		Vector2(0, feet.y) + dir_2d * 24.0 * k - side_p
+	]), Color(aura.r, aura.g, aura.b, 0.95))
 
-	# Scie energetiche e anelli di passo durante la corsa
+	# Scie energetiche (dash dei propulsori) durante la corsa
 	if is_moving:
-		for k in range(3):
-			var trail_off := -Vector2(mv.x, mv.y * 0.65) * (10.0 + float(k) * 8.0)
-			c.draw_circle(Vector2(0, 14.0) + trail_off, 5.2 - float(k) * 1.4, Color(aura.r, aura.g, aura.b, 0.38 - float(k) * 0.09))
+		for t_i in range(3):
+			var trail_off := -Vector2(mv.x, mv.y * 0.65) * (10.0 + float(t_i) * 8.0) * k
+			c.draw_circle(Vector2(0, feet.y - 3.0) + trail_off, (5.0 - float(t_i) * 1.4) * k, Color(aura.r, aura.g, aura.b, 0.40 - float(t_i) * 0.10))
 
-	var tint := Color(1.04 + aura.r * 0.12, 1.04 + aura.g * 0.12, 1.06 + aura.b * 0.12, 1.0)
-	var boot_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_boot.png")
-	var pauldron_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_pauldron.png")
-
-	# Se mira verso Nord ("BACK"), l'arma è davanti al petto dell'eroe (quindi dietro la schiena rispetto alla camera)
+	var tex_name := "hero_full_side.png"
 	if pose == "BACK":
-		_draw_hero_weapon(c, weapon_id, anim_t, is_shooting, aim_angle, face_left, -bob + body_shift.y, body_shift.x + turn_x * 0.6)
+		tex_name = "hero_full_back.png"
+	elif pose == "FRONT":
+		tex_name = "hero_full_front.png"
+	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/" + tex_name)
 
-	# Mantello energetico dietro al corpo nelle viste FRONT e SIDE
+	var hand := Vector2(body_shift.x + (-1.0 if face_left else 1.0) * body_h * 0.20, feet.y - body_h * 0.50 - bob)
+
+	# Mirando a Nord l'arma è davanti all'eroe → dietro la schiena rispetto alla camera
+	if pose == "BACK":
+		_draw_hero_weapon(c, weapon_id, anim_t, is_shooting, aim_angle, face_left, hand, k)
+
+	if tex:
+		_draw_hero_rig(c, tex, feet, body_h * breathe, bob, lean_rot, stride_s if is_moving else 0.0, stride_c if is_moving else 0.0, face_left)
+	else:
+		c.draw_circle(Vector2(feet.x, feet.y - body_h * 0.5), body_h * 0.3, aura)
+
+	# Bagliore neon della visiera (colore Aura scelto) sopra al casco
 	if pose != "BACK":
-		_draw_hero_cape(c, Vector2(body_shift.x - cos_a * 3.0, -14.0 - bob + body_shift.y), mv, anim_t, aura, 0.82)
+		var head_p := Vector2(feet.x + (-1.0 if face_left else 1.0) * (body_h * 0.03 if pose == "SIDE" else 0.0), feet.y - body_h * 0.84 - bob)
+		c.draw_circle(head_p, 6.5 * k, Color(aura.r, aura.g, aura.b, 0.28))
+		c.draw_circle(head_p, 2.4 * k, Color(1, 1, 1, 0.55))
+	else:
+		# Ugelli jetpack accesi sulla schiena mentre corre
+		var back_p := Vector2(feet.x, feet.y - body_h * 0.62 - bob)
+		var jet_r: float = ((4.0 + sin(anim_t * 28.0) * 1.2) if is_moving else 2.2) * k
+		c.draw_circle(back_p + Vector2(-5.0 * k, 0), jet_r, Color(aura.r, aura.g, aura.b, 0.8))
+		c.draw_circle(back_p + Vector2(5.0 * k, 0), jet_r, Color(aura.r, aura.g, aura.b, 0.8))
 
-	# --- GAMBE 3D ARTICOLATE INDIPENDENTI (FALCTA REALE + SOLLEVAMENTO GINOCCHIA) ---
-	var hip_sep: float = 3.2 if pose == "SIDE" else 7.2
-	var hip_y: float = 1.0 - bob * 0.55 + body_shift.y
-	var hip_l := Vector2(-hip_sep + body_shift.x, hip_y)
-	var hip_r := Vector2(hip_sep + body_shift.x, hip_y)
+	if pose != "BACK":
+		_draw_hero_weapon(c, weapon_id, anim_t, is_shooting, aim_angle, face_left, hand, k)
 
-	var swing_vec := Vector2(mv.x * 10.5, mv.y * 5.2)
-	if is_moving and absf(mv.x) < 0.22:
-		swing_vec.x = 2.4 # Leggera apertura naturale durante lo sprint verticale
-	var lift_l: float = maxf(0.0, -stride_c) * 6.8 if is_moving else 0.0
-	var lift_r: float = maxf(0.0, stride_c) * 6.8 if is_moving else 0.0
+## Rig a due segmenti: gambe con falcata (taglio obliquo alternato) + busto con inclinazione e rimbalzo
+static func _draw_hero_rig(c: CanvasItem, tex: Texture2D, feet: Vector2, h: float, bob: float, lean: float, stride_s: float, stride_c: float, flip_h: bool) -> void:
+	var tw: float = float(tex.get_width())
+	var th: float = float(tex.get_height())
+	var w: float = h * tw / th
+	var sx: float = -1.0 if flip_h else 1.0
+	var split_src: float = th * HERO_LEG_SPLIT
+	var leg_h: float = h * (1.0 - HERO_LEG_SPLIT)
+	var top_h: float = h * HERO_LEG_SPLIT
+	var hip := Vector2(feet.x, feet.y - leg_h - bob * 0.6)
 
-	var foot_l: Vector2 = Vector2(-hip_sep, 14.5) + (swing_vec * stride_s if is_moving else Vector2.ZERO) + Vector2(0.0, -lift_l)
-	var foot_r: Vector2 = Vector2(hip_sep, 14.5) - (swing_vec * stride_s if is_moving else Vector2.ZERO) + Vector2(0.0, -lift_r)
-	var rot_l: float = (-stride_s * 0.34 * signf(mv.x if absf(mv.x) > 0.1 else 1.0)) if is_moving else 0.0
-	var rot_r: float = (stride_s * 0.34 * signf(mv.x if absf(mv.x) > 0.1 else 1.0)) if is_moving else 0.0
+	# Gambe: perno all'anca, il taglio obliquo alterna la falcata avanti/indietro
+	var leg_skew: float = stride_s * 0.30
+	var leg_sy: float = 1.0 - absf(stride_c) * 0.05
+	c.draw_set_transform_matrix(Transform2D(lean * 0.4, Vector2(sx, leg_sy), leg_skew * sx, hip))
+	c.draw_texture_rect_region(tex, Rect2(Vector2(-w * 0.5, -1.0), Vector2(w, leg_h + 1.0)), Rect2(Vector2(0, split_src - 1.0), Vector2(tw, th - split_src + 1.0)))
 
-	# Ordina il disegno delle gambe in base alla profondità Y
-	var draw_left_first: bool = foot_l.y <= foot_r.y
-	for step_i in range(2):
-		var is_l: bool = (step_i == 0) if draw_left_first else (step_i == 1)
-		var hp_p: Vector2 = hip_l if is_l else hip_r
-		var ft_p: Vector2 = foot_l if is_l else foot_r
-		var ft_r: float = rot_l if is_l else rot_r
-		var knee_p: Vector2 = hp_p.lerp(ft_p, 0.5) + Vector2(mv.x * 2.5, -2.5)
-		c.draw_line(hp_p, knee_p, Color(0.14, 0.18, 0.28, 1.0), 5.2)
-		c.draw_line(knee_p, ft_p, Color(0.22, 0.28, 0.42, 1.0), 4.4)
-		c.draw_circle(knee_p, 2.5, Color(aura.r, aura.g, aura.b, 0.75))
-		if boot_tex:
-			_draw_part(c, boot_tex, ft_p, ft_r, Rect2(Vector2(-9, -11), Vector2(18, 18)), face_left, tint)
-		else:
-			c.draw_circle(ft_p, 5.0, Color(0.2, 0.25, 0.36, 1.0))
+	# Busto + testa: perno all'anca con inclinazione e torsione nella corsa
+	var twist: float = stride_c * 0.035
+	c.draw_set_transform_matrix(Transform2D(lean + twist, Vector2(sx, 1.0), 0.0, hip - Vector2(0, bob * 0.4)))
+	c.draw_texture_rect_region(tex, Rect2(Vector2(-w * 0.5, -top_h), Vector2(w, top_h + 1.0)), Rect2(Vector2.ZERO, Vector2(tw, split_src + 1.0)))
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	# --- BUSTO, SPALLACCI E CASCO 3D ORIENTATI VERSO I NEMICI ---
-	var torso_pivot := Vector2(body_shift.x, -11.0 - bob + body_shift.y)
-	var head_pivot := Vector2(body_shift.x + turn_x * 0.75, -26.5 - bob + body_shift.y + sin_a * 1.4)
-
-	if pose == "BACK":
-		var torso_back := CyberTheme.get_model_texture("res://assets/cyber_models/hero_torso_back.png")
-		_draw_part(c, torso_back, torso_pivot, lean_rot, Rect2(Vector2(-24, -21), Vector2(48, 42)), face_left, tint)
-
-		# Spina neurale luminosa e ugelli jetpack attivi sulla schiena!
-		var jet_l := torso_pivot + Vector2(-6.5, 2.0).rotated(lean_rot)
-		var jet_r := torso_pivot + Vector2(6.5, 2.0).rotated(lean_rot)
-		var jet_rad: float = (4.8 + sin(anim_t * 28.0) * 1.4) if is_moving else 2.8
-		c.draw_circle(torso_pivot + Vector2(0, -4.0), 3.0, aura)
-		c.draw_circle(jet_l, jet_rad, Color(aura.r, aura.g, aura.b, 0.85))
-		c.draw_circle(jet_r, jet_rad, Color(aura.r, aura.g, aura.b, 0.85))
-		c.draw_circle(jet_l, jet_rad * 0.45, Color.WHITE)
-		c.draw_circle(jet_r, jet_rad * 0.45, Color.WHITE)
-
-		# Mantello olografico fluente visto da dietro mentre corre/spara
-		_draw_hero_cape(c, torso_pivot + Vector2(0, -5.0), mv, anim_t, aura, 0.72)
-
-		# Spallacci 3D sinistro e destro con parallasse
-		_draw_part(c, pauldron_tex, torso_pivot + Vector2(-15.0 + turn_x * 0.25, -8.5), lean_rot - 0.08, Rect2(Vector2(-11, -11), Vector2(22, 22)), true, tint)
-		_draw_part(c, pauldron_tex, torso_pivot + Vector2(15.0 + turn_x * 0.25, -8.5), lean_rot + 0.08, Rect2(Vector2(-11, -11), Vector2(22, 22)), false, tint)
-
-		# Casco 3D visto da DIETRO (calotta corazzata + porta neurale nucale, NON la faccia!)
-		var head_back := CyberTheme.get_model_texture("res://assets/cyber_models/hero_head_back.png")
-		_draw_part(c, head_back, head_pivot, lean_rot * 0.6 + cos_a * 0.10, Rect2(Vector2(-19, -19), Vector2(38, 38)), face_left, tint)
-		c.draw_circle(head_pivot + Vector2(cos_a * 2.0, 2.0), 3.2, aura)
-		c.draw_circle(head_pivot + Vector2(cos_a * 2.0, 2.0), 1.4, Color.WHITE)
-
-	elif pose == "SIDE":
-		var dir_sign: float = -1.0 if face_left else 1.0
-		# Spallaccio lontano dietro il busto
-		_draw_part(c, pauldron_tex, torso_pivot + Vector2(dir_sign * 7.0, -9.0), lean_rot, Rect2(Vector2(-10, -10), Vector2(20, 20)), face_left, tint.darkened(0.18))
-
-		var torso_side := CyberTheme.get_model_texture("res://assets/cyber_models/hero_torso_side.png")
-		_draw_part(c, torso_side, torso_pivot, lean_rot, Rect2(Vector2(-23, -21), Vector2(46, 42)), face_left, tint)
-
-		# Fiamma jetpack laterale in corsa
-		if is_moving:
-			var side_jet := torso_pivot + Vector2(-dir_sign * 10.5, 1.5)
-			c.draw_circle(side_jet, 4.4 + sin(anim_t * 26.0) * 1.2, Color(aura.r, aura.g, aura.b, 0.85))
-			c.draw_circle(side_jet, 2.0, Color.WHITE)
-
-		# Casco 3D di PROFILO con visiera avvolgente puntata verso il nemico!
-		var head_side := CyberTheme.get_model_texture("res://assets/cyber_models/hero_head_side.png")
-		var head_pitch: float = clampf(sin_a * 0.22, -0.20, 0.20) * dir_sign
-		_draw_part(c, head_side, head_pivot, lean_rot * 0.5 + head_pitch, Rect2(Vector2(-19, -19), Vector2(38, 38)), face_left, tint)
-		var visor_a := head_pivot + Vector2(dir_sign * 2.0, -1.5)
-		var visor_b := head_pivot + Vector2(dir_sign * 11.5, 0.5 + sin_a * 1.5)
-		c.draw_line(visor_a, visor_b, aura, 3.8)
-		c.draw_line(visor_a, visor_b, Color(1, 1, 1, 0.88), 1.3)
-
-		# Arma e spallaccio primo piano
-		_draw_hero_weapon(c, weapon_id, anim_t, is_shooting, aim_angle, face_left, -bob + body_shift.y, body_shift.x)
-		_draw_part(c, pauldron_tex, torso_pivot + Vector2(-dir_sign * 7.5, -7.5), lean_rot, Rect2(Vector2(-11, -11), Vector2(22, 22)), face_left, tint)
-
-	else: # "FRONT" (mira a Sud oppure vetrina Podio Menu!)
-		var torso_front := CyberTheme.get_model_texture("res://assets/cyber_models/hero_torso_front.png")
-		_draw_part(c, torso_front, torso_pivot, lean_rot, Rect2(Vector2(-24, -21), Vector2(48, 42)), face_left, tint)
-
-		# Reattore Arc pettorale con il colore Aura scelto
-		var core_p := torso_pivot + Vector2(turn_x * 0.35, -2.5)
-		c.draw_circle(core_p, 6.8, Color(aura.r, aura.g, aura.b, 0.30))
-		c.draw_circle(core_p, 3.8, aura)
-		c.draw_circle(core_p + Vector2(-1, -1), 1.6, Color.WHITE)
-
-		# Spallacci 3D
-		_draw_part(c, pauldron_tex, torso_pivot + Vector2(-15.0 + turn_x * 0.25, -8.5), lean_rot - 0.08, Rect2(Vector2(-11, -11), Vector2(22, 22)), true, tint)
-		_draw_part(c, pauldron_tex, torso_pivot + Vector2(15.0 + turn_x * 0.25, -8.5), lean_rot + 0.08, Rect2(Vector2(-11, -11), Vector2(22, 22)), false, tint)
-
-		# Casco 3D Frontale + Visiera a V luminosa
-		var head_front := CyberTheme.get_model_texture("res://assets/cyber_models/hero_head_front.png")
-		_draw_part(c, head_front, head_pivot, lean_rot * 0.5 + cos_a * 0.08, Rect2(Vector2(-19, -19), Vector2(38, 38)), face_left, tint)
-		var v_mid := head_pivot + Vector2(cos_a * 2.2, 2.2)
-		c.draw_line(v_mid + Vector2(-7.0, -2.5), v_mid, aura, 3.6)
-		c.draw_line(v_mid + Vector2(7.0, -2.5), v_mid, aura, 3.6)
-		c.draw_line(v_mid + Vector2(-6.0, -2.2), v_mid, Color(1, 1, 1, 0.88), 1.2)
-		c.draw_line(v_mid + Vector2(6.0, -2.2), v_mid, Color(1, 1, 1, 0.88), 1.2)
-
-		_draw_hero_weapon(c, weapon_id, anim_t, is_shooting, aim_angle, face_left, -bob + body_shift.y, body_shift.x)
-
-## Mantello Cyber-Tessuto dinamico che ondeggia in direzione opposta alla corsa
-static func _draw_hero_cape(c: CanvasItem, anchor: Vector2, mv: Vector2, anim_t: float, aura: Color, alpha_mul: float) -> void:
-	var wave1: float = sin(anim_t * 10.5) * 3.5
-	var wave2: float = cos(anim_t * 12.0) * 5.0
-	var drag := Vector2(-mv.x * 16.0 + wave1, 20.0 - mv.y * 6.0 + absf(mv.x) * 3.0)
-	var p_tl := anchor + Vector2(-9.5, 0.0)
-	var p_tr := anchor + Vector2(9.5, 0.0)
-	var p_br := anchor + drag + Vector2(13.0 + wave2 * 0.4, 2.0)
-	var p_bm := anchor + drag + Vector2(wave2 * 0.6, 6.0)
-	var p_bl := anchor + drag + Vector2(-13.0 + wave2 * 0.4, 2.0)
-	c.draw_colored_polygon(PackedVector2Array([p_tl, p_tr, p_br, p_bm, p_bl]), Color(0.06, 0.09, 0.18, 0.88 * alpha_mul))
-	c.draw_polyline(PackedVector2Array([p_tl, p_bl, p_bm, p_br, p_tr]), Color(aura.r, aura.g, aura.b, 0.72 * alpha_mul), 1.8)
-
-static func _draw_hero_weapon(c: CanvasItem, weapon_id: String, anim_t: float, is_shooting: bool, aim_angle: float, face_left: bool, y_off: float, x_off: float = 0.0) -> void:
-	var recoil: float = -4.5 if (is_shooting and fmod(anim_t * 14.0, 1.0) < 0.30) else 0.0
-	var hand := Vector2((-7.5 if face_left else 7.5) + x_off, -9.0 + y_off)
+static func _draw_hero_weapon(c: CanvasItem, weapon_id: String, anim_t: float, is_shooting: bool, aim_angle: float, face_left: bool, hand: Vector2, k: float = 1.0) -> void:
+	var recoil: float = -5.0 * k if (is_shooting and fmod(anim_t * 14.0, 1.0) < 0.30) else 0.0
 	var flip_y: float = -1.0 if face_left else 1.0
-
-	# Braccio corazzato esteso verso l'impugnatura
-	var shoulder := Vector2((-9.0 if face_left else 9.0) + x_off, -15.0 + y_off)
-	var grip := hand + Vector2.RIGHT.rotated(aim_angle) * (6.0 + recoil * 0.5)
-	c.draw_line(shoulder, grip, Color(0.18, 0.24, 0.36, 1.0), 5.0)
+	var wsz: float = 40.0 * k
 
 	c.draw_set_transform(hand, aim_angle, Vector2(1.0, flip_y))
 	# Mirino laser tattico verso il nemico quando ingaggia il bersaglio
 	if is_shooting:
-		c.draw_line(Vector2(22.0 + recoil, 0.0), Vector2(68.0, 0.0), Color(0.0, 0.96, 1.0, 0.26), 1.4)
+		c.draw_line(Vector2(wsz * 0.65 + recoil, 0.0), Vector2(wsz * 2.0, 0.0), Color(1.0, 0.15, 0.25, 0.45), 1.6)
 	var wep_tex := CyberTheme.get_item_model_texture(weapon_id, "ARMA")
 	if wep_tex:
-		c.draw_texture_rect(wep_tex, Rect2(Vector2(-2.0 + recoil, -15.0), Vector2(34.0, 34.0)), false)
+		c.draw_texture_rect(wep_tex, Rect2(Vector2(-wsz * 0.10 + recoil, -wsz * 0.48), Vector2(wsz, wsz)), false)
+	# Guanto corazzato che impugna l'arma
+	c.draw_circle(Vector2(recoil + 2.0 * k, 2.0 * k), 4.2 * k, Color(0.16, 0.19, 0.26, 1.0))
+	c.draw_circle(Vector2(recoil + 2.0 * k, 2.0 * k), 4.2 * k - 1.2, Color(0.42, 0.48, 0.58, 1.0))
 	if is_shooting and recoil < -1.0:
-		c.draw_circle(Vector2(30.0 + recoil, 0.0), 6.0, Color(0.0, 0.98, 1.0, 0.80))
-		c.draw_circle(Vector2(30.0 + recoil, 0.0), 2.8, Color.WHITE)
+		c.draw_circle(Vector2(wsz * 0.85 + recoil, 0.0), 7.0 * k, Color(0.0, 0.98, 1.0, 0.85))
+		c.draw_circle(Vector2(wsz * 0.85 + recoil, 0.0), 3.2 * k, Color.WHITE)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ==============================================================================
-# 2. NEMICO MELEE: MECH-RAGNO 3D CON ZAMPE ARTICOLATE IN MOVIMENTO
+# 2. NEMICO MELEE: MANTIS STALKER 3D (zampettata rapida + affondo delle lame)
 # ==============================================================================
 static func draw_melee_enemy(c: CanvasItem, world_id: String, anim_t: float, accent: Color, aim_angle: float) -> void:
 	var face_left := cos(aim_angle) < 0.0
-	var scuttle := absf(sin(anim_t * 16.0)) * 3.2
-	var tilt := cos(aim_angle) * 0.14
-	draw_ground_shadow(c, Vector2(0, 12), 18.0, 0.50)
-	draw_ground_ring(c, Vector2(0, 12), 23.0, Color(1.0, 0.22, 0.32, 1.0), anim_t * 0.65, 2.2)
-	# Alone ostile cremisi dietro il modello per massima visibilità
-	c.draw_circle(Vector2(0, -10.0 - scuttle), 22.0, Color(1.0, 0.18, 0.28, 0.20))
+	var scuttle := absf(sin(anim_t * 16.0)) * 2.6
+	var tilt := cos(aim_angle) * 0.08 + sin(anim_t * 16.0) * 0.04
+	draw_ground_shadow(c, Vector2(0, 14), 22.0, 0.60)
+	draw_ground_ring(c, Vector2(0, 14), 25.0, Color(1.0, 0.22, 0.32, 1.0), anim_t * 0.65, 2.4)
 
-	# Zampe meccaniche articolate che zampettano rapidamente
-	for side: float in [-1.0, 1.0]:
-		for leg_i: int in range(2):
-			var ph: float = anim_t * 18.0 + side * 1.5 + float(leg_i) * PI
-			var knee := Vector2(side * (14.0 + float(leg_i) * 4.0), -6.0 - scuttle + sin(ph) * 3.5)
-			var foot := Vector2(side * (21.0 + float(leg_i) * 5.0) + cos(ph) * 4.5, 10.0 + float(leg_i) * 3.0 - maxf(0.0, sin(ph)) * 4.0)
-			c.draw_line(Vector2(side * 8.0, -8.0 - scuttle), knee, Color(0.28, 0.34, 0.48, 1.0), 3.4)
-			c.draw_line(knee, foot, Color(1.0, 0.32, 0.38, 0.95), 2.8)
-
-	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_melee.png")
-	var tint := Color(1.02 + accent.r * 0.18, 0.98 + accent.g * 0.16, 1.02 + accent.b * 0.18, 1.0)
+	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_melee_v2.png")
 	if tex:
-		_draw_part(c, tex, Vector2(cos(aim_angle) * 2.5, -9.0 - scuttle), tilt, Rect2(Vector2(-26, -26), Vector2(52, 52)), face_left, tint)
+		var squash := Vector2(1.0 + scuttle * 0.012, 1.0 - scuttle * 0.012)
+		_draw_grounded_sprite(c, tex, Vector2(cos(aim_angle) * 2.0, 16.0 - scuttle), 50.0, tilt, not face_left, squash)
 	else:
 		c.draw_circle(Vector2(0, -8), 14.0, accent)
 
-	# Accessori di bioma (piccoli dettagli luminosi sopra il modello)
 	match world_id:
 		"world_2", "world_5":
-			c.draw_circle(Vector2(0, -24 - scuttle), 4.0, Color(1.0, 0.55, 0.1, 0.9))
+			c.draw_circle(Vector2(0, -30 - scuttle), 4.0, Color(1.0, 0.55, 0.1, 0.95))
 		"world_4", "world_8":
 			for i in range(3):
 				var a := anim_t * 4.0 + i * TAU / 3.0
-				c.draw_circle(Vector2(cos(a) * 18.0, -10 + sin(a) * 7.0 - scuttle), 2.6, Color(accent.r, accent.g, accent.b, 0.9))
+				c.draw_circle(Vector2(cos(a) * 22.0, -12 + sin(a) * 8.0 - scuttle), 2.6, Color(accent.r, accent.g, accent.b, 0.95))
 		_:
 			pass
-	# Occhio di mira rosso brillante orientato verso l'eroe
-	var eye_off := Vector2(cos(aim_angle) * 4.5, sin(aim_angle) * 2.5)
-	c.draw_circle(Vector2(0, -12 - scuttle) + eye_off, 4.0 + sin(anim_t * 8.0), Color(1.0, 0.18, 0.28, 0.92))
-	c.draw_circle(Vector2(0, -12 - scuttle) + eye_off, 1.8, Color.WHITE)
 
 # ==============================================================================
-# 3. NEMICO RANGED: DRONE CECCHINO 3D FLUTTUANTE CON ROLLIO DINAMICO
+# 3. NEMICO RANGED: HOVER-WASP SNIPER DRONE 3D (volo, rollio e carica laser)
 # ==============================================================================
 static func draw_ranged_enemy(c: CanvasItem, anim_t: float, _accent: Color, aim_angle: float, is_charging: bool) -> void:
 	var face_left := cos(aim_angle) < 0.0
 	var hover := sin(anim_t * 3.8) * 4.5
-	var bank_rot := cos(aim_angle) * 0.12 + sin(anim_t * 2.6) * 0.05
-	draw_ground_shadow(c, Vector2(0, 16), 15.0 - hover * 0.6, 0.45)
-	draw_ground_ring(c, Vector2(0, 16), 22.0, Color(0.95, 0.28, 1.0, 1.0), -anim_t * 0.8, 2.2)
-	c.draw_circle(Vector2(0, -18.0 + hover), 23.0, Color(0.90, 0.24, 1.0, 0.20))
+	var bank_rot := cos(aim_angle) * 0.10 + sin(anim_t * 2.6) * 0.06
+	draw_ground_shadow(c, Vector2(0, 16), 17.0 - hover * 0.5, 0.48)
+	draw_ground_ring(c, Vector2(0, 16), 23.0, Color(0.95, 0.28, 1.0, 1.0), -anim_t * 0.8, 2.2)
 
-	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_ranged.png")
+	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_ranged_v2.png")
+	var body_c := Vector2(0, -16.0 + hover)
 	if tex:
-		_draw_part(c, tex, Vector2(0, -18.0 + hover), bank_rot, Rect2(Vector2(-27, -27), Vector2(54, 54)), face_left, Color(1.12, 1.08, 1.15, 1.0))
+		var w: float = 60.0
+		var h: float = w * float(tex.get_height()) / float(tex.get_width())
+		_draw_part(c, tex, body_c, bank_rot, Rect2(Vector2(-w * 0.5, -h * 0.5), Vector2(w, h)), not face_left)
 	else:
-		c.draw_circle(Vector2(0, -18 + hover), 14.0, Color(0.6, 0.3, 1.0, 1.0))
+		c.draw_circle(body_c, 14.0, Color(0.6, 0.3, 1.0, 1.0))
 
-	# Raggio laser di puntamento durante la carica
-	var eye := Vector2(cos(aim_angle) * 5.0, -16.0 + hover + sin(aim_angle) * 2.5)
-	c.draw_circle(eye, 3.8, Color(1.0, 0.22, 0.35, 0.95))
-	c.draw_circle(eye, 1.6, Color.WHITE)
+	# Lente rossa di puntamento + raggio laser durante la carica
+	var eye := body_c + Vector2(cos(aim_angle) * 6.0, 8.0 + sin(aim_angle) * 3.0)
 	if is_charging:
 		var tip := eye + Vector2.RIGHT.rotated(aim_angle) * 135.0
-		c.draw_line(eye, tip, Color(1.0, 0.18, 0.30, 0.50 + 0.28 * sin(anim_t * 30.0)), 2.4)
+		c.draw_line(eye, tip, Color(1.0, 0.18, 0.30, 0.55 + 0.28 * sin(anim_t * 30.0)), 2.4)
 		c.draw_circle(eye, 6.5 + sin(anim_t * 30.0) * 2.0, Color(1.0, 0.25, 0.35, 0.92))
+		c.draw_circle(eye, 2.4, Color.WHITE)
 
 # ==============================================================================
-# 4. NEMICO PESANTE: GOLIATH MORTAR MECH 3D CON PASSO PESANTE
+# 4. NEMICO PESANTE: GOLIATH SIEGE JUGGERNAUT 3D (passo pesante + mortai in carica)
 # ==============================================================================
 static func draw_heavy_enemy(c: CanvasItem, anim_t: float, charge_ratio: float, aim_angle: float) -> void:
 	var face_left := cos(aim_angle) < 0.0
-	var stomp := absf(sin(anim_t * 5.5)) * 2.8
-	var sway := sin(anim_t * 5.5) * 0.06
-	draw_ground_shadow(c, Vector2(0, 18), 26.0, 0.58)
-	draw_ground_ring(c, Vector2(0, 18), 30.0, Color(1.0, 0.52, 0.12, 1.0), anim_t * 0.45, 2.4)
-	c.draw_set_transform(Vector2(0, 18), 0.0, Vector2(1.0, PERSPECTIVE_Y))
-	c.draw_arc(Vector2.ZERO, 34.0, -PI * 0.5, -PI * 0.5 + TAU * charge_ratio, 32, Color(1.0, 0.35, 0.1, 0.96), 3.4)
+	var stomp := absf(sin(anim_t * 5.5)) * 2.6
+	var sway := sin(anim_t * 5.5) * 0.05
+	draw_ground_shadow(c, Vector2(0, 20), 28.0, 0.62)
+	draw_ground_ring(c, Vector2(0, 20), 31.0, Color(1.0, 0.52, 0.12, 1.0), anim_t * 0.45, 2.4)
+	c.draw_set_transform(Vector2(0, 20), 0.0, Vector2(1.0, PERSPECTIVE_Y))
+	c.draw_arc(Vector2.ZERO, 35.0, -PI * 0.5, -PI * 0.5 + TAU * charge_ratio, 32, Color(1.0, 0.35, 0.1, 0.96), 3.4)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	c.draw_circle(Vector2(0, -16.0 - stomp), 30.0, Color(1.0, 0.42, 0.12, 0.18))
 
-	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_heavy.png")
+	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_heavy_v2.png")
 	if tex:
-		var heat := Color(1.14, 1.10 - charge_ratio * 0.20, 1.08 - charge_ratio * 0.32, 1.0)
-		_draw_part(c, tex, Vector2(0, -16.0 - stomp), sway, Rect2(Vector2(-35, -35), Vector2(70, 70)), face_left, heat)
+		var heat := Color(1.0 + charge_ratio * 0.25, 1.0, 1.0 - charge_ratio * 0.15, 1.0)
+		_draw_grounded_sprite(c, tex, Vector2(0, 22.0), 74.0 - stomp, sway, face_left, Vector2(1.0 + stomp * 0.01, 1.0), heat)
 	else:
 		c.draw_circle(Vector2(0, -16), 22.0, Color(0.8, 0.45, 0.2, 1.0))
 	if charge_ratio > 0.6:
-		c.draw_circle(Vector2(0, -16 - stomp), 7.0 + charge_ratio * 6.0, Color(1.0, 0.50, 0.12, 0.45))
+		var mortar := Vector2((-8.0 if face_left else 8.0), -46.0)
+		c.draw_circle(mortar, 5.0 + charge_ratio * 6.0, Color(1.0, 0.50, 0.12, 0.55))
+		c.draw_circle(mortar, 2.5 + charge_ratio * 2.0, Color(1.0, 0.95, 0.6, 0.9))
 
 # ==============================================================================
-# 5. BOSS OVERLORD 3D (aura di fase, satelliti orbitanti in prospettiva)
+# 5. BOSS ROBO-TITAN DREADNOUGHT 3D (passo pesante, fornace pulsante, fase 2 furiosa)
 # ==============================================================================
 static func draw_boss(c: CanvasItem, world_id: String, anim_t: float, boss_col: Color, in_phase_2: bool, aim_angle: float) -> void:
 	var active_col := Color(1.0, 0.15, 0.22, 1.0) if in_phase_2 else boss_col
 	var face_left := cos(aim_angle) < 0.0
-	var breath := sin(anim_t * 2.4) * 2.0
+	var stomp := absf(sin(anim_t * (4.2 if in_phase_2 else 2.8))) * 3.0
+	var sway := sin(anim_t * (4.2 if in_phase_2 else 2.8)) * 0.04
 
-	draw_ground_shadow(c, Vector2(0, 40), 46.0, 0.7)
-	draw_ground_ring(c, Vector2(0, 40), 56.0, active_col, anim_t, 3.4)
+	draw_ground_shadow(c, Vector2(0, 44), 54.0, 0.72)
+	draw_ground_ring(c, Vector2(0, 44), 62.0, active_col, anim_t, 3.6)
+	if in_phase_2:
+		# Onde d'urto rosse ad ogni passo in fase 2
+		c.draw_set_transform(Vector2(0, 44), 0.0, Vector2(1.0, PERSPECTIVE_Y))
+		var shock_r: float = 50.0 + fmod(anim_t * 90.0, 40.0)
+		c.draw_arc(Vector2.ZERO, shock_r, 0.0, TAU, 40, Color(1.0, 0.2, 0.2, 0.6 * (1.0 - (shock_r - 50.0) / 40.0)), 3.0)
+		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	# Satelliti dietro al boss (metà superiore dell'orbita)
 	var orb_count := 4 if in_phase_2 else 3
 	var orbs_front: Array[Vector2] = []
 	for i in range(orb_count):
 		var ang := anim_t * 2.2 + i * (TAU / float(orb_count))
-		var p := Vector2(cos(ang) * 66.0, -6.0 + sin(ang) * 66.0 * PERSPECTIVE_Y)
+		var p := Vector2(cos(ang) * 74.0, -20.0 + sin(ang) * 74.0 * PERSPECTIVE_Y)
 		if sin(ang) < 0.0:
 			_draw_orb(c, p, active_col, 0.8)
 		else:
@@ -385,22 +297,25 @@ static func draw_boss(c: CanvasItem, world_id: String, anim_t: float, boss_col: 
 		var flap := sin(anim_t * 5.0) * 6.0
 		for side: float in [-1.0, 1.0]:
 			var wing := PackedVector2Array([
-				Vector2(side * 20, -40), Vector2(side * (70 + flap), -86), Vector2(side * (78 + flap), -40), Vector2(side * 30, -14)
+				Vector2(side * 24, -70), Vector2(side * (84 + flap), -120), Vector2(side * (92 + flap), -60), Vector2(side * 34, -30)
 			])
-			c.draw_colored_polygon(wing, Color(active_col.r, active_col.g, active_col.b, 0.35))
-			c.draw_polyline(wing, Color(1, 1, 1, 0.55), 2.0)
+			c.draw_colored_polygon(wing, Color(active_col.r, active_col.g, active_col.b, 0.40))
+			c.draw_polyline(wing, Color(1, 1, 1, 0.6), 2.0)
 
-	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_boss.png")
-	c.draw_circle(Vector2(0, -24.0 - breath), 58.0, Color(active_col.r, active_col.g, active_col.b, 0.22))
+	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_boss_titan.png")
 	if tex:
-		var tint := Color(0.95 + active_col.r * 0.25, 0.95 + active_col.g * 0.25, 0.98 + active_col.b * 0.25, 1.0)
-		_draw_upright(c, tex, Rect2(Vector2(-60, -80 - breath), Vector2(120, 120)), face_left, tint)
+		var tint := Color(1.0 + active_col.r * 0.10, 1.0 + active_col.g * 0.06, 1.0 + active_col.b * 0.06, 1.0)
+		if in_phase_2:
+			tint = Color(1.25, 0.92, 0.92, 1.0)
+		_draw_grounded_sprite(c, tex, Vector2(0, 46.0), 142.0 - stomp, sway, face_left, Vector2(1.0 + stomp * 0.006, 1.0), tint)
 	else:
 		c.draw_circle(Vector2(0, -20), 40.0, active_col)
 
-	# Nucleo reattore pulsante colorato
-	c.draw_circle(Vector2(0, -18 - breath), 14.0 + sin(anim_t * 5.0) * 2.0, Color(active_col.r, active_col.g, active_col.b, 0.30))
-	c.draw_circle(Vector2(0, -18 - breath), 6.0, active_col)
+	# Fornace toracica pulsante (si accende di più in fase 2)
+	var core_p := Vector2((3.0 if face_left else -3.0), -48.0 - stomp * 0.5)
+	var pulse: float = 0.5 + 0.5 * sin(anim_t * (9.0 if in_phase_2 else 5.0))
+	c.draw_circle(core_p, 13.0 + pulse * 4.0, Color(1.0, 0.45, 0.10, 0.22 + pulse * 0.18))
+	c.draw_circle(core_p, 4.5 + pulse * 1.5, Color(1.0, 0.92, 0.55, 0.85))
 
 	for p in orbs_front:
 		_draw_orb(c, p, active_col, 1.0)
