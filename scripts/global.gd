@@ -1,6 +1,9 @@
 extends Node
 
-const GAME_VERSION: String = "v1.5.0"
+const GAME_VERSION: String = "v1.5.1"
+
+# Flag di sessione: mostra la schermata d'entrata cinematografica solo all'apertura dell'app
+var boot_entrance_shown: bool = false
 
 # Identità Giocatore (Creazione Personaggio)
 var profile_created: bool = false

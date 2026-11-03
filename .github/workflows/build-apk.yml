@@ -95,10 +95,10 @@ jobs:
           make_latest: true
           body: |
             ### ⚡ V-PUNK: Rogue Protocol — Versione `v1.5.${{ github.run_number }}` (Android APK)
-            - **Rarità Chiare & Stato Equipaggiato Distinto**: Colori netti per rarità (`★ COMUNE` Argento, `★★ RARO` Blu Elettrico, `★★★ EPICO` Viola Ametista, `★★★★ LEGGENDARIO` Oro Reale) + badge verde smeraldo `✓ INDOSSATO` senza mai alterare il colore della rarità.
-            - **Nuova UI 3D Scolpita & Glassmorphism**: Pannelli, card rarità, pulsanti tattili estrusi 3D e piedistalli olografici 3D isometrici.
-            - **Illuminazione Arena Potenziata**: Pavimento PBR e pareti 3D schiariti, vignettatura ridotta al minimo e riflettori tattici sotto Eroe e Nemici per massima visibilità.
-            - **Boss Finale Cinematografico & Valchiria a Prossimità**: Esplosioni a catena + slow-motion + celebrazione prima della Vittoria, e scelta Santuario Cyber-Valchiria attivata solo avvicinandosi all'altare.
+            - **Nuovo Logo 3D HD con Titolo & Boot Splash Full-HD**: Nuovo emblema 3D Cyber-Samurai + stemma "V" con titolo `V-PUNK: ROGUE PROTOCOL` integrato sotto, icone Android adattive HD e schermata di avvio nitida a tutta altezza.
+            - **Schermata d'Entrata 3D & Studio Creazione Personaggio**: All'apertura dell'app accoglie con Key-Art 3D Night City, Camera Olografica 3D interattiva dell'Operativo in tempo reale, card 3D scolpite per le classi (`Cyber-Ronin`, `Vanguard`, `Netrunner`) e personalizzazione Callsign + Aura.
+            - **Rarità Chiare & Stato Equipaggiato Distinto**: Colori netti per rarità (`★ COMUNE` Argento, `★★ RARO` Blu Elettrico, `★★★ EPICO` Viola Ametista, `★★★★ LEGGENDARIO` Oro Reale) + badge verde smeraldo `✓ INDOSSATO`.
+            - **UI 3D Scolpita, Arena Luminosa, Boss Cinematografico & Valchiria a Prossimità**.
             - Scarica **`V-Punk-v1.5.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android ed aprilo per installare e giocare!
           files: |
             build/android/V-Punk-v1.5.${{ github.run_number }}.apk

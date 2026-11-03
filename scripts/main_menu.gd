@@ -213,7 +213,11 @@ func _ready() -> void:
 	_show_home_view()
 
 	if not Global.profile_created:
+		Global.boot_entrance_shown = true
 		call_deferred("_show_character_creation_modal", true)
+	elif not Global.boot_entrance_shown:
+		Global.boot_entrance_shown = true
+		call_deferred("_show_welcome_entrance_screen")
 
 func _setup_dynamic_styles() -> void:
 	CyberTheme.attach_cyber_bloom(self)
@@ -275,7 +279,11 @@ var cyber_bg_canvas: Control = null
 var boss_holo_node: Node2D = null
 var hero_holo_node: Node2D = null
 var top_avatar_holo: Node2D = null
+var welcome_layer: CanvasLayer = null
+var welcome_holo: Node2D = null
+var welcome_fx_ctrl: Control = null
 var char_modal_layer: CanvasLayer = null
+var char_fx_ctrl: Control = null
 var char_preview_holo: Node2D = null
 var char_preview_panel: PanelContainer = null
 var char_preview_status_lbl: Label = null
@@ -291,6 +299,9 @@ func _process(delta: float) -> void:
 	if is_instance_valid(boss_holo_node): boss_holo_node.queue_redraw()
 	if is_instance_valid(hero_holo_node): hero_holo_node.queue_redraw()
 	if is_instance_valid(top_avatar_holo): top_avatar_holo.queue_redraw()
+	if is_instance_valid(welcome_holo): welcome_holo.queue_redraw()
+	if is_instance_valid(welcome_fx_ctrl): welcome_fx_ctrl.queue_redraw()
+	if is_instance_valid(char_fx_ctrl): char_fx_ctrl.queue_redraw()
 	if is_instance_valid(char_preview_holo): char_preview_holo.queue_redraw()
 
 func _setup_procedural_menu_models() -> void:
@@ -2078,9 +2089,9 @@ func _on_btn_play_pressed() -> void:
 # TERMINALE IDENTITÀ NEURALE: CREAZIONE PERSONAGGIO (NOME, CLASSE, COLORE AURA)
 # ==============================================================================
 const CHAR_CLASS_DEFS := [
-	{"id": "RONIN", "title": "⚡ CYBER-RONIN", "wep": "pistol_base", "wep_name": "Pistola Base", "bonus": "+30 VEL | +5% CRIT", "col": Color(0.0, 0.95, 1.0, 1.0)},
-	{"id": "VANGUARD", "title": "🛡️ VANGUARD", "wep": "shotgun", "wep_name": "Fucile a Pompa", "bonus": "+40 HP CORAZZA", "col": Color(0.99, 0.93, 0.04, 1.0)},
-	{"id": "NETRUNNER", "title": "🔮 NETRUNNER", "wep": "homing_wand", "wep_name": "Conduttore Psion", "bonus": "+4 ATK GUIDATO", "col": Color(1.0, 0.08, 0.45, 1.0)}
+	{"id": "RONIN", "title": "⚡ CYBER-RONIN", "wep": "pistol_base", "wep_name": "Pistola Cyber", "bonus": "+30 VEL • +5% CRIT", "stats": "⚔️ 12  ❤️ 100  ⚡ 330", "rar": "RARE", "col": Color(0.0, 0.95, 1.0, 1.0)},
+	{"id": "VANGUARD", "title": "🛡️ VANGUARD", "wep": "shotgun", "wep_name": "Fucile a Pompa", "bonus": "+40 HP CORAZZA", "stats": "⚔️ 18  ❤️ 140  ⚡ 295", "rar": "LEGENDARY", "col": Color(1.0, 0.84, 0.10, 1.0)},
+	{"id": "NETRUNNER", "title": "🔮 NETRUNNER", "wep": "homing_wand", "wep_name": "Conduttore Psion", "bonus": "+4 ATK GUIDATO", "stats": "⚔️ 15  ❤️ 105  ⚡ 310", "rar": "EPIC", "col": Color(0.84, 0.28, 1.0, 1.0)}
 ]
 
 const CHAR_COLOR_DEFS := [
@@ -2090,6 +2101,168 @@ const CHAR_COLOR_DEFS := [
 	{"id": "GREEN", "label": "🟢 BIO-VERDE", "col": Color(0.12, 1.0, 0.52, 1.0)}
 ]
 
+## Schermata d'Entrata Cinematografica 3D all'apertura dell'App (per chi ha già un Operativo salvato)
+func _show_welcome_entrance_screen() -> void:
+	if is_instance_valid(welcome_layer):
+		welcome_layer.queue_free()
+		welcome_layer = null
+
+	welcome_layer = CanvasLayer.new()
+	welcome_layer.name = "WelcomeEntranceLayer"
+	welcome_layer.layer = 34
+	add_child(welcome_layer)
+
+	var root_ctrl := Control.new()
+	welcome_layer.add_child(root_ctrl)
+	root_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	# 1. Poster Key-Art 3D Full-Screen (con Logo Alato + "V-PUNK: ROGUE PROTOCOL" in alta definizione!)
+	var bg_tex_rect := TextureRect.new()
+	bg_tex_rect.texture = CyberTheme.get_model_texture("res://assets/cyber_models/ui_entrance_keyart.png")
+	bg_tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg_tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg_tex_rect.mouse_filter = Control.MOUSE_FILTER_STOP
+	root_ctrl.add_child(bg_tex_rect)
+	bg_tex_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	# Effetti particellari olografici + sfumatura inferiore per far risaltare il dock 3D
+	welcome_fx_ctrl = Control.new()
+	welcome_fx_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root_ctrl.add_child(welcome_fx_ctrl)
+	welcome_fx_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	welcome_fx_ctrl.draw.connect(func():
+		var sz := welcome_fx_ctrl.size
+		welcome_fx_ctrl.draw_polygon(
+			PackedVector2Array([Vector2(0, sz.y * 0.52), Vector2(sz.x, sz.y * 0.52), Vector2(sz.x, sz.y), Vector2(0, sz.y)]),
+			PackedColorArray([Color(0.02, 0.03, 0.08, 0.0), Color(0.02, 0.03, 0.08, 0.0), Color(0.02, 0.03, 0.08, 0.94), Color(0.02, 0.03, 0.08, 0.94)])
+		)
+		for i in range(18):
+			var px := fmod(float(i) * 97.0 + sin(menu_anim_t * 0.9 + float(i)) * 28.0, maxf(100.0, sz.x))
+			var py := sz.y - fmod(menu_anim_t * (28.0 + float(i % 5) * 9.0) + float(i) * 83.0, maxf(200.0, sz.y))
+			var pa := 0.25 + 0.35 * sin(menu_anim_t * 3.0 + float(i))
+			welcome_fx_ctrl.draw_circle(Vector2(px, py), 2.4, Color(0.1, 0.95, 1.0, pa))
+	)
+
+	# 2. Dock d'Ingresso 3D Scolpito in basso con Anteprima Operativo + Pulsanti Gioca / Crea Operativo
+	var dock_margin := MarginContainer.new()
+	dock_margin.anchor_left = 0.0
+	dock_margin.anchor_right = 1.0
+	dock_margin.anchor_top = 1.0
+	dock_margin.anchor_bottom = 1.0
+	dock_margin.offset_left = 20.0
+	dock_margin.offset_right = -20.0
+	dock_margin.offset_top = -420.0
+	dock_margin.offset_bottom = -24.0
+	root_ctrl.add_child(dock_margin)
+
+	var dock_panel := PanelContainer.new()
+	dock_panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(18, 16))
+	dock_margin.add_child(dock_panel)
+
+	var dv := VBoxContainer.new()
+	dv.alignment = BoxContainer.ALIGNMENT_CENTER
+	dv.add_theme_constant_override("separation", 12)
+	dock_panel.add_child(dv)
+
+	# Riga Dossier Operativo Attivo + Modello 3D Olografico
+	var hero_row := HBoxContainer.new()
+	hero_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	hero_row.add_theme_constant_override("separation", 16)
+	dv.add_child(hero_row)
+
+	var holo_stage := PanelContainer.new()
+	holo_stage.custom_minimum_size = Vector2(150, 148)
+	holo_stage.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("RARE", 8, 8))
+	hero_row.add_child(holo_stage)
+
+	var holo_ctrl := Control.new()
+	holo_ctrl.custom_minimum_size = Vector2(134, 132)
+	holo_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holo_stage.add_child(holo_ctrl)
+
+	welcome_holo = Node2D.new()
+	welcome_holo.position = Vector2(67, 82)
+	welcome_holo.scale = Vector2(1.95, 1.95)
+	welcome_holo.draw.connect(func():
+		var aura_c := Global.get_player_accent_color()
+		welcome_holo.draw_set_transform(Vector2(0, 18), 0.0, Vector2(1.0, 0.40))
+		welcome_holo.draw_circle(Vector2.ZERO, 28.0, Color(0.05, 0.10, 0.20, 0.95))
+		welcome_holo.draw_arc(Vector2.ZERO, 28.0, 0.0, TAU, 28, aura_c, 2.2)
+		welcome_holo.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		CyberModels.draw_hero(welcome_holo, WeaponDB.equipped_weapon_id, menu_anim_t, false, false, PI * 0.5 + sin(menu_anim_t * 1.5) * 0.45)
+	)
+	holo_ctrl.add_child(welcome_holo)
+
+	var info_v := VBoxContainer.new()
+	info_v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_v.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_v.add_theme_constant_override("separation", 6)
+	hero_row.add_child(info_v)
+
+	var w_tag := Label.new()
+	w_tag.text = "⚡ SISTEMA PRONTO • OPERATIVO ATTIVO"
+	w_tag.add_theme_font_size_override("font_size", 13)
+	CyberTheme.style_label(w_tag, CyberTheme.COL_CYAN, 3)
+	info_v.add_child(w_tag)
+
+	var w_name := Label.new()
+	var op_call := Global.player_name if not Global.player_name.is_empty() else "V-77"
+	w_name.text = op_call + "  [" + Global.get_class_display_name() + "]"
+	w_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	w_name.add_theme_font_size_override("font_size", 22)
+	CyberTheme.style_label(w_name, CyberTheme.COL_YELLOW, 4)
+	info_v.add_child(w_name)
+
+	var w_prog := Label.new()
+	w_prog.text = "Mondo Sbloccato: 0" + str(Global.max_unlocked_world) + "/08\n🪙 " + str(Global.total_coins) + "   •   💎 " + str(Global.total_credits) + "   •   ⚙️ " + str(Global.upgrade_scrolls)
+	w_prog.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(w_prog, Color(0.90, 0.96, 1.0, 1.0), 2)
+	info_v.add_child(w_prog)
+
+	# Pulsante Primario 3D Oro: Entra nel Gioco
+	var btn_enter := Button.new()
+	btn_enter.custom_minimum_size = Vector2(0, 68)
+	btn_enter.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	btn_enter.text = "⚡ ENTRA A NIGHT CITY  (CONTINUA) ⚡"
+	btn_enter.add_theme_font_size_override("font_size", 19)
+	CyberTheme.style_button(btn_enter, CyberTheme.COL_YELLOW, true)
+	btn_enter.pressed.connect(func():
+		SoundFX.play_win()
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(root_ctrl, "modulate:a", 0.0, 0.26)
+		tw.tween_property(dock_panel, "scale", Vector2(1.04, 1.04), 0.26)
+		tw.chain().tween_callback(func():
+			if is_instance_valid(welcome_layer):
+				welcome_layer.queue_free()
+				welcome_layer = null
+		)
+	)
+	dv.add_child(btn_enter)
+
+	# Pulsante Secondario 3D Ciano: Apri Creazione / Personalizzazione Operativo
+	var btn_customize := Button.new()
+	btn_customize.custom_minimum_size = Vector2(0, 52)
+	btn_customize.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+	btn_customize.text = "👤 CAMBIA / RICREA OPERATIVO"
+	btn_customize.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_button(btn_customize, CyberTheme.COL_CYAN, false)
+	btn_customize.pressed.connect(func():
+		SoundFX.play_click()
+		if is_instance_valid(welcome_layer):
+			welcome_layer.queue_free()
+			welcome_layer = null
+		_show_character_creation_modal(false)
+	)
+	dv.add_child(btn_customize)
+
+	dock_panel.pivot_offset = Vector2(340, 190)
+	dock_panel.scale = Vector2(0.90, 0.90)
+	dock_panel.modulate = Color(1, 1, 1, 0.0)
+	var tw_open := create_tween().set_parallel(true)
+	tw_open.tween_property(dock_panel, "scale", Vector2.ONE, 0.36).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw_open.tween_property(dock_panel, "modulate:a", 1.0, 0.26)
+
+## Vera Schermata d'Entrata 3D per la Creazione del Personaggio (con Logo Alta Risoluzione + Titolo + Studio Olografico!)
 func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	if is_instance_valid(char_modal_layer):
 		char_modal_layer.queue_free()
@@ -2111,82 +2284,136 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	char_modal_layer.add_child(root_ctrl)
 	root_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	var overlay := ColorRect.new()
-	overlay.color = Color(0.015, 0.02, 0.05, 0.96)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	root_ctrl.add_child(overlay)
-	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# 1. Sfondo Key-Art 3D ad Alta Risoluzione di Night City + Particelle Olografiche (NON più schermo piatto nero!)
+	var keyart_bg := TextureRect.new()
+	keyart_bg.texture = CyberTheme.get_model_texture("res://assets/cyber_models/ui_entrance_keyart.png")
+	keyart_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	keyart_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	keyart_bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	root_ctrl.add_child(keyart_bg)
+	keyart_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var glass_tint := ColorRect.new()
+	glass_tint.color = Color(0.02, 0.035, 0.085, 0.78)
+	glass_tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root_ctrl.add_child(glass_tint)
+	glass_tint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	char_fx_ctrl = Control.new()
+	char_fx_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root_ctrl.add_child(char_fx_ctrl)
+	char_fx_ctrl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	char_fx_ctrl.draw.connect(func():
+		var sz := char_fx_ctrl.size
+		for i in range(16):
+			var px := fmod(float(i) * 103.0 + cos(menu_anim_t * 0.8 + float(i)) * 24.0, maxf(100.0, sz.x))
+			var py := sz.y - fmod(menu_anim_t * (25.0 + float(i % 4) * 8.0) + float(i) * 91.0, maxf(200.0, sz.y))
+			char_fx_ctrl.draw_circle(Vector2(px, py), 2.2, Color(0.15, 0.95, 1.0, 0.28))
+	)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_bottom", 18)
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_bottom", 16)
 	root_ctrl.add_child(margin)
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	var main_panel := PanelContainer.new()
-	main_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.01, 2, 8, 14))
-	margin.add_child(main_panel)
+	var outer_vbox := VBoxContainer.new()
+	outer_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	outer_vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(outer_vbox)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	main_panel.add_child(vbox)
+	# 2. HERO HEADER: Logo 3D con Titolo Sotto ("V-PUNK / ROGUE PROTOCOL") + Camera Olografica 3D dell'Operativo!
+	var showcase_row := HBoxContainer.new()
+	showcase_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	showcase_row.add_theme_constant_override("separation", 12)
+	outer_vbox.add_child(showcase_row)
 
-	# 1. Titolo Terminale Pulito (senza versione in bella vista)
-	var lbl_hdr := Label.new()
-	lbl_hdr.text = "// CREAZIONE OPERATIVO //"
-	lbl_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_hdr.add_theme_font_size_override("font_size", 22)
-	CyberTheme.style_label(lbl_hdr, CyberTheme.COL_YELLOW, 4)
-	vbox.add_child(lbl_hdr)
+	# Card Sinistra: Nuovo Logo Ufficiale 3D ad Alta Risoluzione con Titolo Sotto!
+	var logo_card := PanelContainer.new()
+	logo_card.custom_minimum_size = Vector2(280, 232)
+	logo_card.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(6, 6))
+	showcase_row.add_child(logo_card)
 
-	var lbl_sub := Label.new()
-	lbl_sub.text = "Personalizza Nome, Archetipo e Colore Visiera per iniziare a Night City"
-	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_sub.add_theme_font_size_override("font_size", 15)
-	CyberTheme.style_label(lbl_sub, CyberTheme.COL_CYAN, 2)
-	vbox.add_child(lbl_sub)
+	var logo_tex_rect := TextureRect.new()
+	logo_tex_rect.name = "BrandLogoHeader"
+	logo_tex_rect.texture = CyberTheme.get_model_texture("res://assets/cyber_models/ui_logo_header_3d.png")
+	logo_tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo_tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo_tex_rect.custom_minimum_size = Vector2(266, 218)
+	logo_tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	logo_card.add_child(logo_tex_rect)
 
-	# 2. Podio Olografico 3D Anteprima in Tempo Reale
+	# Card Destra: Podio Olografico 3D Anteprima in Tempo Reale dell'Operativo
 	char_preview_panel = PanelContainer.new()
-	char_preview_panel.custom_minimum_size = Vector2(280, 198)
-	char_preview_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	char_preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), Global.get_player_accent_color(), 0.03, 2, 6, 10))
-	vbox.add_child(char_preview_panel)
+	char_preview_panel.custom_minimum_size = Vector2(396, 232)
+	char_preview_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	char_preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(10, 8))
+	showcase_row.add_child(char_preview_panel)
 
 	var preview_vbox := VBoxContainer.new()
 	preview_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	preview_vbox.add_theme_constant_override("separation", 2)
+	preview_vbox.add_theme_constant_override("separation", 4)
 	preview_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	char_preview_panel.add_child(preview_vbox)
 
+	var lbl_stage_top := Label.new()
+	lbl_stage_top.text = "✨ ANTEPRIMA OLOGRAFICA 3D"
+	lbl_stage_top.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_stage_top.add_theme_font_size_override("font_size", 13)
+	CyberTheme.style_label(lbl_stage_top, CyberTheme.COL_CYAN, 2)
+	preview_vbox.add_child(lbl_stage_top)
+
 	var preview_ctrl := Control.new()
-	preview_ctrl.custom_minimum_size = Vector2(230, 152)
+	preview_ctrl.custom_minimum_size = Vector2(360, 152)
 	preview_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview_vbox.add_child(preview_ctrl)
 
 	char_preview_holo = Node2D.new()
-	char_preview_holo.position = Vector2(115, 84)
-	char_preview_holo.scale = Vector2(2.2, 2.2)
+	char_preview_holo.position = Vector2(180, 96)
+	char_preview_holo.scale = Vector2(2.35, 2.35)
 	char_preview_holo.draw.connect(_on_draw_char_preview_holo)
 	preview_ctrl.add_child(char_preview_holo)
 
 	char_preview_status_lbl = Label.new()
-	char_preview_status_lbl.text = "CLASSE: " + char_selected_class + " | AURA: " + char_selected_color
+	char_preview_status_lbl.text = _get_char_preview_summary_text()
 	char_preview_status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	char_preview_status_lbl.add_theme_font_size_override("font_size", 14)
+	char_preview_status_lbl.add_theme_font_size_override("font_size", 13)
 	CyberTheme.style_label(char_preview_status_lbl, Global.get_player_accent_color(), 3)
 	preview_vbox.add_child(char_preview_status_lbl)
 
-	# 3. Inserimento Nome Operativo (Callsign)
+	# 3. PANNELLO PRINCIPALE 3D SCOLPITO: STUDIO DI CREAZIONE OPERATIVO
+	var main_panel := PanelContainer.new()
+	main_panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(16, 14))
+	outer_vbox.add_child(main_panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 12)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	main_panel.add_child(vbox)
+
+	var lbl_hdr := Label.new()
+	lbl_hdr.text = "⚡ FORGIA IL TUO CYBER-OPERATIVO ⚡" if is_first_time else "⚡ PERSONALIZZA / RICREA OPERATIVO ⚡"
+	lbl_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_hdr.add_theme_font_size_override("font_size", 21)
+	CyberTheme.style_label(lbl_hdr, CyberTheme.COL_YELLOW, 4)
+	vbox.add_child(lbl_hdr)
+
+	var lbl_sub := Label.new()
+	lbl_sub.text = "Scegli Nome in Codice, Classe da Combattimento e Aura Neon per scendere a Night City"
+	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl_sub.add_theme_font_size_override("font_size", 14)
+	CyberTheme.style_label(lbl_sub, Color(0.88, 0.95, 1.0, 1.0), 2)
+	vbox.add_child(lbl_sub)
+
+	# STEP 1: Inserimento Nome Operativo (Callsign)
 	var lbl_name_prompt := Label.new()
-	lbl_name_prompt.text = "1. NOME OPERATIVO / CALLSIGN:"
+	lbl_name_prompt.text = "1. NOME OPERATIVO / CALLSIGN"
 	lbl_name_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_name_prompt.add_theme_font_size_override("font_size", 16)
-	CyberTheme.style_label(lbl_name_prompt, CyberTheme.COL_YELLOW, 3)
+	lbl_name_prompt.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(lbl_name_prompt, CyberTheme.COL_CYAN, 3)
 	vbox.add_child(lbl_name_prompt)
 
 	var name_hbox := HBoxContainer.new()
@@ -2195,13 +2422,15 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	vbox.add_child(name_hbox)
 
 	char_name_input = LineEdit.new()
-	char_name_input.custom_minimum_size = Vector2(340, 50)
-	char_name_input.placeholder_text = "Inserisci il tuo nome (es. V-RONIN)..."
+	char_name_input.custom_minimum_size = Vector2(440, 54)
+	char_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	char_name_input.placeholder_text = "Inserisci nome (es. V-RONIN)..."
 	char_name_input.text = Global.player_name if not Global.player_name.is_empty() else "V-77"
 	char_name_input.max_length = 14
 	char_name_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
-	char_name_input.add_theme_font_size_override("font_size", 18)
-	char_name_input.add_theme_stylebox_override("normal", CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.98), CyberTheme.COL_CYAN, 0.03, 2, 6, 4))
+	char_name_input.add_theme_font_size_override("font_size", 19)
+	char_name_input.add_theme_stylebox_override("normal", CyberTheme.make_cyber_box(Color(0.03, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.02, 2, 6, 4))
+	char_name_input.add_theme_stylebox_override("focus", CyberTheme.make_cyber_box(Color(0.05, 0.09, 0.18, 1.0), CyberTheme.COL_YELLOW, 0.02, 2, 8, 6))
 	char_name_input.text_submitted.connect(func(_t: String):
 		char_name_input.release_focus()
 		DisplayServer.virtual_keyboard_hide()
@@ -2209,7 +2438,7 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	name_hbox.add_child(char_name_input)
 
 	var btn_rand_name := Button.new()
-	btn_rand_name.custom_minimum_size = Vector2(150, 50)
+	btn_rand_name.custom_minimum_size = Vector2(162, 54)
 	btn_rand_name.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_rand_name.focus_mode = Control.FOCUS_NONE
 	btn_rand_name.text = "🎲 CASUALE"
@@ -2218,12 +2447,12 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	btn_rand_name.pressed.connect(_on_char_rand_name_pressed)
 	name_hbox.add_child(btn_rand_name)
 
-	# 4. Selezione Archetipo / Classe (3 Card con Modello Arma 3D)
+	# STEP 2: Selezione Archetipo / Classe (3 Card 3D Scolpite con Piedistallo Arma Olografico)
 	var lbl_class_prompt := Label.new()
-	lbl_class_prompt.text = "2. SCEGLI ARCHETIPO & ARMA INIZIALE:"
+	lbl_class_prompt.text = "2. SCEGLI ARCHETIPO & ARMA 3D INIZIALE"
 	lbl_class_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_class_prompt.add_theme_font_size_override("font_size", 16)
-	CyberTheme.style_label(lbl_class_prompt, CyberTheme.COL_YELLOW, 3)
+	lbl_class_prompt.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(lbl_class_prompt, CyberTheme.COL_CYAN, 3)
 	vbox.add_child(lbl_class_prompt)
 
 	var class_hbox := HBoxContainer.new()
@@ -2233,16 +2462,14 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 
 	for c_def in CHAR_CLASS_DEFS:
 		var cb := Button.new()
-		cb.custom_minimum_size = Vector2(190, 180)
+		cb.custom_minimum_size = Vector2(198, 204)
 		cb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cb.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		cb.focus_mode = Control.FOCUS_NONE
 		var cid: String = str(c_def["id"])
 		var cwep: String = str(c_def["wep"])
 		var ccol: Color = c_def["col"]
-		cb.text = "\n\n\n\n" + str(c_def["title"]) + "\n" + str(c_def["wep_name"]) + "\n" + str(c_def["bonus"])
-		cb.add_theme_font_size_override("font_size", 14)
-		CyberTheme.style_button(cb, ccol, char_selected_class == cid)
+		_style_archetype_card_btn(cb, c_def, char_selected_class == cid)
 		class_hbox.add_child(cb)
 
 		var w_icon := Control.new()
@@ -2250,18 +2477,18 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 		cb.add_child(w_icon)
 		w_icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		w_icon.draw.connect(func():
-			CyberTheme.draw_item_icon(w_icon, Vector2(cb.size.x * 0.5, 48.0), cwep, "ARMA", ccol, 78.0)
+			CyberTheme.draw_item_icon(w_icon, Vector2(cb.size.x * 0.5, 52.0), cwep, "ARMA", ccol, 78.0, char_selected_class == cid)
 		)
 
 		cb.pressed.connect(_on_char_class_selected.bind(cid))
 		char_class_btns[cid] = cb
 
-	# 5. Selezione Colore Visiera / Aura Neon
+	# STEP 3: Selezione Colore Visiera / Aura Neon
 	var lbl_col_prompt := Label.new()
-	lbl_col_prompt.text = "3. COLORE AURA NEON & VISIERA:"
+	lbl_col_prompt.text = "3. COLORE VISIERA & AURA NEON"
 	lbl_col_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_col_prompt.add_theme_font_size_override("font_size", 16)
-	CyberTheme.style_label(lbl_col_prompt, CyberTheme.COL_YELLOW, 3)
+	lbl_col_prompt.add_theme_font_size_override("font_size", 15)
+	CyberTheme.style_label(lbl_col_prompt, CyberTheme.COL_CYAN, 3)
 	vbox.add_child(lbl_col_prompt)
 
 	var col_hbox := HBoxContainer.new()
@@ -2271,7 +2498,8 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 
 	for col_def in CHAR_COLOR_DEFS:
 		var col_btn := Button.new()
-		col_btn.custom_minimum_size = Vector2(142, 50)
+		col_btn.custom_minimum_size = Vector2(148, 54)
+		col_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col_btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		col_btn.focus_mode = Control.FOCUS_NONE
 		var col_id: String = str(col_def["id"])
@@ -2283,25 +2511,26 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 		col_hbox.add_child(col_btn)
 		char_color_btns[col_id] = col_btn
 
-	# 6. Pulsanti di Conferma Creazione (e Chiudi se già creato)
+	# STEP 4: Pulsante 3D d'Ingresso Principale
 	var action_hbox := HBoxContainer.new()
 	action_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	action_hbox.add_theme_constant_override("separation", 14)
+	action_hbox.add_theme_constant_override("separation", 12)
 	vbox.add_child(action_hbox)
 
 	var btn_confirm := Button.new()
-	btn_confirm.custom_minimum_size = Vector2(440 if is_first_time else 340, 62)
+	btn_confirm.custom_minimum_size = Vector2(460 if is_first_time else 380, 68)
+	btn_confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_confirm.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_confirm.focus_mode = Control.FOCUS_NONE
-	btn_confirm.text = "⚡ CREA OPERATIVO & INIZIA DA ZERO ⚡" if is_first_time else "⚡ SALVA / RICREA DA ZERO ⚡"
+	btn_confirm.text = "⚡ ENTRA A NIGHT CITY — INIZIA ORA ⚡" if is_first_time else "⚡ SALVA E APPLICA OPERATIVO ⚡"
 	btn_confirm.add_theme_font_size_override("font_size", 18)
 	CyberTheme.style_button(btn_confirm, CyberTheme.COL_YELLOW, true)
-	btn_confirm.pressed.connect(_on_char_confirm_pressed)
+	btn_confirm.pressed.connect(_on_char_confirm_pressed.bind(is_first_time))
 	action_hbox.add_child(btn_confirm)
 
 	if not is_first_time:
 		var btn_cancel := Button.new()
-		btn_cancel.custom_minimum_size = Vector2(180, 62)
+		btn_cancel.custom_minimum_size = Vector2(170, 68)
 		btn_cancel.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_cancel.focus_mode = Control.FOCUS_NONE
 		btn_cancel.text = "ANNULLA"
@@ -2310,12 +2539,43 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 		btn_cancel.pressed.connect(_on_char_cancel_pressed)
 		action_hbox.add_child(btn_cancel)
 
+	# Animazione d'ingresso cinematografica
+	outer_vbox.modulate = Color(1, 1, 1, 0.0)
+	var tw_enter := create_tween()
+	tw_enter.tween_property(outer_vbox, "modulate:a", 1.0, 0.30)
+
+func _get_char_preview_summary_text() -> String:
+	for c_def in CHAR_CLASS_DEFS:
+		if str(c_def["id"]) == char_selected_class:
+			return str(c_def["title"]) + "  •  " + str(c_def["stats"])
+	return "CLASSE: " + char_selected_class + " | AURA: " + char_selected_color
+
+func _style_archetype_card_btn(btn: Button, c_def: Dictionary, is_selected: bool) -> void:
+	if not btn: return
+	var rar_key: String = str(c_def.get("rar", "RARE"))
+	var ccol: Color = c_def["col"]
+	var sel_prefix := "✓ " if is_selected else ""
+	btn.text = "\n\n\n\n" + sel_prefix + str(c_def["title"]) + "\n" + str(c_def["wep_name"]) + "\n" + str(c_def["bonus"]) + "\n" + str(c_def["stats"])
+	btn.add_theme_font_size_override("font_size", 13)
+
+	var sb_card := CyberTheme.make_rarity_card_box("LEGENDARY" if is_selected else rar_key, 8, 8)
+	if sb_card is StyleBoxTexture:
+		(sb_card as StyleBoxTexture).modulate_color = Color(1.12, 1.12, 1.15, 1.0) if is_selected else Color(0.88, 0.90, 0.96, 0.94)
+	btn.add_theme_stylebox_override("normal", sb_card)
+	btn.add_theme_stylebox_override("hover", sb_card)
+	btn.add_theme_stylebox_override("pressed", sb_card)
+	btn.add_theme_color_override("font_color", Color.WHITE if is_selected else ccol.lightened(0.28))
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
+	btn.add_theme_constant_override("outline_size", 3)
+
 func _style_color_choice_btn(btn: Button, col_val: Color, label_str: String, is_selected: bool) -> void:
 	if not btn: return
 	btn.text = ("✓ " if is_selected else "") + label_str
-	var bg := Color(col_val.r * 0.42, col_val.g * 0.42, col_val.b * 0.42, 0.98) if is_selected else Color(0.06, 0.08, 0.14, 0.95)
+	var bg := Color(col_val.r * 0.42, col_val.g * 0.42, col_val.b * 0.42, 0.98) if is_selected else Color(0.07, 0.10, 0.18, 0.96)
 	var border := Color.WHITE if is_selected else col_val
-	var sb := CyberTheme.make_cyber_box(bg, border, 0.06, 3 if is_selected else 2, 8 if is_selected else 5, 12 if is_selected else 4)
+	var sb := CyberTheme.make_cyber_box(bg, border, 0.04, 3 if is_selected else 2, 8 if is_selected else 5, 12 if is_selected else 4)
 	btn.add_theme_stylebox_override("normal", sb)
 	btn.add_theme_stylebox_override("hover", sb)
 	btn.add_theme_stylebox_override("pressed", sb)
@@ -2330,7 +2590,23 @@ func _on_draw_char_preview_holo() -> void:
 	elif char_selected_class == "NETRUNNER": w_preview = "homing_wand"
 	Global.player_color_id = char_selected_color
 	var aura_col := Global.get_player_accent_color()
-	char_preview_holo.draw_circle(Vector2.ZERO, 32.0, Color(aura_col.r, aura_col.g, aura_col.b, 0.22))
+
+	# Pedana proiettore 3D isometrica + cono di luce volumetrica sotto l'operativo
+	char_preview_holo.draw_set_transform(Vector2(0, 18.0), 0.0, Vector2(1.0, 0.38))
+	char_preview_holo.draw_circle(Vector2.ZERO, 34.0, Color(0.05, 0.09, 0.18, 0.95))
+	char_preview_holo.draw_arc(Vector2.ZERO, 34.0, 0.0, TAU, 32, aura_col, 2.4)
+	char_preview_holo.draw_arc(Vector2.ZERO, 25.0, menu_anim_t * 1.6, menu_anim_t * 1.6 + PI * 1.4, 24, Color.WHITE, 1.5)
+	char_preview_holo.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	char_preview_holo.draw_polygon(
+		PackedVector2Array([Vector2(-26, 18), Vector2(26, 18), Vector2(32, -44), Vector2(-32, -44)]),
+		PackedColorArray([
+			Color(aura_col.r, aura_col.g, aura_col.b, 0.24),
+			Color(aura_col.r, aura_col.g, aura_col.b, 0.24),
+			Color(aura_col.r, aura_col.g, aura_col.b, 0.0),
+			Color(aura_col.r, aura_col.g, aura_col.b, 0.0)
+		])
+	)
+
 	var preview_ang: float = PI * 0.5 + sin(menu_anim_t * 1.65) * 0.65
 	var preview_mv := Vector2(sin(menu_anim_t * 1.65) * 0.55, 0.35)
 	CyberModels.draw_hero(char_preview_holo, w_preview, menu_anim_t, true, false, preview_ang, preview_mv)
@@ -2353,9 +2629,12 @@ func _on_char_class_selected(cid: String) -> void:
 	for c_def in CHAR_CLASS_DEFS:
 		var id_k: String = str(c_def["id"])
 		if char_class_btns.has(id_k) and is_instance_valid(char_class_btns[id_k]):
-			CyberTheme.style_button(char_class_btns[id_k], c_def["col"], id_k == cid)
+			_style_archetype_card_btn(char_class_btns[id_k], c_def, id_k == cid)
+			for ch in char_class_btns[id_k].get_children():
+				if ch is Control:
+					(ch as Control).queue_redraw()
 	if is_instance_valid(char_preview_status_lbl):
-		char_preview_status_lbl.text = "CLASSE: " + char_selected_class + " | AURA: " + char_selected_color
+		char_preview_status_lbl.text = _get_char_preview_summary_text()
 		CyberTheme.style_label(char_preview_status_lbl, Global.get_player_accent_color(), 3)
 	if is_instance_valid(char_preview_holo):
 		char_preview_holo.queue_redraw()
@@ -2371,15 +2650,13 @@ func _on_char_color_selected(col_id: String) -> void:
 		var id_k: String = str(col_def["id"])
 		if char_color_btns.has(id_k) and is_instance_valid(char_color_btns[id_k]):
 			_style_color_choice_btn(char_color_btns[id_k], col_def["col"], str(col_def["label"]), id_k == col_id)
-	if is_instance_valid(char_preview_panel):
-		char_preview_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.08, 0.16, 0.95), Global.get_player_accent_color(), 0.03, 2, 6, 10))
 	if is_instance_valid(char_preview_status_lbl):
-		char_preview_status_lbl.text = "CLASSE: " + char_selected_class + " | AURA: " + char_selected_color
+		char_preview_status_lbl.text = _get_char_preview_summary_text()
 		CyberTheme.style_label(char_preview_status_lbl, Global.get_player_accent_color(), 3)
 	if is_instance_valid(char_preview_holo):
 		char_preview_holo.queue_redraw()
 
-func _on_char_confirm_pressed() -> void:
+func _on_char_confirm_pressed(is_first_time: bool = true) -> void:
 	if is_instance_valid(char_name_input):
 		char_name_input.release_focus()
 	DisplayServer.virtual_keyboard_hide()
@@ -2391,17 +2668,41 @@ func _on_char_confirm_pressed() -> void:
 		final_name = "V-77"
 
 	var sys_save: Node = get_node_or_null("/root/SaveSystem")
-	if sys_save and sys_save.has_method("reset_save"):
-		sys_save.reset_save()
-
-	Global.profile_created = true
-	Global.player_name = final_name
-	Global.player_class = char_selected_class
-	Global.player_color_id = char_selected_color
-
 	var im: Node = get_node_or_null("/root/InventoryManager")
-	if im and im.has_method("init_starter_loadout"):
-		im.init_starter_loadout(Global.player_class)
+
+	if is_first_time:
+		if sys_save and sys_save.has_method("reset_save"):
+			sys_save.reset_save()
+		Global.profile_created = true
+		Global.player_name = final_name
+		Global.player_class = char_selected_class
+		Global.player_color_id = char_selected_color
+		if im and im.has_method("init_starter_loadout"):
+			im.init_starter_loadout(Global.player_class)
+	else:
+		Global.profile_created = true
+		Global.player_name = final_name
+		Global.player_class = char_selected_class
+		Global.player_color_id = char_selected_color
+		var class_wep := "pistol_base"
+		var class_wep_name := "Pistola Base"
+		if char_selected_class == "VANGUARD":
+			class_wep = "shotgun"
+			class_wep_name = "Fucile a Pompa"
+		elif char_selected_class == "NETRUNNER":
+			class_wep = "homing_wand"
+			class_wep_name = "Conduttore Psionico"
+		if im:
+			var owns_wep := false
+			if "inventory" in im:
+				for it in im.inventory:
+					if str(it.get("id", "")) == class_wep:
+						owns_wep = true
+						break
+			if not owns_wep and im.has_method("add_item"):
+				im.add_item(class_wep, class_wep_name, "ARMA", "COMMON")
+			if im.has_method("equip_item"):
+				im.equip_item(class_wep, "ARMA")
 
 	if sys_save and sys_save.has_method("save_game"):
 		sys_save.save_game()
