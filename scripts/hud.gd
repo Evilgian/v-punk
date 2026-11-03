@@ -102,7 +102,7 @@ func _apply_cyber_hud_styles() -> void:
 			CyberTheme.style_label(p_lbl, CyberTheme.COL_YELLOW, 3)
 
 	if pause_overlay:
-		pause_overlay.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.02, 0.03, 0.07, 0.94), CyberTheme.COL_CYAN, 0.0, 2, 6, 12))
+		pause_overlay.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(16, 14))
 		var p_vbox := pause_overlay.get_node_or_null("VBoxContainer") as VBoxContainer
 		if p_vbox and not p_vbox.get_node_or_null("BtnPauseSettings"):
 			var btn_ps := Button.new()

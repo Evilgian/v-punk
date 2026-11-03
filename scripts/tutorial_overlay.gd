@@ -50,7 +50,7 @@ func _build_hud_banner() -> void:
 	card_panel.offset_bottom = 208.0
 	card_panel.add_theme_stylebox_override(
 		"panel",
-		CyberTheme.make_cyber_box(Color(0.02, 0.05, 0.12, 0.88), CyberTheme.COL_CYAN, 0.02, 2, 8, 10)
+		CyberTheme.make_3d_panel_box(10, 8)
 	)
 	root_ctrl.add_child(card_panel)
 
@@ -161,10 +161,15 @@ func _refresh_tutorial_step() -> void:
 		head_txt = "🧬 ABILITÀ IN PARTITA & SCHEDA EQUIP"
 		desc_txt = "Raccogli XP per sbloccare Abilità Neurali cumulative. Nel Menu EQUIP usa le nuove tab '⬆️ POTENZIA LV.' (con ⚙️ Nuclei) e '🔨 FUSIONE' (unisci 3 copie per alzare la rarità)!"
 		border_col = CyberTheme.COL_MAGENTA
-	elif room == 5:
+	elif room == 5 and not cleared:
 		badge_txt = "🎓 PASSO 6/6"
-		head_txt = "👼 SANTUARIO CYBER-VALCHIRIA (OGNI 5 STANZE)"
-		desc_txt = "Ogni 5 livelli trovi un Santuario sicuro dove scegliere tra Cura HP o Potere Minore, mentre ogni 10 livelli affronterai un Boss! Poi entra nel Portale."
+		head_txt = "👼 AVVICINATI ALLA CYBER-VALCHIRIA (OGNI 5 STANZE)"
+		desc_txt = "Cammina fino al cerchio luminoso della Valchiria al centro della stanza per scegliere tra Cura HP o Potere Minore! Poi si aprirà il Portale Stargate."
+		border_col = CyberTheme.COL_GREEN
+	elif room == 5 and cleared:
+		badge_txt = "✅ SANTUARIO COMPLETATO"
+		head_txt = "🚪 BENEDIZIONE RICEVUTA — ENTRA NEL PORTALE"
+		desc_txt = "Ottima scelta! Ora raggiungi il Portale Stargate illuminato in alto. Ricorda: ogni 10 livelli affronterai un Guardiano Boss!"
 		border_col = CyberTheme.COL_GREEN
 	elif room == 10 and not cleared:
 		badge_txt = "⚠️ PROVA FINALE"
@@ -192,7 +197,7 @@ func _refresh_tutorial_step() -> void:
 	if card_panel:
 		card_panel.add_theme_stylebox_override(
 			"panel",
-			CyberTheme.make_cyber_box(Color(0.02, 0.05, 0.12, 0.88), border_col, 0.02, 2, 8, 10)
+			CyberTheme.make_3d_panel_box(10, 8)
 		)
 		# Piccola animazione d'attenzione al cambio passo
 		card_panel.modulate = Color(1.25, 1.25, 1.25, 1.0)

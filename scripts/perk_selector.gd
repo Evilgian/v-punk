@@ -9,7 +9,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	if panel:
-		panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.11, 0.96), CyberTheme.COL_YELLOW, 0.04, 2, 8, 14))
+		panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(16, 14))
 
 	if not player_ref:
 		var players := get_tree().get_nodes_in_group("player")

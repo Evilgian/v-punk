@@ -44,10 +44,10 @@ func _draw() -> void:
 			draw_line(hex[i], hex[(i + 1) % 6], Color(1.0, 0.85, 0.2, 0.98), 2.2)
 		draw_circle(center, 4.5, Color(0.95, 0.35, 1.0, 1.0))
 	elif drop_type == "gear_drop":
-		# Capsula Equipaggiamento 3D (Corazza / Anello / Pet / Arma)
+		# Capsula Equipaggiamento 3D Olografica (Ciano/ Cristallo neutra finché non viene identificata)
 		var pulse := 0.65 + 0.35 * sin(anim_t * 6.0)
-		draw_circle(center, 22.0, Color(1.0, 0.82, 0.12, 0.28 * pulse))
-		draw_arc(center, 18.0, 0.0, TAU, 28, Color(1.0, 0.88, 0.2, 0.95), 2.2)
+		draw_circle(center, 22.0, Color(0.10, 0.88, 1.0, 0.28 * pulse))
+		draw_arc(center, 18.0, 0.0, TAU, 28, Color(0.25, 0.95, 1.0, 0.95), 2.4)
 		var tex := CyberTheme.get_model_texture("res://assets/cyber_models/" + preview_gear_icon + ".png")
 		if tex:
 			draw_texture_rect(tex, Rect2(center - Vector2(16, 16), Vector2(32, 32)), false)
@@ -112,8 +112,10 @@ func _collect(body: Node2D) -> void:
 			var dropped: Dictionary = im.roll_random_in_run_gear_drop(w_idx)
 			var d_name: String = str(dropped.get("name", "Equipaggiamento"))
 			var d_rar: String = str(dropped.get("rarity", "COMMON"))
+			var d_col: Color = CyberTheme.get_rarity_color(d_rar)
+			var d_lbl: String = CyberTheme.get_rarity_label_it(d_rar)
 			if vfx and vfx.has_method("spawn_floating_text"):
-				vfx.spawn_floating_text(global_position, "🎁 DROP: " + d_name.to_upper() + " (" + d_rar + ")!", Color(1.0, 0.88, 0.15, 1.0))
+				vfx.spawn_floating_text(global_position, "🎁 DROP: " + d_name.to_upper() + " [" + d_lbl + "]!", d_col)
 	else:
 		if body.has_method("add_exp"):
 			body.add_exp(1)

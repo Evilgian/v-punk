@@ -11,6 +11,7 @@ extends Node
 
 var current_room: int = 1
 var room_cleared: bool = false
+var sanctuary_pending: bool = false
 var current_world: WorldData
 var total_room_enemies: int = 0
 var spawn_grace_frames: int = 2
@@ -28,6 +29,7 @@ func _ready() -> void:
 
 func start_room() -> void:
 	room_cleared = false
+	sanctuary_pending = false
 	spawn_grace_frames = 2
 	print("🏁 Avvio Stanza ", current_room, "/", current_world.total_rooms, " in ", current_world.display_name)
 
@@ -53,17 +55,18 @@ func start_room() -> void:
 		return
 
 	# 2. Stanza Santuario / Cyber-Valchiria (Ogni 5 Livelli nel mezzo: 5, 15, 25, 35, 45)
+	# La scelta si attiva SOLO quando il giocatore cammina fino alla Valchiria!
 	var is_sanctuary_stage: bool = (current_room % 10 == 5) and (current_room < current_world.total_rooms)
 	if is_sanctuary_stage:
 		total_room_enemies = 0
-		room_cleared = true
-		print("👼 SANTUARIO CYBER-VALCHIRIA nella Stanza ", current_room)
+		sanctuary_pending = true
+		room_cleared = false
+		print("👼 SANTUARIO CYBER-VALCHIRIA nella Stanza ", current_room, " (avvicinati per attivare)")
 		var sanct_script := load("res://scripts/sanctuary_node.gd")
 		if sanct_script:
 			var sanct: Node2D = sanct_script.new()
-			sanct.global_position = Vector2(360, 540)
+			sanct.global_position = Vector2(360, 560)
 			_spawn_into_arena(sanct)
-		spawn_door()
 		_update_hud_counter()
 		return
 
@@ -170,11 +173,20 @@ func _process(_delta: float) -> void:
 	var remaining_enemies := get_tree().get_nodes_in_group("enemies").size()
 	_update_hud_counter()
 
-	if not room_cleared and remaining_enemies == 0:
+	if not sanctuary_pending and not room_cleared and remaining_enemies == 0:
 		room_cleared = true
 		_clear_all_projectiles()
 		_vacuum_room_xp()
 		spawn_door()
+
+func complete_sanctuary() -> void:
+	if not sanctuary_pending:
+		return
+	sanctuary_pending = false
+	if not room_cleared:
+		room_cleared = true
+		spawn_door()
+	_update_hud_counter()
 
 func _clear_all_projectiles() -> void:
 	var vfx: Node = get_node_or_null("/root/VFXManager")
@@ -202,8 +214,8 @@ func _update_hud_counter() -> void:
 	var huds := get_tree().get_nodes_in_group("hud")
 	for h in huds:
 		if "room_label" in h and h.room_label:
-			if is_sanct_st:
-				h.room_label.text = "Stage " + str(current_room) + "/" + str(current_world.total_rooms) + " | 👼 SANTUARIO RIFORNIMENTO"
+			if is_sanct_st and sanctuary_pending:
+				h.room_label.text = "Stage " + str(current_room) + "/" + str(current_world.total_rooms) + " | 👼 AVVICINATI ALLA VALCHIRIA"
 			elif remaining > 0:
 				var tag := "⚠️ BOSS" if is_boss_st else ("Nemici: " + str(remaining) + "/" + str(total_room_enemies))
 				h.room_label.text = "Stage " + str(current_room) + "/" + str(current_world.total_rooms) + " | " + tag

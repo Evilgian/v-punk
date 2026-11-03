@@ -7,7 +7,7 @@ extends CanvasLayer
 
 func show_reward(icon_str: String, title_text: String, amount_text: String) -> void:
 	if panel:
-		panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.07, 0.15, 0.98), CyberTheme.COL_YELLOW, 0.06, 2, 8, 16))
+		panel.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("LEGENDARY", 16, 14))
 	if icon_label: icon_label.text = icon_str
 	if title_label:
 		title_label.text = "// " + title_text + " //"

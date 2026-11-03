@@ -16,6 +16,8 @@ func setup_item(item_data: Dictionary) -> void:
 	var im: Node = get_node_or_null("/root/InventoryManager")
 	var iid: String = str(item_data.get("id", "pistol_base"))
 	var islot: String = str(item_data.get("slot", "ARMA"))
+	var rar_str: String = str(item_data.get("rarity", "COMMON"))
+	var rar_col: Color = CyberTheme.get_rarity_color(rar_str)
 	var is_eq: bool = im.is_item_equipped(iid) if (im and im.has_method("is_item_equipped")) else false
 	var cur_lvl: int = im.get_item_level(iid) if (im and im.has_method("get_item_level")) else 1
 	var coin_cost: int = im.get_upgrade_coin_cost(iid) if (im and im.has_method("get_upgrade_coin_cost")) else 50
@@ -23,18 +25,18 @@ func setup_item(item_data: Dictionary) -> void:
 	var stat_desc: String = im.get_item_stat_description(iid, islot) if (im and im.has_method("get_item_stat_description")) else "Modulo Cyberware compatibile."
 
 	if panel:
-		panel.custom_minimum_size = Vector2(520, 500)
-		panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.05, 2, 8, 14))
+		panel.custom_minimum_size = Vector2(530, 520)
+		panel.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(rar_str, 16, 14))
 		var vbox := panel.get_node_or_null("VBox") as VBoxContainer
 		if vbox:
 			var old_m := vbox.get_node_or_null("Modal3DModel")
 			if old_m: old_m.queue_free()
 			var m_ctrl := Control.new()
 			m_ctrl.name = "Modal3DModel"
-			m_ctrl.custom_minimum_size = Vector2(0, 145)
+			m_ctrl.custom_minimum_size = Vector2(0, 152)
 			m_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			m_ctrl.draw.connect(func():
-				CyberTheme.draw_item_icon(m_ctrl, Vector2(m_ctrl.size.x * 0.5, 72.0), iid, islot, CyberTheme.COL_CYAN, 134.0)
+				CyberTheme.draw_item_icon(m_ctrl, Vector2(m_ctrl.size.x * 0.5, 74.0), iid, islot, rar_col, 136.0, is_eq)
 			)
 			vbox.add_child(m_ctrl)
 			vbox.move_child(m_ctrl, 1)
@@ -67,13 +69,14 @@ func setup_item(item_data: Dictionary) -> void:
 	CyberTheme.apply_recursive_cyber_style(self)
 
 	if item_title:
-		item_title.text = "// " + str(item_data.get("name", "Oggetto")).to_upper() + "  [LV. " + str(cur_lvl) + "] //"
-		item_title.add_theme_font_size_override("font_size", 20)
-		CyberTheme.style_label(item_title, CyberTheme.COL_YELLOW, 3)
+		item_title.text = str(item_data.get("name", "Oggetto")).to_upper() + "  [LV. " + str(cur_lvl) + "]"
+		item_title.add_theme_font_size_override("font_size", 21)
+		CyberTheme.style_label(item_title, rar_col, 4)
 	if item_info:
-		item_info.text = "SLOT: " + islot + "  •  RARITÀ: " + str(item_data.get("rarity", "COMMON")) + "\nRisorse: 🪙 " + str(Global.total_coins) + "   |   ⚙️ Nuclei: " + str(Global.upgrade_scrolls)
-		item_info.add_theme_font_size_override("font_size", 16)
-		CyberTheme.style_label(item_info, CyberTheme.COL_CYAN, 3)
+		var eq_tag := "  •  ✓ INDOSSATO" if is_eq else ""
+		item_info.text = "SLOT: " + islot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nRisorse: 🪙 " + str(Global.total_coins) + "   |   ⚙️ Nuclei: " + str(Global.upgrade_scrolls)
+		item_info.add_theme_font_size_override("font_size", 15)
+		CyberTheme.style_label(item_info, CyberTheme.COL_EQUIPPED if is_eq else rar_col, 3)
 	if item_desc:
 		item_desc.text = stat_desc
 		item_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -86,11 +89,11 @@ func setup_item(item_data: Dictionary) -> void:
 		for conn in btn_action.pressed.get_connections():
 			btn_action.pressed.disconnect(conn["callable"])
 		if is_eq:
-			btn_action.text = "DISEQUIPAGGIA"
-			CyberTheme.style_button(btn_action, CyberTheme.COL_MAGENTA, false)
+			btn_action.text = "✓ IN USO  (TOCCA PER RIMUOVERE)"
+			CyberTheme.style_button(btn_action, CyberTheme.COL_EQUIPPED, false)
 		else:
 			btn_action.text = "⚡ EQUIPAGGIA ORA"
-			CyberTheme.style_button(btn_action, CyberTheme.COL_YELLOW, true)
+			CyberTheme.style_button(btn_action, CyberTheme.COL_CYAN, true)
 
 		btn_action.pressed.connect(func():
 			if im:

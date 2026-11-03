@@ -58,10 +58,11 @@ func _physics_process(delta: float) -> void:
 func _draw() -> void:
 	CyberModels.draw_melee_enemy(self, world_id, anim_t, unit_tint, aim_angle)
 
-	if hp < max_hp and max_hp > 0:
+	if max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-		draw_rect(Rect2(Vector2(-18, -44), Vector2(36, 4)), Color(0.08, 0.08, 0.12, 0.85), true)
-		draw_rect(Rect2(Vector2(-18, -44), Vector2(36.0 * ratio, 4)), Color(1.0, 0.25, 0.3, 0.95), true)
+		var bar_alpha := 0.95 if hp < max_hp else 0.72
+		draw_rect(Rect2(Vector2(-19, -45), Vector2(38, 6)), Color(0.04, 0.05, 0.10, bar_alpha), true)
+		draw_rect(Rect2(Vector2(-18, -44), Vector2(36.0 * ratio, 4)), Color(1.0, 0.24, 0.32, bar_alpha), true)
 
 func take_damage(amount: int) -> void:
 	if max_hp < hp: max_hp = hp

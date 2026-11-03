@@ -33,7 +33,7 @@ func _build_ui() -> void:
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.13, 0.98), CyberTheme.COL_CYAN, 0.02, 2, 10, 16))
+	panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(16, 14))
 	margin.add_child(panel)
 
 	var vbox := VBoxContainer.new()

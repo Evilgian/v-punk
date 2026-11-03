@@ -58,10 +58,11 @@ func _draw() -> void:
 	var charge_ratio := clampf(bomb_timer / 3.5, 0.0, 1.0)
 	CyberModels.draw_heavy_enemy(self, anim_t, charge_ratio, aim_angle)
 
-	if hp < max_hp and max_hp > 0:
+	if max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-		draw_rect(Rect2(Vector2(-22, -60), Vector2(44, 5)), Color(0.08, 0.08, 0.12, 0.85), true)
-		draw_rect(Rect2(Vector2(-22, -60), Vector2(44.0 * ratio, 5)), Color(1.0, 0.55, 0.1, 0.95), true)
+		var bar_alpha := 0.96 if hp < max_hp else 0.78
+		draw_rect(Rect2(Vector2(-23, -61), Vector2(46, 7)), Color(0.04, 0.05, 0.10, bar_alpha), true)
+		draw_rect(Rect2(Vector2(-22, -60), Vector2(44.0 * ratio, 5)), Color(1.0, 0.58, 0.12, bar_alpha), true)
 
 func _launch_parabolic_bomb() -> void:
 	if not is_instance_valid(player): return

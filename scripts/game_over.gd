@@ -10,7 +10,7 @@ func _ready() -> void:
 	SoundFX.play_gameover()
 
 	if panel:
-		panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.06, 0.02, 0.06, 0.96), CyberTheme.COL_MAGENTA, 0.04, 2, 8, 16))
+		panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(18, 16, Color(1.18, 0.85, 0.96, 1.0)))
 	CyberTheme.apply_recursive_cyber_style(self)
 
 	Global.quest_runs += 1

@@ -1,6 +1,6 @@
 extends Node
 
-const GAME_VERSION: String = "v1.4.0"
+const GAME_VERSION: String = "v1.5.0"
 
 # Identità Giocatore (Creazione Personaggio)
 var profile_created: bool = false

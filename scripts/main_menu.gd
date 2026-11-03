@@ -238,42 +238,35 @@ func _setup_dynamic_styles() -> void:
 
 	var central: PanelContainer = find_child("CentralContainer", true, false) as PanelContainer
 	if central:
-		central.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.055, 0.10, 0.88), Color(0, 0.95, 1, 0.45), 0.0, 2, 6, 8))
+		central.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(12, 10, Color(0.95, 0.98, 1.0, 0.96)))
 
 	var world_card: PanelContainer = find_child("WorldCard", true, false) as PanelContainer
 	if world_card:
-		world_card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.07, 0.13, 0.94), CyberTheme.COL_CYAN, 0.03, 2, 8, 10))
+		world_card.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(14, 12))
 
 	var summary_card: PanelContainer = find_child("EquippedSummaryCard", true, false) as PanelContainer
 	if summary_card:
-		summary_card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.06, 0.08, 0.15, 0.94), CyberTheme.COL_MAGENTA, 0.04, 2, 6, 6))
+		summary_card.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(12, 10))
 
 	var profile_card: PanelContainer = find_child("ProfileCard", true, false) as PanelContainer
 	if profile_card:
-		profile_card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.16, 0.96), CyberTheme.COL_CYAN, 0.05, 2, 6, 6))
+		profile_card.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(10, 6))
 
 	var pill_scrolls: PanelContainer = find_child("PillScrolls", true, false) as PanelContainer
 	if pill_scrolls:
-		pill_scrolls.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.09, 0.14, 0.95), CyberTheme.COL_GREEN, 0.05, 2, 5, 4))
+		pill_scrolls.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("EPIC", 8, 4))
 
 	var pill_coins: PanelContainer = find_child("PillCoins", true, false) as PanelContainer
 	if pill_coins:
-		pill_coins.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.07, 0.08, 0.13, 0.95), CyberTheme.COL_YELLOW, 0.05, 2, 5, 4))
+		pill_coins.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("LEGENDARY", 8, 4))
 
 	var pill_gems: PanelContainer = find_child("PillGems", true, false) as PanelContainer
 	if pill_gems:
-		pill_gems.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.08, 0.16, 0.95), CyberTheme.COL_CYAN, 0.05, 2, 5, 4))
+		pill_gems.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("RARE", 8, 4))
 
 	var podium: PanelContainer = find_child("HeroPodium", true, false) as PanelContainer
 	if podium:
-		var sb_podium := StyleBoxFlat.new()
-		sb_podium.bg_color = Color(0.04, 0.10, 0.20, 0.95)
-		sb_podium.border_width_left = 3; sb_podium.border_width_top = 3; sb_podium.border_width_right = 3; sb_podium.border_width_bottom = 3
-		sb_podium.border_color = Color(0, 0.95, 1, 0.95)
-		sb_podium.shadow_color = Color(0, 0.95, 1, 0.35)
-		sb_podium.shadow_size = 10
-		sb_podium.corner_radius_top_left = 48; sb_podium.corner_radius_top_right = 48; sb_podium.corner_radius_bottom_left = 48; sb_podium.corner_radius_bottom_right = 48
-		podium.add_theme_stylebox_override("panel", sb_podium)
+		podium.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(10, 10))
 
 	_setup_procedural_menu_models()
 
@@ -328,9 +321,25 @@ func _setup_procedural_menu_models() -> void:
 	if hero_center:
 		hero_center.texture = null
 		hero_holo_node = Node2D.new()
-		hero_holo_node.position = Vector2(90, 112)
-		hero_holo_node.scale = Vector2(2.35, 2.35)
+		hero_holo_node.position = Vector2(90, 118)
+		hero_holo_node.scale = Vector2(2.30, 2.30)
 		hero_holo_node.draw.connect(func():
+			var aura_c := Global.get_player_accent_color()
+			# Camera Olografica 3D: disco proiettore metallico + colonna di luce volumetrica
+			hero_holo_node.draw_set_transform(Vector2(0, 20.0), 0.0, Vector2(1.0, 0.38))
+			hero_holo_node.draw_circle(Vector2.ZERO, 33.0, Color(0.05, 0.09, 0.18, 0.96))
+			hero_holo_node.draw_arc(Vector2.ZERO, 33.0, 0.0, TAU, 32, aura_c, 2.2)
+			hero_holo_node.draw_arc(Vector2.ZERO, 25.0, menu_anim_t * 1.4, menu_anim_t * 1.4 + PI * 1.4, 24, Color.WHITE, 1.4)
+			hero_holo_node.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			hero_holo_node.draw_polygon(
+				PackedVector2Array([Vector2(-26, 20), Vector2(26, 20), Vector2(32, -46), Vector2(-32, -46)]),
+				PackedColorArray([
+					Color(aura_c.r, aura_c.g, aura_c.b, 0.22),
+					Color(aura_c.r, aura_c.g, aura_c.b, 0.22),
+					Color(aura_c.r, aura_c.g, aura_c.b, 0.0),
+					Color(aura_c.r, aura_c.g, aura_c.b, 0.0)
+				])
+			)
 			# Sul podio menu l'eroe è rivolto frontalmente / 3-4 verso il giocatore per mostrare visiera, armatura e arma
 			CyberModels.draw_hero(hero_holo_node, WeaponDB.equipped_weapon_id, menu_anim_t, false, false, PI * 0.5 + sin(menu_anim_t * 1.35) * 0.45)
 		)
@@ -347,7 +356,7 @@ func _setup_procedural_menu_models() -> void:
 		)
 		top_avatar.add_child(top_avatar_holo)
 
-	# Modelli 3D nei Forzieri dello Shop
+	# Modelli 3D nei Forzieri dello Shop (con i colori ufficiali di Rarità!)
 	if btn_buy_normal_crate:
 		var nc_vis := Control.new()
 		nc_vis.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -357,8 +366,8 @@ func _setup_procedural_menu_models() -> void:
 			var crate_t := CyberTheme.get_model_texture("res://assets/cyber_models/prop_crate.png")
 			if crate_t:
 				nc_vis.draw_texture_rect(crate_t, Rect2(c - Vector2(44, 34), Vector2(88, 88)), false)
-			CyberTheme.draw_item_icon(nc_vis, c + Vector2(-56, -6), "shotgun", "ARMA", Color(0.1, 0.6, 1.0, 1.0), 66.0)
-			CyberTheme.draw_item_icon(nc_vis, c + Vector2(56, -6), "kevlar", "CORAZZA", Color(0.2, 0.9, 0.5, 1.0), 66.0)
+			CyberTheme.draw_item_icon(nc_vis, c + Vector2(-58, -6), "shotgun", "ARMA", CyberTheme.COL_RARITY_RARE, 64.0)
+			CyberTheme.draw_item_icon(nc_vis, c + Vector2(58, -6), "kevlar", "CORAZZA", CyberTheme.COL_RARITY_COMMON, 64.0)
 		)
 		btn_buy_normal_crate.add_child(nc_vis)
 
@@ -368,9 +377,9 @@ func _setup_procedural_menu_models() -> void:
 		ec_vis.set_anchors_preset(Control.PRESET_FULL_RECT)
 		ec_vis.draw.connect(func():
 			var c := Vector2(btn_buy_epic_crate.size.x * 0.5, 68.0)
-			CyberTheme.draw_item_icon(ec_vis, c + Vector2(-62, 2), "katana", "ARMA", Color(0.8, 0.2, 1.0, 1.0), 68.0)
-			CyberTheme.draw_item_icon(ec_vis, c + Vector2(62, 2), "scythe", "ARMA", Color(1.0, 0.2, 0.5, 1.0), 68.0)
-			CyberTheme.draw_item_icon(ec_vis, c + Vector2(0, -8), "plasma_cannon", "ARMA", Color(1.0, 0.84, 0.0, 1.0), 78.0)
+			CyberTheme.draw_item_icon(ec_vis, c + Vector2(-64, 2), "katana", "ARMA", CyberTheme.COL_RARITY_EPIC, 66.0)
+			CyberTheme.draw_item_icon(ec_vis, c + Vector2(64, 2), "drone_shield", "PET 2", CyberTheme.COL_RARITY_EPIC, 66.0)
+			CyberTheme.draw_item_icon(ec_vis, c + Vector2(0, -8), "plasma_cannon", "ARMA", CyberTheme.COL_RARITY_LEGENDARY, 76.0)
 		)
 		btn_buy_epic_crate.add_child(ec_vis)
 
@@ -485,34 +494,30 @@ func _style_nav_btn(btn: Control, is_active: bool) -> void:
 	btn.pivot_offset = btn.size / 2.0
 	var label: Label = btn.get_node_or_null("Label") as Label
 	if label:
-		label.add_theme_color_override("font_color", CyberTheme.COL_YELLOW if is_active else Color(0.80, 0.88, 0.98, 1))
-		label.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.95))
-		label.add_theme_constant_override("outline_size", 3)
+		label.add_theme_color_override("font_color", Color(0.06, 0.05, 0.02, 1.0) if is_active else Color(0.92, 0.96, 1.0, 1.0))
+		label.add_theme_color_override("font_outline_color", Color(1.0, 0.96, 0.72, 0.55) if is_active else Color(0.02, 0.03, 0.08, 0.95))
+		label.add_theme_constant_override("outline_size", 2 if is_active else 3)
 
-	var sb := CyberTheme.make_cyber_box(
-		Color(0.10, 0.17, 0.30, 0.98) if is_active else Color(0.05, 0.07, 0.14, 0.94),
-		CyberTheme.COL_YELLOW if is_active else Color(0.0, 0.94, 1.0, 0.42),
-		0.05,
-		2 if is_active else 1,
-		6 if is_active else 3,
-		8 if is_active else 0
-	)
-	btn.add_theme_stylebox_override("panel", sb)
+	var nav_tex := CyberTheme.get_model_texture("res://assets/cyber_models/ui_btn_gold_3d.png" if is_active else "res://assets/cyber_models/ui_btn_cyan_3d.png")
+	if nav_tex:
+		var sbt := StyleBoxTexture.new()
+		sbt.texture = nav_tex
+		sbt.texture_margin_left = 18; sbt.texture_margin_right = 18
+		sbt.texture_margin_top = 14; sbt.texture_margin_bottom = 18
+		sbt.content_margin_left = 4; sbt.content_margin_right = 4
+		sbt.content_margin_top = 4; sbt.content_margin_bottom = 8
+		if not is_active:
+			sbt.modulate_color = Color(0.88, 0.92, 0.98, 0.96)
+		btn.add_theme_stylebox_override("panel", sbt)
+	else:
+		btn.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box())
 
-	var target_scale := Vector2(1.05, 1.05) if is_active else Vector2(1.0, 1.0)
+	var target_scale := Vector2(1.06, 1.06) if is_active else Vector2(1.0, 1.0)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(btn, "scale", target_scale, 0.18)
 
 func _get_rarity_color(rarity_str: String) -> Color:
-	match rarity_str.to_upper():
-		"COMMON", "0": return Color(0.45, 0.50, 0.58, 1)
-		"RARE", "1": return Color(0.1, 0.65, 1.0, 1)
-		"EPIC", "2": return Color(0.75, 0.25, 1.0, 1)
-		"LEGENDARY", "3", "GOLD": return Color(1.0, 0.78, 0.05, 1)
-		"GREEN": return Color(0.2, 0.85, 0.45, 1)
-		"BLUE": return Color(0.1, 0.65, 1.0, 1)
-		"PURPLE": return Color(0.75, 0.25, 1.0, 1)
-		_: return Color(0.4, 0.45, 0.52, 1)
+	return CyberTheme.get_rarity_color(rarity_str)
 
 func _cycle_world(direction: int) -> void:
 	var keys: Array = WorldDB.world_order if ("world_order" in WorldDB and not WorldDB.world_order.is_empty()) else WorldDB.worlds.keys()
@@ -641,12 +646,16 @@ func _rebuild_home_loadout_dashboard() -> void:
 	hbox.add_theme_constant_override("separation", 10)
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
+	var wep_slot_item: Dictionary = im.get_equipped_item_in_slot("ARMA") if (im and im.has_method("get_equipped_item_in_slot")) else {}
+	var wep_rar: String = str(wep_slot_item.get("rarity", "COMMON")) if not wep_slot_item.is_empty() else "COMMON"
 	var eq_weapon: WeaponStats = WeaponDB.get_equipped_weapon()
 	var wep_id: String = WeaponDB.equipped_weapon_id
 	var wep_name: String = eq_weapon.display_name if eq_weapon else "Pistola Base"
 	var wep_lvl: int = im.get_item_level(wep_id) if (im and im.has_method("get_item_level")) else 1
 	var wep_dmg: int = (eq_weapon.get_final_damage() if eq_weapon else 15) + (wep_lvl - 1) * 3
 
+	var arm_slot_item: Dictionary = im.get_equipped_item_in_slot("CORAZZA") if (im and im.has_method("get_equipped_item_in_slot")) else {}
+	var arm_rar: String = str(arm_slot_item.get("rarity", "COMMON")) if not arm_slot_item.is_empty() else "COMMON"
 	var arm_id: String = WeaponDB.equipped_armor_id
 	var eq_armor: Dictionary = WeaponDB.armors.get(arm_id, {}) as Dictionary
 	var has_armor: bool = not arm_id.is_empty() and not eq_armor.is_empty()
@@ -656,33 +665,36 @@ func _rebuild_home_loadout_dashboard() -> void:
 
 	var pet_item: Dictionary = im.get_equipped_item_in_slot("PET 1") if (im and im.has_method("get_equipped_item_in_slot")) else {}
 	var has_pet: bool = not pet_item.is_empty() and not str(pet_item.get("id", "")).is_empty()
+	var pet_rar: String = str(pet_item.get("rarity", "COMMON")) if has_pet else "COMMON"
 	var pet_id: String = str(pet_item.get("id", "drone_laser")) if has_pet else "drone_laser"
 	var pet_name: String = str(pet_item.get("name", "Drone Laser")) if has_pet else "Slot Libero"
 
 	var showcase_items := [
-		{"id": wep_id, "slot": "ARMA", "title": wep_name, "stat": "⚔️ " + str(wep_dmg) + " ATK (Lv." + str(wep_lvl) + ")", "col": CyberTheme.COL_CYAN},
-		{"id": arm_id if has_armor else "kevlar", "slot": "CORAZZA", "title": arm_name, "stat": ("🛡️ +" + str(arm_hp) + " HP") if has_armor else "Corazza vuota", "col": CyberTheme.COL_MAGENTA if has_armor else Color(0.42, 0.48, 0.60, 0.85)},
-		{"id": pet_id, "slot": "PET 1", "title": pet_name, "stat": "🤖 Drone Attivo" if has_pet else "Drone vuoto", "col": CyberTheme.COL_GREEN if has_pet else Color(0.42, 0.48, 0.60, 0.85)}
+		{"id": wep_id, "slot": "ARMA", "title": wep_name, "stat": "⚔️ " + str(wep_dmg) + " ATK • " + CyberTheme.get_rarity_label_it(wep_rar), "rar": wep_rar, "active": true},
+		{"id": arm_id if has_armor else "kevlar", "slot": "CORAZZA", "title": arm_name, "stat": ("🛡️ +" + str(arm_hp) + " HP • " + CyberTheme.get_rarity_label_it(arm_rar)) if has_armor else "Corazza vuota", "rar": arm_rar, "active": has_armor},
+		{"id": pet_id, "slot": "PET 1", "title": pet_name, "stat": ("🤖 " + CyberTheme.get_rarity_label_it(pet_rar)) if has_pet else "Drone vuoto", "rar": pet_rar, "active": has_pet}
 	]
 
 	for s_info in showcase_items:
 		var p := PanelContainer.new()
-		p.custom_minimum_size = Vector2(200, 148)
+		p.custom_minimum_size = Vector2(200, 154)
 		p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var c_acc: Color = s_info["col"]
-		p.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.12, 0.96), c_acc, 0.04, 2, 5, 6))
+		var s_active: bool = bool(s_info["active"])
+		var s_rar: String = str(s_info["rar"])
+		var c_acc: Color = CyberTheme.get_rarity_color(s_rar) if s_active else Color(0.45, 0.52, 0.64, 0.80)
+		p.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(s_rar, 8, 6) if s_active else CyberTheme.make_3d_panel_box(8, 6, Color(0.75, 0.82, 0.92, 0.88)))
 
 		var vb := VBoxContainer.new()
 		vb.alignment = BoxContainer.ALIGNMENT_END
 		vb.add_theme_constant_override("separation", 2)
 
 		var spacer := Control.new()
-		spacer.custom_minimum_size = Vector2(0, 78)
+		spacer.custom_minimum_size = Vector2(0, 80)
 		spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var sid: String = s_info["id"]
 		var sslot: String = s_info["slot"]
 		spacer.draw.connect(func():
-			CyberTheme.draw_item_icon(spacer, Vector2(spacer.size.x * 0.5, 42.0), sid, sslot, c_acc, 76.0)
+			CyberTheme.draw_item_icon(spacer, Vector2(spacer.size.x * 0.5, 42.0), sid, sslot, c_acc, 72.0, s_active)
 		)
 		vb.add_child(spacer)
 
@@ -691,14 +703,14 @@ func _rebuild_home_loadout_dashboard() -> void:
 		l_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		l_name.add_theme_font_size_override("font_size", 15)
-		CyberTheme.style_label(l_name, Color.WHITE, 3)
+		CyberTheme.style_label(l_name, Color.WHITE if s_active else Color(0.68, 0.75, 0.85, 0.88), 3)
 		vb.add_child(l_name)
 
 		var l_st := Label.new()
 		l_st.text = s_info["stat"]
 		l_st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l_st.add_theme_font_size_override("font_size", 14)
-		CyberTheme.style_label(l_st, c_acc, 2)
+		l_st.add_theme_font_size_override("font_size", 13)
+		CyberTheme.style_label(l_st, c_acc.lightened(0.18), 2)
 		vb.add_child(l_st)
 
 		p.add_child(vb)
@@ -825,27 +837,23 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 	var is_empty: bool = eq_item.is_empty() or eq_item.get("id", "").is_empty()
 	var item_id: String = str(eq_item.get("id", ""))
 	var item_lvl: int = im.get_item_level(item_id) if (im and not is_empty and im.has_method("get_item_level")) else 1
+	var rar_str: String = str(eq_item.get("rarity", "COMMON")) if not is_empty else "COMMON"
+	var rar_col: Color = CyberTheme.get_rarity_color(rar_str) if not is_empty else Color(0.52, 0.62, 0.76, 0.72)
 
 	if lbl:
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		lbl.add_theme_font_size_override("font_size", 14)
+		lbl.add_theme_font_size_override("font_size", 13)
 		if is_empty:
 			lbl.text = slot_type + "\n[VUOTO]"
 			lbl.modulate = Color(0.68, 0.76, 0.88, 0.85)
 		else:
-			lbl.text = slot_type + " • Lv." + str(item_lvl) + "\n" + str(eq_item.get("name", slot_type))
+			lbl.text = slot_type + " • Lv." + str(item_lvl) + "\n" + str(eq_item.get("name", slot_type)) + "\n" + CyberTheme.get_rarity_badge_text(rar_str)
 			lbl.modulate = Color.WHITE
 
-	var rar_str: String = str(eq_item.get("rarity", "COMMON")) if not is_empty else "COMMON"
-	var rar_col: Color = _get_rarity_color(rar_str) if not is_empty else Color(0.0, 0.94, 1.0, 0.55)
-	slot_panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(
-		Color(rar_col.r * 0.22, rar_col.g * 0.22, rar_col.b * 0.28, 0.96) if not is_empty else Color(0.06, 0.09, 0.16, 0.92),
-		rar_col,
-		0.04,
-		2,
-		6,
-		6 if not is_empty else 2
-	))
+	if is_empty:
+		slot_panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(8, 6, Color(0.75, 0.82, 0.92, 0.85)))
+	else:
+		slot_panel.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(rar_str, 8, 6))
 
 	var old_icon := slot_panel.get_node_or_null("Slot3DModel")
 	if old_icon:
@@ -861,7 +869,7 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 	elif "PET" in slot_type: fallback_id = "drone_laser"
 	var draw_id := item_id if not is_empty else fallback_id
 	model_ctrl.draw.connect(func():
-		CyberTheme.draw_item_icon(model_ctrl, Vector2(44.0, slot_panel.size.y * 0.5), draw_id, slot_type, rar_col, 70.0)
+		CyberTheme.draw_item_icon(model_ctrl, Vector2(44.0, slot_panel.size.y * 0.5), draw_id, slot_type, rar_col, 66.0, not is_empty)
 	)
 	slot_panel.add_child(model_ctrl)
 
@@ -1023,6 +1031,43 @@ func _populate_inventory() -> void:
 	if forge_section_panel: forge_section_panel.visible = show_merge
 	if merge_workshop_box: merge_workshop_box.visible = show_merge
 
+	# Legenda Colori Rarità chiara e immediata sopra la griglia Arsenale
+	if inventory_view:
+		var leg_bar := inventory_view.get_node_or_null("RarityLegendBar") as PanelContainer
+		if not leg_bar:
+			leg_bar = PanelContainer.new()
+			leg_bar.name = "RarityLegendBar"
+			leg_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			leg_bar.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(10, 6))
+			var leg_row := HBoxContainer.new()
+			leg_row.alignment = BoxContainer.ALIGNMENT_CENTER
+			leg_row.add_theme_constant_override("separation", 8)
+			leg_bar.add_child(leg_row)
+
+			for r_key in ["COMMON", "RARE", "EPIC", "LEGENDARY"]:
+				var r_pill := PanelContainer.new()
+				r_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box(r_key))
+				var r_lbl := Label.new()
+				r_lbl.text = CyberTheme.get_rarity_badge_text(r_key)
+				r_lbl.add_theme_font_size_override("font_size", 12)
+				CyberTheme.style_label(r_lbl, CyberTheme.get_rarity_color(r_key).lightened(0.20), 2)
+				r_pill.add_child(r_lbl)
+				leg_row.add_child(r_pill)
+
+			var eq_pill := PanelContainer.new()
+			eq_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
+			var eq_lbl := Label.new()
+			eq_lbl.text = "✓ INDOSSATO"
+			eq_lbl.add_theme_font_size_override("font_size", 12)
+			CyberTheme.style_label(eq_lbl, Color(0.88, 1.0, 0.94, 1.0), 2)
+			eq_pill.add_child(eq_lbl)
+			leg_row.add_child(eq_pill)
+
+			inventory_view.add_child(leg_bar)
+			if inventory_grid:
+				inventory_view.move_child(leg_bar, inventory_grid.get_index())
+		leg_bar.visible = show_arsenal
+
 	# Update 6 Active Slots visuals around hero
 	_update_active_slot_ui("SlotWeapon", "ARMA")
 	_update_active_slot_ui("SlotArmor", "CORAZZA")
@@ -1058,7 +1103,7 @@ func _populate_inventory() -> void:
 		merge_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		if not fusible.is_empty():
 			var f_item: Dictionary = fusible[0]
-			merge_status_label.text = "🔴 FUSIONE PRONTA! Unisci 3 copie identiche per salire di rarità: COMUNE ➔ RARO ➔ EPICO ➔ LEGGENDARIO\nPronto ora: 3x " + str(f_item["name"]) + " (" + str(f_item["rarity"]) + ")"
+			merge_status_label.text = "🔴 FUSIONE PRONTA! Unisci 3 copie identiche per salire di rarità: COMUNE ➔ RARO ➔ EPICO ➔ LEGGENDARIO\nPronto ora: 3x " + str(f_item["name"]) + " (" + CyberTheme.get_rarity_label_it(str(f_item["rarity"])) + ")"
 		else:
 			merge_status_label.text = "Unisci 3 copie dello stesso oggetto e rarità per evolverlo: COMUNE ➔ RARO ➔ EPICO ➔ LEGGENDARIO."
 
@@ -1092,18 +1137,11 @@ func _populate_upgrade_workshop(im: Node) -> void:
 	# Banner superiore con saldo risorse e istruzioni Officina
 	var hdr_card := PanelContainer.new()
 	hdr_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hdr_card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.04, 0.08, 0.16, 0.96), CyberTheme.COL_CYAN, 0.03, 2, 8, 8))
-
-	var hdr_margin := MarginContainer.new()
-	hdr_margin.add_theme_constant_override("margin_left", 14)
-	hdr_margin.add_theme_constant_override("margin_right", 14)
-	hdr_margin.add_theme_constant_override("margin_top", 10)
-	hdr_margin.add_theme_constant_override("margin_bottom", 10)
-	hdr_card.add_child(hdr_margin)
+	hdr_card.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(14, 10))
 
 	var hdr_vbox := VBoxContainer.new()
 	hdr_vbox.add_theme_constant_override("separation", 6)
-	hdr_margin.add_child(hdr_vbox)
+	hdr_card.add_child(hdr_vbox)
 
 	var res_lbl := Label.new()
 	res_lbl.text = "⚙️ OFFICINA LIVELLI  —  🪙 Monete: " + str(Global.total_coins) + "   |   ⚙️ Nuclei: " + str(Global.upgrade_scrolls)
@@ -1160,7 +1198,7 @@ func _populate_upgrade_workshop(im: Node) -> void:
 		var item_name: String = str(u_item.get("name", item_id))
 		var slot_name: String = str(u_item.get("slot", "ARMA"))
 		var rar_str: String = str(u_item.get("rarity", "COMMON"))
-		var rar_col := _get_rarity_color(rar_str)
+		var rar_col := CyberTheme.get_rarity_color(rar_str)
 		var is_eq: bool = im.is_item_equipped(item_id)
 		var cur_lvl: int = im.get_item_level(item_id)
 		var coin_cost: int = im.get_upgrade_coin_cost(item_id)
@@ -1170,27 +1208,20 @@ func _populate_upgrade_workshop(im: Node) -> void:
 
 		var card := PanelContainer.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var b_col := CyberTheme.COL_YELLOW if is_eq else rar_col
-		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), b_col, 0.04, 2, 6, 8 if is_eq else 3))
-
-		var m_box := MarginContainer.new()
-		m_box.add_theme_constant_override("margin_left", 10)
-		m_box.add_theme_constant_override("margin_right", 10)
-		m_box.add_theme_constant_override("margin_top", 10)
-		m_box.add_theme_constant_override("margin_bottom", 10)
-		card.add_child(m_box)
+		# Cornice 3D SEMPRE del colore della Rarità (mai alterata in oro se indossato!)
+		card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(rar_str, 12, 10))
 
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		m_box.add_child(row)
+		card.add_child(row)
 
 		var icon_ctrl := Control.new()
-		icon_ctrl.custom_minimum_size = Vector2(72, 72)
+		icon_ctrl.custom_minimum_size = Vector2(76, 76)
 		icon_ctrl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		icon_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon_ctrl.draw.connect(func():
-			CyberTheme.draw_item_icon(icon_ctrl, Vector2(36, 36), item_id, slot_name, b_col, 66.0)
+			CyberTheme.draw_item_icon(icon_ctrl, Vector2(38, 38), item_id, slot_name, rar_col, 68.0, is_eq)
 		)
 		row.add_child(icon_ctrl)
 
@@ -1199,12 +1230,35 @@ func _populate_upgrade_workshop(im: Node) -> void:
 		mid_v.add_theme_constant_override("separation", 4)
 		row.add_child(mid_v)
 
+		var tags_row := HBoxContainer.new()
+		tags_row.add_theme_constant_override("separation", 6)
+		mid_v.add_child(tags_row)
+
+		var rar_pill := PanelContainer.new()
+		rar_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box(rar_str))
+		var rar_lbl := Label.new()
+		rar_lbl.text = CyberTheme.get_rarity_badge_text(rar_str)
+		rar_lbl.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_label(rar_lbl, rar_col.lightened(0.22), 2)
+		rar_pill.add_child(rar_lbl)
+		tags_row.add_child(rar_pill)
+
+		if is_eq:
+			var eq_pill := PanelContainer.new()
+			eq_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
+			var eq_lbl := Label.new()
+			eq_lbl.text = "✓ INDOSSATO"
+			eq_lbl.add_theme_font_size_override("font_size", 12)
+			CyberTheme.style_label(eq_lbl, Color(0.88, 1.0, 0.94, 1.0), 2)
+			eq_pill.add_child(eq_lbl)
+			tags_row.add_child(eq_pill)
+
 		var l_title := Label.new()
-		l_title.text = ("⚡ [IN USO] " if is_eq else "") + item_name + " (" + rar_str + ")"
+		l_title.text = item_name
 		l_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		l_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l_title.add_theme_font_size_override("font_size", 16)
-		CyberTheme.style_label(l_title, CyberTheme.COL_YELLOW if is_eq else Color.WHITE, 3)
+		CyberTheme.style_label(l_title, Color.WHITE, 3)
 		mid_v.add_child(l_title)
 
 		var l_lvl := Label.new()
@@ -1241,7 +1295,7 @@ func _populate_upgrade_workshop(im: Node) -> void:
 		btn_up.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_up.text = "⬆️ POTENZIA" if can_afford else "SERVONO RISORSE"
 		btn_up.add_theme_font_size_override("font_size", 14)
-		CyberTheme.style_button(btn_up, CyberTheme.COL_YELLOW if can_afford else CyberTheme.COL_CYAN, can_afford)
+		CyberTheme.style_button(btn_up, CyberTheme.COL_GREEN if can_afford else CyberTheme.COL_CYAN, false)
 		btn_up.pressed.connect(func():
 			var res: Dictionary = im.upgrade_item_level(item_id)
 			upgrade_feedback_msg = str(res.get("message", ""))
@@ -1291,32 +1345,25 @@ func _populate_merge_workshop(im: Node) -> void:
 		var is_max_rar: bool = (rar_str == "LEGENDARY")
 		var next_rar: String = im.get_next_rarity(rar_str) if im.has_method("get_next_rarity") else rar_str
 		var is_ready: bool = (cnt >= 3 and not is_max_rar)
-		var rar_col := _get_rarity_color(rar_str)
-		var next_col := _get_rarity_color(next_rar)
+		var rar_col := CyberTheme.get_rarity_color(rar_str)
+		var next_col := CyberTheme.get_rarity_color(next_rar)
 
 		var card := PanelContainer.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var b_col := CyberTheme.COL_YELLOW if is_ready else rar_col
-		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), b_col, 0.04, 2, 6, 10 if is_ready else 2))
-
-		var m_box := MarginContainer.new()
-		m_box.add_theme_constant_override("margin_left", 10)
-		m_box.add_theme_constant_override("margin_right", 10)
-		m_box.add_theme_constant_override("margin_top", 10)
-		m_box.add_theme_constant_override("margin_bottom", 10)
-		card.add_child(m_box)
+		# Cornice 3D SEMPRE della Rarità attuale dell'oggetto!
+		card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(rar_str, 12, 10))
 
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		m_box.add_child(row)
+		card.add_child(row)
 
 		var icon_ctrl := Control.new()
-		icon_ctrl.custom_minimum_size = Vector2(72, 72)
+		icon_ctrl.custom_minimum_size = Vector2(74, 74)
 		icon_ctrl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		icon_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		icon_ctrl.draw.connect(func():
-			CyberTheme.draw_item_icon(icon_ctrl, Vector2(36, 36), item_id, slot_name, b_col, 66.0)
+			CyberTheme.draw_item_icon(icon_ctrl, Vector2(37, 37), item_id, slot_name, rar_col, 66.0)
 		)
 		row.add_child(icon_ctrl)
 
@@ -1334,11 +1381,11 @@ func _populate_merge_workshop(im: Node) -> void:
 		mid_v.add_child(l_title)
 
 		var l_evo := Label.new()
-		l_evo.text = "🌟 RARITÀ MASSIMA (LEGGENDARIO)" if is_max_rar else ("Evoluzione: " + rar_str + "  ➔  " + next_rar)
+		l_evo.text = "🌟 RARITÀ MASSIMA (LEGGENDARIO)" if is_max_rar else (CyberTheme.get_rarity_badge_text(rar_str) + "  ➔  " + CyberTheme.get_rarity_badge_text(next_rar))
 		l_evo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		l_evo.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		l_evo.add_theme_font_size_override("font_size", 14)
-		CyberTheme.style_label(l_evo, next_col, 2)
+		CyberTheme.style_label(l_evo, next_col.lightened(0.18), 2)
 		mid_v.add_child(l_evo)
 
 		var pbar := ProgressBar.new()
@@ -1347,29 +1394,29 @@ func _populate_merge_workshop(im: Node) -> void:
 		pbar.max_value = 3
 		pbar.value = 3 if is_max_rar else mini(cnt, 3)
 		pbar.show_percentage = false
-		var sb_bg := CyberTheme.make_cyber_box(Color(0.03, 0.04, 0.09, 0.95), Color(0.25, 0.35, 0.50, 0.7), 0.08, 1, 3, 0)
+		var sb_bg := CyberTheme.make_cyber_box(Color(0.03, 0.04, 0.09, 0.95), Color(0.25, 0.35, 0.50, 0.7), 0.04, 1, 3, 0)
 		var sb_fill := StyleBoxFlat.new()
 		sb_fill.bg_color = CyberTheme.COL_GREEN if is_ready else rar_col
-		sb_fill.skew = Vector2(0.08, 0.0)
+		sb_fill.corner_radius_top_left = 6; sb_fill.corner_radius_top_right = 6; sb_fill.corner_radius_bottom_left = 6; sb_fill.corner_radius_bottom_right = 6
 		pbar.add_theme_stylebox_override("background", sb_bg)
 		pbar.add_theme_stylebox_override("fill", sb_fill)
 		mid_v.add_child(pbar)
 
 		var right_v := VBoxContainer.new()
-		right_v.custom_minimum_size = Vector2(138, 0)
+		right_v.custom_minimum_size = Vector2(142, 0)
 		right_v.alignment = BoxContainer.ALIGNMENT_CENTER
 		right_v.add_theme_constant_override("separation", 5)
 		row.add_child(right_v)
 
 		var cnt_lbl := Label.new()
-		cnt_lbl.text = ("Copie: " + str(cnt)) if is_max_rar else ("Copie: " + str(cnt) + " / 3")
+		cnt_lbl.text = ("Copie: " + str(cnt)) if is_max_rar else (("✓ PRONTO 3 / 3" if is_ready else ("Copie: " + str(cnt) + " / 3")))
 		cnt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cnt_lbl.add_theme_font_size_override("font_size", 14)
-		CyberTheme.style_label(cnt_lbl, CyberTheme.COL_YELLOW if is_ready else Color(0.84, 0.90, 0.98, 1.0), 2)
+		CyberTheme.style_label(cnt_lbl, CyberTheme.COL_GREEN if is_ready else Color(0.84, 0.90, 0.98, 1.0), 2)
 		right_v.add_child(cnt_lbl)
 
 		var btn_mrg := Button.new()
-		btn_mrg.custom_minimum_size = Vector2(138, 48)
+		btn_mrg.custom_minimum_size = Vector2(142, 48)
 		btn_mrg.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_mrg.disabled = not is_ready
 		if is_max_rar:
@@ -1379,12 +1426,12 @@ func _populate_merge_workshop(im: Node) -> void:
 		else:
 			btn_mrg.text = "MANCANO " + str(3 - cnt)
 		btn_mrg.add_theme_font_size_override("font_size", 14)
-		CyberTheme.style_button(btn_mrg, CyberTheme.COL_YELLOW if is_ready else CyberTheme.COL_MAGENTA, is_ready)
+		CyberTheme.style_button(btn_mrg, CyberTheme.COL_GREEN if is_ready else CyberTheme.COL_MAGENTA, false)
 		btn_mrg.pressed.connect(func():
 			var res: Dictionary = im.merge_items(item_id, rar_str)
 			if res.get("success", false):
 				SoundFX.play_win()
-				_trigger_rewards_popup("🔨", "FUSIONE COMPLETATA!", item_name + " ➔ " + next_rar)
+				_trigger_rewards_popup("🔨", "FUSIONE COMPLETATA!", item_name + " ➔ " + CyberTheme.get_rarity_label_it(next_rar))
 				_update_top_bar()
 				_populate_inventory()
 			else:
@@ -1396,54 +1443,79 @@ func _populate_merge_workshop(im: Node) -> void:
 
 func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: String, slot_name: String, rarity_val: Variant, is_eq: bool, count: int = 1, item_lvl: int = 1) -> PanelContainer:
 	var rarity_str: String = str(rarity_val).to_upper()
-	var rarity_col := _get_rarity_color(rarity_str)
-	var border_col := CyberTheme.COL_YELLOW if is_eq else rarity_col
+	var rarity_col := CyberTheme.get_rarity_color(rarity_str)
 
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(310, 214)
+	card.custom_minimum_size = Vector2(310, 232)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(
-		Color(rarity_col.r * 0.18, rarity_col.g * 0.18, rarity_col.b * 0.25, 0.96),
-		border_col,
-		0.03,
-		2,
-		6,
-		10 if is_eq else 4
-	))
-
-	var m := MarginContainer.new()
-	m.add_theme_constant_override("margin_left", 10)
-	m.add_theme_constant_override("margin_right", 10)
-	m.add_theme_constant_override("margin_top", 8)
-	m.add_theme_constant_override("margin_bottom", 8)
-	card.add_child(m)
+	# Cornice 3D Scolpita SEMPRE fedele alla Rarità (Argento / Blu / Viola / Oro — mai ingiallita quando indossata!)
+	card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(rarity_str, 10, 8))
 
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 5)
 	vb.alignment = BoxContainer.ALIGNMENT_END
-	m.add_child(vb)
+	card.add_child(vb)
+
+	# Riga superiore con Badge Rarità a sinistra e Badge Smeraldo "✓ INDOSSATO" a destra (distinto dall'Oro Leggendario!)
+	var top_tags := HBoxContainer.new()
+	top_tags.add_theme_constant_override("separation", 4)
+	vb.add_child(top_tags)
+
+	var rar_pill := PanelContainer.new()
+	rar_pill.name = "RarityBadge"
+	rar_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box(rarity_str))
+	var rar_lbl := Label.new()
+	rar_lbl.text = CyberTheme.get_rarity_badge_text(rarity_str)
+	rar_lbl.add_theme_font_size_override("font_size", 12)
+	CyberTheme.style_label(rar_lbl, rarity_col.lightened(0.22), 2)
+	rar_pill.add_child(rar_lbl)
+	top_tags.add_child(rar_pill)
+
+	var tag_spacer := Control.new()
+	tag_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_tags.add_child(tag_spacer)
+
+	if is_eq:
+		var eq_pill := PanelContainer.new()
+		eq_pill.name = "EquippedBadge"
+		eq_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
+		var eq_lbl := Label.new()
+		eq_lbl.text = "✓ INDOSSATO"
+		eq_lbl.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_label(eq_lbl, Color(0.88, 1.0, 0.94, 1.0), 2)
+		eq_pill.add_child(eq_lbl)
+		top_tags.add_child(eq_pill)
+	elif count > 1:
+		var cnt_pill := PanelContainer.new()
+		cnt_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box(rarity_str))
+		var cnt_lbl := Label.new()
+		cnt_lbl.text = "x" + str(count)
+		cnt_lbl.add_theme_font_size_override("font_size", 12)
+		CyberTheme.style_label(cnt_lbl, Color.WHITE, 2)
+		cnt_pill.add_child(cnt_lbl)
+		top_tags.add_child(cnt_pill)
 
 	var icon_box := Control.new()
-	icon_box.custom_minimum_size = Vector2(0, 86)
+	icon_box.custom_minimum_size = Vector2(0, 84)
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_box.draw.connect(func():
-		CyberTheme.draw_item_icon(icon_box, Vector2(icon_box.size.x * 0.5, 44.0), item_id, slot_name, border_col, 88.0)
+		CyberTheme.draw_item_icon(icon_box, Vector2(icon_box.size.x * 0.5, 42.0), item_id, slot_name, rarity_col, 82.0, is_eq)
 	)
 	vb.add_child(icon_box)
 
 	var lbl_name := Label.new()
-	lbl_name.text = item_name + (" (x" + str(count) + ")" if count > 1 else "")
+	lbl_name.text = item_name + (" (x" + str(count) + ")" if (count > 1 and is_eq) else "")
 	lbl_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_name.add_theme_font_size_override("font_size", 16)
-	CyberTheme.style_label(lbl_name, CyberTheme.COL_YELLOW if is_eq else Color.WHITE, 3)
+	CyberTheme.style_label(lbl_name, Color.WHITE, 3)
 	vb.add_child(lbl_name)
 
 	var lbl_meta := Label.new()
-	lbl_meta.text = "Lv." + str(item_lvl) + " • " + slot_name + " • " + rarity_str
+	lbl_meta.text = "Lv." + str(item_lvl) + "  •  " + slot_name
 	lbl_meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_meta.add_theme_font_size_override("font_size", 14)
-	CyberTheme.style_label(lbl_meta, rarity_col.lightened(0.25), 2)
+	CyberTheme.style_label(lbl_meta, rarity_col.lightened(0.24), 2)
 	vb.add_child(lbl_meta)
 
 	var act_row := HBoxContainer.new()
@@ -1461,7 +1533,7 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 		CyberTheme.style_button(btn_eq, CyberTheme.COL_GREEN, false)
 	else:
 		btn_eq.text = "⚡ EQUIPAGGIA"
-		CyberTheme.style_button(btn_eq, CyberTheme.COL_YELLOW, true)
+		CyberTheme.style_button(btn_eq, CyberTheme.COL_CYAN, false)
 	btn_eq.pressed.connect(func():
 		var im: Node = get_node_or_null("/root/InventoryManager")
 		if im:
@@ -1477,11 +1549,11 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 	act_row.add_child(btn_eq)
 
 	var btn_info := Button.new()
-	btn_info.custom_minimum_size = Vector2(94, 44)
+	btn_info.custom_minimum_size = Vector2(92, 44)
 	btn_info.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_info.text = "⬆️ LV."
 	btn_info.add_theme_font_size_override("font_size", 14)
-	CyberTheme.style_button(btn_info, CyberTheme.COL_CYAN, false)
+	CyberTheme.style_button(btn_info, CyberTheme.COL_MAGENTA, false)
 	btn_info.pressed.connect(func():
 		SoundFX.play_click()
 		_open_item_action_modal(item_data)
@@ -1536,10 +1608,10 @@ func _populate_upgrades() -> void:
 		var cost: int = tm.get_cost(t_id) if (tm and tm.has_method("get_cost")) else 100
 
 		var card := PanelContainer.new()
-		card.custom_minimum_size = Vector2(315, 255)
+		card.custom_minimum_size = Vector2(315, 258)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var border_c := CyberTheme.COL_CYAN if cur_lvl > 0 else Color(0.28, 0.36, 0.52, 0.88)
-		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), border_c, 0.05, 2, 6, 8 if cur_lvl > 0 else 2))
+		var border_c := CyberTheme.COL_CYAN if cur_lvl > 0 else Color(0.55, 0.65, 0.80, 0.90)
+		card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("RARE" if cur_lvl > 0 else "COMMON", 10, 10))
 
 		var vbox := VBoxContainer.new()
 		vbox.add_theme_constant_override("separation", 6)
@@ -1676,9 +1748,11 @@ func _buy_crate(cost: int, crate_type: String) -> void:
 		var sys_save: Node = get_node_or_null("/root/SaveSystem")
 		if sys_save and sys_save.has_method("save_game"): sys_save.save_game()
 
-		var reward_display: String = item_name + " (" + rarity + ")"
+		var reward_display: String = item_name + " (" + CyberTheme.get_rarity_badge_text(rarity) + ")"
 		_trigger_rewards_popup("🎁", "CASSA APERTA!", reward_display)
-		if shop_result_label: shop_result_label.text = "🎉 TROVATO: " + reward_display
+		if shop_result_label:
+			shop_result_label.text = "🎉 TROVATO: " + reward_display
+			CyberTheme.style_label(shop_result_label, CyberTheme.get_rarity_color(rarity).lightened(0.20), 3)
 		_update_top_bar()
 	else:
 		SoundFX.play_hit()
@@ -1703,15 +1777,18 @@ func _populate_checkin() -> void:
 			card.custom_minimum_size = Vector2(154, 185)
 			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-			var border_c := Color(0.28, 0.34, 0.48, 0.7)
-			var bg_c := Color(0.05, 0.07, 0.13, 0.90)
+			var border_c := CyberTheme.COL_RARITY_COMMON
+			var c_rar := "COMMON"
 			if day_num < Global.checkin_day:
-				bg_c = Color(0.06, 0.14, 0.10, 0.85)
 				border_c = CyberTheme.COL_GREEN
+				c_rar = "RARE"
 			elif day_num == Global.checkin_day:
-				bg_c = Color(0.08, 0.18, 0.28, 0.98)
 				border_c = CyberTheme.COL_YELLOW
-			card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(bg_c, border_c, 0.05, 2, 6, 8 if day_num == Global.checkin_day else 2))
+				c_rar = "LEGENDARY"
+			elif day_num == 7:
+				border_c = CyberTheme.COL_RARITY_EPIC
+				c_rar = "EPIC"
+			card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(c_rar, 8, 8))
 
 			var vbox := VBoxContainer.new()
 			vbox.alignment = BoxContainer.ALIGNMENT_END
@@ -1817,9 +1894,10 @@ func _populate_quests() -> void:
 
 		var card := PanelContainer.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.custom_minimum_size = Vector2(0, 126)
-		var q_col := CyberTheme.COL_YELLOW if (is_ready and not is_claimed) else (CyberTheme.COL_CYAN if not is_claimed else Color(0.28, 0.32, 0.42, 0.85))
-		card.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.05, 0.08, 0.15, 0.96), q_col, 0.04, 2, 6, 8 if not is_claimed else 0))
+		card.custom_minimum_size = Vector2(0, 130)
+		var q_col := CyberTheme.COL_YELLOW if (is_ready and not is_claimed) else (CyberTheme.COL_CYAN if not is_claimed else Color(0.45, 0.52, 0.65, 0.85))
+		var q_box_style := CyberTheme.make_rarity_card_box("LEGENDARY", 10, 8) if (is_ready and not is_claimed) else (CyberTheme.make_3d_panel_box(10, 8) if not is_claimed else CyberTheme.make_rarity_card_box("COMMON", 10, 8))
+		card.add_theme_stylebox_override("panel", q_box_style)
 
 		var margin := MarginContainer.new()
 		margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL

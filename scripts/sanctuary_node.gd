@@ -1,5 +1,7 @@
 extends Node2D
 
+const TRIGGER_RADIUS: float = 122.0
+
 var anim_t: float = 0.0
 var blessing_claimed: bool = false
 var modal_layer: CanvasLayer = null
@@ -7,32 +9,72 @@ var modal_layer: CanvasLayer = null
 func _ready() -> void:
 	add_to_group("obstacles") # Viene ripulito automaticamente al cambio stanza
 	z_index = 5
-	# Mostra il terminale di scelta dopo un breve istante dall'ingresso nella stanza
-	get_tree().create_timer(0.45).timeout.connect(_open_sanctuary_modal)
 
 func _process(delta: float) -> void:
 	anim_t += delta
+	if not blessing_claimed and modal_layer == null and not get_tree().paused:
+		var players := get_tree().get_nodes_in_group("player")
+		if not players.is_empty() and players[0] is Node2D:
+			var p := players[0] as Node2D
+			if p.global_position.distance_to(global_position + Vector2(0, 22)) <= TRIGGER_RADIUS:
+				_open_sanctuary_modal()
 	queue_redraw()
 
 func _draw() -> void:
 	var pulse := 0.75 + 0.25 * sin(anim_t * 4.0)
 	var bob := sin(anim_t * 2.8) * 6.0
 
-	# Cerchi olografici sul pavimento del Santuario
-	draw_circle(Vector2(0, 34), 68.0, Color(0.0, 0.95, 1.0, 0.10 * pulse))
-	draw_arc(Vector2(0, 34), 68.0, anim_t * 0.8, anim_t * 0.8 + PI * 1.6, 36, Color(0.0, 0.95, 1.0, 0.75), 2.5)
-	draw_arc(Vector2(0, 34), 52.0, -anim_t * 1.2, -anim_t * 1.2 + PI * 1.4, 32, Color(1.0, 0.88, 0.25, 0.80), 2.0)
+	# Frecce guida olografiche sul pavimento dall'Eroe fino all'Altare della Valchiria (finché non viene attivata)
+	if not blessing_claimed:
+		var players := get_tree().get_nodes_in_group("player")
+		if not players.is_empty() and players[0] is Node2D:
+			var p_local := to_local((players[0] as Node2D).global_position) + Vector2(0, -16)
+			var target_local := Vector2(0, 34)
+			var dist := p_local.distance_to(target_local)
+			if dist > TRIGGER_RADIUS * 0.9:
+				var dir := (target_local - p_local).normalized()
+				var perp := Vector2(-dir.y, dir.x)
+				var steps: int = clampi(int(dist / 64.0), 2, 10)
+				for i in range(steps):
+					var wave: float = fmod(anim_t * 2.8 - float(i) * 0.32, 1.0)
+					if wave < 0.0: wave += 1.0
+					var a_ch: float = 0.22 + 0.68 * sin(wave * PI)
+					var cp := p_local.lerp(target_local, float(i + 1) / float(steps + 1))
+					var tip := cp + dir * 13.0
+					var lw := cp - dir * 8.0 + perp * 15.0
+					var rw := cp - dir * 8.0 - perp * 15.0
+					draw_polyline(PackedVector2Array([lw, tip, rw]), Color(0.15, 0.96, 1.0, a_ch), 3.8)
+					draw_polyline(PackedVector2Array([lw, tip, rw]), Color(1.0, 1.0, 1.0, a_ch * 0.75), 1.4)
+
+	# Pedana Altare 3D in prospettiva + Zona di Attivazione Prossimità
+	draw_set_transform(Vector2(0, 30), 0.0, Vector2(1.0, 0.48))
+	if not blessing_claimed:
+		draw_circle(Vector2.ZERO, TRIGGER_RADIUS, Color(0.0, 0.94, 1.0, 0.09 * pulse))
+		draw_arc(Vector2.ZERO, TRIGGER_RADIUS, 0.0, TAU, 48, Color(0.25, 0.96, 1.0, 0.55 * pulse), 2.6)
+	draw_circle(Vector2.ZERO, 76.0, Color(0.08, 0.14, 0.26, 0.92))
+	draw_arc(Vector2.ZERO, 76.0, anim_t * 0.8, anim_t * 0.8 + PI * 1.6, 36, Color(0.0, 0.95, 1.0, 0.90), 3.2)
+	draw_arc(Vector2.ZERO, 56.0, -anim_t * 1.2, -anim_t * 1.2 + PI * 1.4, 32, Color(1.0, 0.88, 0.25, 0.90), 2.4)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	# Fascio di luce volumetrica ascensionale 3D
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-52, 30), Vector2(52, 30), Vector2(34, -155), Vector2(-34, -155)
+	]), Color(0.18, 0.96, 1.0, (0.14 if not blessing_claimed else 0.05) * pulse))
 
 	# Modello 3D-Shaded Cyber-Valchiria / Angelo Custode
 	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/sanctuary_angel.png")
 	if tex:
-		var rect := Rect2(Vector2(-68, -82 + bob), Vector2(136, 136))
-		draw_texture_rect(tex, rect, false)
+		var rect := Rect2(Vector2(-70, -86 + bob), Vector2(140, 140))
+		draw_texture_rect(tex, rect, false, Color(1.08, 1.08, 1.12, 1.0))
 	else:
 		draw_circle(Vector2(0, bob), 32.0, Color(0.2, 1.0, 0.7, 0.85))
 
-	# Fascio di luce ascensionale
-	draw_rect(Rect2(Vector2(-28, -140), Vector2(56, 170)), Color(0.2, 1.0, 0.85, 0.07 * pulse), true)
+	# Scritta olografica sopra la Valchiria
+	var font := ThemeDB.fallback_font
+	if font:
+		var prompt_txt := "👼 AVVICINATI ALLA VALCHIRIA" if not blessing_claimed else "✨ BENEDIZIONE ATTIVA ✨"
+		var prompt_col := CyberTheme.COL_YELLOW if not blessing_claimed else CyberTheme.COL_EQUIPPED
+		draw_string(font, Vector2(-115, -96 + bob * 0.5), prompt_txt, HORIZONTAL_ALIGNMENT_CENTER, 230, 14, prompt_col)
 
 func _open_sanctuary_modal() -> void:
 	if blessing_claimed or not is_inside_tree():
@@ -65,9 +107,13 @@ func _open_sanctuary_modal() -> void:
 	center_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(620, 520)
-	panel.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.06, 0.14, 0.98), CyberTheme.COL_CYAN, 0.03, 2, 10, 16))
+	panel.custom_minimum_size = Vector2(630, 535)
+	panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(18, 16))
 	center_box.add_child(panel)
+	panel.pivot_offset = Vector2(315, 268)
+	panel.scale = Vector2(0.82, 0.82)
+	var tw_in := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw_in.tween_property(panel, "scale", Vector2.ONE, 0.30)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 16)
@@ -129,7 +175,9 @@ func _open_sanctuary_modal() -> void:
 				vfx.spawn_floating_text(player.global_position, "💚 +" + str(heal_amt) + " HP RIPRISTINATI!", CyberTheme.COL_GREEN)
 		SoundFX.play_win()
 		get_tree().paused = false
+		_notify_spawner_completed()
 		modal_layer.queue_free()
+		modal_layer = null
 	)
 	hbox.add_child(btn_heal)
 
@@ -162,6 +210,14 @@ func _open_sanctuary_modal() -> void:
 				vfx.spawn_floating_text(player.global_position, "⚡ " + str(chosen_power["title"]) + "!", chosen_power["col"])
 		SoundFX.play_win()
 		get_tree().paused = false
+		_notify_spawner_completed()
 		modal_layer.queue_free()
+		modal_layer = null
 	)
 	hbox.add_child(btn_pow)
+
+func _notify_spawner_completed() -> void:
+	var spawners := get_tree().get_nodes_in_group("spawner")
+	for sp in spawners:
+		if sp.has_method("complete_sanctuary"):
+			sp.complete_sanctuary()

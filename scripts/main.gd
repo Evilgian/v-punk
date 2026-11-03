@@ -20,10 +20,11 @@ func _ready() -> void:
 	var current_world: WorldData = WorldDB.get_selected_world()
 	if current_world:
 		arena_accent = current_world.accent_color
-		floor_base = current_world.biome_color.darkened(0.30)
+		# Ponte ben illuminato (acciaio satinato misto al colore del bioma, mai buio!)
+		floor_base = current_world.biome_color.lightened(0.28).lerp(Color(0.22, 0.29, 0.42, 1.0), 0.55)
 		world_title = current_world.display_name.to_upper()
 		if dark_bg:
-			dark_bg.color = floor_base.darkened(0.35)
+			dark_bg.color = floor_base.darkened(0.18)
 
 	if hud and player and hud.has_method("setup"):
 		hud.setup(player)
@@ -43,7 +44,7 @@ func _ready() -> void:
 			tut_node.name = "TutorialOverlay"
 			add_child.call_deferred(tut_node)
 
-## Vignettatura cinematografica + luce volumetrica dall'alto: dà profondità 3D all'arena
+## Illuminazione zenitale morbida + vignettatura leggerissima solo agli angoli estremi (massima visibilità in-game!)
 func _setup_cinematic_vignette() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "VignetteLayer"
@@ -53,14 +54,14 @@ func _setup_cinematic_vignette() -> void:
 		move_child(layer, hud.get_index())
 
 	var grad := Gradient.new()
-	grad.set_color(0, Color(0, 0, 0, 0.0))
-	grad.set_color(1, Color(0.0, 0.01, 0.04, 0.60))
-	grad.add_point(0.64, Color(0, 0, 0, 0.0))
+	grad.set_color(0, Color(0.75, 0.90, 1.0, 0.05))
+	grad.set_color(1, Color(0.01, 0.02, 0.06, 0.16))
+	grad.add_point(0.80, Color(0, 0, 0, 0.0))
 	var tex := GradientTexture2D.new()
 	tex.gradient = grad
 	tex.fill = GradientTexture2D.FILL_RADIAL
 	tex.fill_from = Vector2(0.5, 0.48)
-	tex.fill_to = Vector2(1.05, 1.05)
+	tex.fill_to = Vector2(1.08, 1.08)
 	tex.width = 256
 	tex.height = 256
 
@@ -95,22 +96,25 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	# 1. Vuoto Abissale Esterno
-	draw_rect(Rect2(Vector2(0, 0), Vector2(720, 1280)), Color(0.012, 0.016, 0.032, 1.0), true)
+	# 1. Sfondo Esterno Metallico Scuro (non nero assoluto)
+	draw_rect(Rect2(Vector2(0, 0), Vector2(720, 1280)), Color(0.06, 0.09, 0.16, 1.0), true)
 
-	# 2. Ponte Arena 3D con Gradiente di Profondità Prospettica (più scuro in lontananza a Nord, più vivo al centro)
+	# 2. Ponte Arena 3D luminoso e ben leggibile
 	var deck_rect := Rect2(Vector2(42, 112), Vector2(636, 1134))
-	draw_rect(deck_rect, floor_base.darkened(0.32), true)
+	draw_rect(deck_rect, floor_base, true)
+	# Riflettore zenitale morbido sull'intera arena per garantire visibilità cristallina di eroe e nemici
+	draw_circle(Vector2(360, 660), 540.0, Color(0.65, 0.82, 1.0, 0.08))
+	draw_circle(Vector2(360, 660), 340.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.06))
 
 	# Canalizzazioni Energetiche Sub-Pavimento (Fiumi di Plasma Sottostanti visibili tra le piastre 3D)
-	var trench_glow := Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.24 + 0.08 * sin(pulse_t * 3.0))
+	var trench_glow := Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.34 + 0.10 * sin(pulse_t * 3.0))
 	for gx in [148, 254, 360, 466, 572]:
 		draw_line(Vector2(gx, 112), Vector2(gx, 1246), trench_glow, 6.0)
 		var pulse_y: float = fmod(pulse_t * 175.0 + float(gx) * 1.7, 1134.0) + 112.0
 		draw_line(
 			Vector2(gx, maxf(112.0, pulse_y - 46.0)),
 			Vector2(gx, minf(1246.0, pulse_y + 46.0)),
-			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.80),
+			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.90),
 			4.0
 		)
 
@@ -120,11 +124,11 @@ func _draw() -> void:
 		draw_line(
 			Vector2(maxf(42.0, pulse_x - 42.0), gy),
 			Vector2(minf(678.0, pulse_x + 42.0), gy),
-			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.80),
+			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.90),
 			4.0
 		)
 
-	# 3. Piastre Metallica 3D PBR in Prospettiva (con shading progressivo Nord -> Sud)
+	# 3. Piastre Metalliche 3D PBR chiare e ben illuminate (Nord -> Sud)
 	var floor_tex := CyberTheme.get_model_texture("res://assets/cyber_models/arena_floor_tile.png")
 	var tile_w: int = 106
 	var tile_h: int = 103
@@ -132,21 +136,21 @@ func _draw() -> void:
 		var tx: int = 42 + col_i * tile_w
 		for row_i in range(11):
 			var ty: int = 112 + row_i * tile_h
-			var depth_f: float = 0.78 + 0.26 * (float(row_i) / 10.0)
+			var depth_f: float = 0.96 + 0.22 * (float(row_i) / 10.0)
 			var tile_mod := Color(
-				clampf((floor_base.r * 3.0 + 0.62) * depth_f, 0.48, 1.18),
-				clampf((floor_base.g * 3.0 + 0.62) * depth_f, 0.48, 1.18),
-				clampf((floor_base.b * 3.0 + 0.72) * depth_f, 0.54, 1.24),
-				0.94
+				clampf((floor_base.r * 2.4 + 0.78) * depth_f, 0.92, 1.42),
+				clampf((floor_base.g * 2.4 + 0.80) * depth_f, 0.94, 1.44),
+				clampf((floor_base.b * 2.4 + 0.86) * depth_f, 0.98, 1.48),
+				0.96
 			)
 			var tr := Rect2(Vector2(tx + 2, ty + 2), Vector2(tile_w - 4, tile_h - 4))
 			if floor_tex:
 				draw_texture_rect(floor_tex, tr, false, tile_mod)
 			else:
-				draw_rect(tr, Color(floor_base.r + 0.03, floor_base.g + 0.035, floor_base.b + 0.05, 0.95), true)
+				draw_rect(tr, Color(floor_base.r + 0.08, floor_base.g + 0.09, floor_base.b + 0.12, 0.96), true)
 			# Micro-LED angolari incastonati nelle piastre
-			draw_circle(Vector2(tx + 10, ty + 10), 1.5, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.30 * depth_f))
-			draw_circle(Vector2(tx + tile_w - 10, ty + tile_h - 10), 1.5, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.30 * depth_f))
+			draw_circle(Vector2(tx + 10, ty + 10), 1.7, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.42 * depth_f))
+			draw_circle(Vector2(tx + tile_w - 10, ty + tile_h - 10), 1.7, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.42 * depth_f))
 
 	# 4. Reattore Centrale Incassato in Prospettiva 2.5D Ellittica (Camera ~65°)
 	var center := Vector2(360, 665)
@@ -168,19 +172,20 @@ func _draw() -> void:
 	# 5. ARCHITETTURA MURARIA 3D IN PROSPETTIVA (Parete Nord Alta + Contrafforti 3D + Pareti Laterali Inclinate)
 	_draw_3d_arena_architecture()
 
-	# 6. Illuminazione Dinamica Ellittica 2.5D al Suolo sotto Eroe, Nemici e Proiettili
+	# 6. Riflettori Tattici 2.5D ad Alta Visibilità sotto Eroe, Nemici e Proiettili
 	if is_instance_valid(player):
 		var p_col := Global.get_player_accent_color()
 		draw_set_transform(player.global_position + Vector2(0, 14), 0.0, Vector2(1.0, 0.48))
-		draw_circle(Vector2.ZERO, 68.0, Color(p_col.r, p_col.g, p_col.b, 0.12))
-		draw_circle(Vector2.ZERO, 36.0, Color(p_col.r, p_col.g, p_col.b, 0.18))
+		draw_circle(Vector2.ZERO, 88.0, Color(p_col.r, p_col.g, p_col.b, 0.22))
+		draw_circle(Vector2.ZERO, 48.0, Color(1.0, 1.0, 1.0, 0.16))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(e) and e is Node2D:
 			var ep := (e as Node2D).global_position + Vector2(0, 12)
 			draw_set_transform(ep, 0.0, Vector2(1.0, 0.48))
-			draw_circle(Vector2.ZERO, 46.0, Color(1.0, 0.16, 0.28, 0.11))
+			draw_circle(Vector2.ZERO, 58.0, Color(1.0, 0.22, 0.32, 0.24))
+			draw_circle(Vector2.ZERO, 30.0, Color(1.0, 0.55, 0.30, 0.18))
 			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	for pr in get_tree().get_nodes_in_group("projectiles"):
@@ -199,17 +204,17 @@ func _draw() -> void:
 		draw_circle(mp, mr, Color(1.0, 0.98, 0.9, ma * 0.85))
 
 func _draw_3d_arena_architecture() -> void:
-	var roof_top := Color(0.16, 0.20, 0.31, 1.0)
-	var roof_edge := Color(0.28, 0.35, 0.50, 1.0)
-	var wall_upper := Color(0.11, 0.14, 0.23, 1.0)
-	var wall_lower := Color(0.05, 0.07, 0.13, 1.0)
-	var wall_side_face := Color(0.08, 0.10, 0.18, 1.0)
+	var roof_top := Color(0.24, 0.30, 0.44, 1.0)
+	var roof_edge := Color(0.42, 0.52, 0.70, 1.0)
+	var wall_upper := Color(0.18, 0.24, 0.38, 1.0)
+	var wall_lower := Color(0.11, 0.15, 0.26, 1.0)
+	var wall_side_face := Color(0.15, 0.20, 0.32, 1.0)
 
-	# --- OMBRE AMBIENT OCCLUSION PROIETTATE SUL PAVIMENTO DALLE PARETI 3D ---
-	draw_rect(Rect2(Vector2(42, 112), Vector2(636, 36)), Color(0, 0, 0, 0.48), true)
-	draw_rect(Rect2(Vector2(42, 112), Vector2(636, 18)), Color(0, 0, 0, 0.35), true)
-	draw_rect(Rect2(Vector2(42, 112), Vector2(22, 1134)), Color(0, 0, 0, 0.42), true)
-	draw_rect(Rect2(Vector2(656, 112), Vector2(22, 1134)), Color(0, 0, 0, 0.42), true)
+	# --- OMBRE AMBIENT OCCLUSION MORBIDE SUL PAVIMENTO DALLE PARETI 3D ---
+	draw_rect(Rect2(Vector2(42, 112), Vector2(636, 26)), Color(0, 0, 0, 0.22), true)
+	draw_rect(Rect2(Vector2(42, 112), Vector2(636, 12)), Color(0, 0, 0, 0.18), true)
+	draw_rect(Rect2(Vector2(42, 112), Vector2(16, 1134)), Color(0, 0, 0, 0.20), true)
+	draw_rect(Rect2(Vector2(662, 112), Vector2(16, 1134)), Color(0, 0, 0, 0.20), true)
 
 	# --- PARETE NORD 3D IN PROSPETTIVA (Altezza y = 0..112: Tetto Superiore + Facciata Verticale 3D) ---
 	# Facciata verticale 3D (y = 28..112) sfumata dall'alto verso il basso
