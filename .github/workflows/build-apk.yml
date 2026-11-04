@@ -41,21 +41,17 @@ jobs:
         run: |
           echo "ANDROID_HOME is: $ANDROID_HOME"
           mkdir -p ~/.android
-          # Utilizza il keystore permanente versionato nel repository
           cp keystore/release.keystore ~/.android/debug.keystore
 
           mkdir -p ~/.config/godot
-          cat << 'EOF' > ~/.config/godot/editor_settings-4.3.tres
-[gd_resource type="EditorSettings" format=3]
-[resource]
-export/android/android_sdk_path = "$ANDROID_HOME"
-export/android/debug_keystore = "$HOME/.android/debug.keystore"
-export/android/debug_keystore_user = "vpunkrelease"
-export/android/debug_keystore_pass = "vpunk2026"
-EOF
-          # Espande le variabili di ambiente nel file di configurazione
-          sed -i "s|\$ANDROID_HOME|$ANDROID_HOME|g" ~/.config/godot/editor_settings-4.3.tres
-          sed -i "s|\$HOME|$HOME|g" ~/.config/godot/editor_settings-4.3.tres
+          cat << EOF > ~/.config/godot/editor_settings-4.3.tres
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "vpunkrelease"
+          export/android/debug_keystore_pass = "vpunk2026"
+          EOF
           cp ~/.config/godot/editor_settings-4.3.tres ~/.config/godot/editor_settings-4.tres
 
       - name: Imposta Versione Build & Compila APK Android
