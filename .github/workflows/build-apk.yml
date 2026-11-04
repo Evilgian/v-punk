@@ -25,15 +25,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Verifica Android SDK Preinstallato e Genera Keystore
-        run: |
-          echo "ANDROID_HOME is: $ANDROID_HOME"
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore \
-            -storepass android -alias androiddebugkey -keypass android \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
-
       - name: Scarica e Installa Godot 4.3 & Export Templates
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
@@ -46,21 +37,23 @@ jobs:
           unzip -q Godot_v4.3-stable_export_templates.tpz
           mv templates/* ~/.local/share/godot/export_templates/4.3.stable/
 
-      - name: Configura Editor Settings e Keystore per Android
+      - name: Configura Editor Settings e Keystore Permanente per Android
         run: |
+          echo "ANDROID_HOME is: $ANDROID_HOME"
+          mkdir -p ~/.android
+          # Utilizza il keystore permanente versionato nel repository
+          cp keystore/release.keystore ~/.android/debug.keystore
+
           mkdir -p ~/.config/godot
           cat << EOF > ~/.config/godot/editor_settings-4.3.tres
-          [gd_resource type="EditorSettings" format=3]
-          [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
-          export/android/debug_keystore = "$HOME/.android/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
-          EOF
+[gd_resource type="EditorSettings" format=3]
+[resource]
+export/android/android_sdk_path = "$ANDROID_HOME"
+export/android/debug_keystore = "$HOME/.android/debug.keystore"
+export/android/debug_keystore_user = "vpunkrelease"
+export/android/debug_keystore_pass = "vpunk2026"
+EOF
           cp ~/.config/godot/editor_settings-4.3.tres ~/.config/godot/editor_settings-4.tres
-
-          # Inserisce anche il keystore direttamente nel preset Android
-          sed -i "s|custom_template/release=\"\"|custom_template/release=\"\"\nkeystore/debug=\"$HOME/.android/debug.keystore\"\nkeystore/debug_user=\"androiddebugkey\"\nkeystore/debug_password=\"android\"|g" export_presets.cfg
 
       - name: Imposta Versione Build & Compila APK Android
         run: |
@@ -95,6 +88,7 @@ jobs:
           make_latest: true
           body: |
             ### ⚡ V-PUNK: Rogue Protocol — Versione `v1.5.${{ github.run_number }}` (Android APK)
+            - **Firma Digitale Permanente (Keystore Fisso)**: Configurato il keystore crittografico permanente. Da questa release (`v1.5.${{ github.run_number }}`) in poi, tutti gli aggiornamenti futuri si installeranno direttamente sopra la versione esistente senza errori di conflitto firma!
             - **Personaggio & Boss 3D Aggressivi & Dettagliati**: Nuovo modello Cyber-Ronin Exo-Slayer con elmo cornuto, visiera neon a V, armature a piastre metalliche e locomozione articolata; Boss Robo-Titan ridisegnato come Dreadnought mecha con teschio cornuto, fornace ardente e lanciamissili; nemici 3D potenziati (Mantis Stalker, Hover-Wasp, Goliath).
             - **Visibilità Cristallina & Nessuna Opacità**: Rimosse le doppie vignettature scure e il bloom eccessivo che causava l'effetto "fantasma/opaco"; unità risaltate con contorni solidi ad alto contrasto e pavimento bilanciato.
             - **24 Abilità di Livello Uniche & Varie**: Espanso l'albero perk da 8 a 24 abilità (Lame Orbitali, Scudo Energetico, Fulmini a Catena, Munizioni Smart, Fuoco a 360°, Criogenia, Vampirismo) con pesi bilanciati per evitare ripetizioni.
