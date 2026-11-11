@@ -24,6 +24,8 @@ func _ready() -> void:
 			current_room = spawners[0].current_room
 
 		stats_label.text = "// SYSTEM FAILURE: FLATLINED //\n\nSettore Raggiunto: Stage " + str(current_room) + "\nCrediti Totali: 🪙 " + str(Global.total_coins) + "\nCyber-Gemme: 💎 " + str(Global.total_credits)
+		stats_label.add_theme_font_size_override("font_size", 20)
+		CyberTheme.style_label(stats_label, CyberTheme.COL_CYAN, 3)
 
 	if btn_retry:
 		CyberTheme.style_button(btn_retry, CyberTheme.COL_YELLOW, true)

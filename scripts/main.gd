@@ -123,21 +123,19 @@ func _draw() -> void:
 			draw_circle(Vector2(tx + 10, ty + 10), 1.7, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.42 * depth_f))
 			draw_circle(Vector2(tx + tile_w - 10, ty + tile_h - 10), 1.7, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.42 * depth_f))
 
-	# 4. Reattore Centrale Incassato in Prospettiva 2.5D Ellittica (Camera ~65°)
+	# 4. Reattore Centrale Incassato in Prospettiva 2.5D Ellittica con Identità Unica per ciascuno degli 8 Mondi!
 	var center := Vector2(360, 665)
 	var ring_alpha: float = 0.30 + sin(pulse_t * 2.5) * 0.08
 	draw_set_transform(center, 0.0, Vector2(1.0, 0.56))
 	draw_circle(Vector2.ZERO, 178.0, Color(0.01, 0.015, 0.03, 0.55))
 	draw_arc(Vector2.ZERO, 178.0, 0.0, TAU, 64, Color(0.22, 0.28, 0.42, 0.75), 5.0)
-	draw_circle(Vector2.ZERO, 155.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.055))
-	draw_circle(Vector2.ZERO, 102.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.075))
+	draw_circle(Vector2.ZERO, 155.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.065))
+	draw_circle(Vector2.ZERO, 102.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.085))
 	draw_arc(Vector2.ZERO, 158.0, 0.0, TAU, 64, Color(arena_accent.r, arena_accent.g, arena_accent.b, ring_alpha * 0.75), 2.4)
 	draw_arc(Vector2.ZERO, 132.0, pulse_t * 0.45, pulse_t * 0.45 + PI * 1.4, 48, Color(arena_accent.r, arena_accent.g, arena_accent.b, ring_alpha * 1.25), 3.4)
 	draw_arc(Vector2.ZERO, 132.0, pulse_t * 0.45 + PI, pulse_t * 0.45 + PI * 1.6, 32, Color(1.0, 0.9, 0.3, ring_alpha), 2.8)
 	draw_arc(Vector2.ZERO, 86.0, -pulse_t * 0.7, -pulse_t * 0.7 + PI * 1.5, 40, Color(arena_accent.r, arena_accent.g, arena_accent.b, ring_alpha * 1.35), 2.5)
-	for a_idx in range(4):
-		var ang: float = float(a_idx) * PI * 0.5 + pulse_t * 0.2
-		draw_line(Vector2(cos(ang), sin(ang)) * 48.0, Vector2(cos(ang), sin(ang)) * 78.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.40), 2.2)
+	_draw_world_biome_emblem(ring_alpha)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	# 5. ARCHITETTURA MURARIA 3D IN PROSPETTIVA (Parete Nord Alta + Contrafforti 3D + Pareti Laterali Inclinate)
@@ -315,3 +313,69 @@ func _setup_perimeter_walls() -> void:
 		wall.add_child(shape)
 
 		add_child.call_deferred(wall)
+
+
+func _draw_world_biome_emblem(ring_alpha: float) -> void:
+	var w_id: String = WorldDB.selected_world_id if WorldDB else "world_1"
+	var col := Color(arena_accent.r, arena_accent.g, arena_accent.b, ring_alpha * 1.45)
+	match w_id:
+		"world_1":
+			# Foresta Bio-Cyber: 6 Radici Bio-Luminescenti + Nucleo Smeraldo
+			for i in range(6):
+				var a: float = float(i) * TAU / 6.0 + sin(pulse_t * 1.5 + float(i)) * 0.08
+				draw_line(Vector2(cos(a), sin(a)) * 32.0, Vector2(cos(a), sin(a)) * 145.0, col, 3.8)
+			draw_circle(Vector2.ZERO, 34.0, Color(0.10, 0.95, 0.55, 0.25))
+		"world_2":
+			# Deserto Ruggine: Turbina Solare a 8 Pale Dorate
+			for i in range(8):
+				var a: float = float(i) * TAU / 8.0 + pulse_t * 0.35
+				draw_line(Vector2(cos(a), sin(a)) * 38.0, Vector2(cos(a + 0.18), sin(a + 0.18)) * 138.0, col, 4.2)
+		"world_3":
+			# Cyber-Tokyo: Doppio Esagono Olografico Neon Magenta/Ciano
+			var hex1 := PackedVector2Array()
+			var hex2 := PackedVector2Array()
+			for i in range(7):
+				var a1: float = float(i) * TAU / 6.0 + pulse_t * 0.25
+				var a2: float = float(i) * TAU / 6.0 - pulse_t * 0.25
+				hex1.append(Vector2(cos(a1), sin(a1)) * 112.0)
+				hex2.append(Vector2(cos(a2), sin(a2)) * 68.0)
+			draw_polyline(hex1, col, 3.0)
+			draw_polyline(hex2, Color(0.0, 0.95, 1.0, ring_alpha * 1.3), 2.5)
+		"world_4":
+			# Settore Glaciale: Cristallo Crio-Esagonale a Fiocco di Neve
+			for i in range(6):
+				var a: float = float(i) * TAU / 6.0
+				var p1 := Vector2(cos(a), sin(a)) * 24.0
+				var p2 := Vector2(cos(a), sin(a)) * 142.0
+				draw_line(p1, p2, col, 3.5)
+				var mid := p1.lerp(p2, 0.65)
+				draw_line(mid, mid + Vector2(cos(a + 0.55), sin(a + 0.55)) * 34.0, col, 2.5)
+				draw_line(mid, mid + Vector2(cos(a - 0.55), sin(a - 0.55)) * 34.0, col, 2.5)
+		"world_5":
+			# Fonderie di Magma: Caldera Fusa con Fessure Incandescenti
+			draw_circle(Vector2.ZERO, 64.0, Color(1.0, 0.35, 0.05, 0.22 + 0.08 * sin(pulse_t * 4.0)))
+			for i in range(5):
+				var a: float = float(i) * TAU / 5.0 - pulse_t * 0.15
+				draw_line(Vector2(cos(a), sin(a)) * 45.0, Vector2(cos(a), sin(a)) * 148.0, Color(1.0, 0.55, 0.10, ring_alpha * 1.5), 4.5)
+		"world_6":
+			# Bio-Lab Infetto: Trifoglio Bio-Hazard Radioattivo
+			for i in range(3):
+				var a: float = float(i) * TAU / 3.0 + pulse_t * 0.4
+				var c_pos := Vector2(cos(a), sin(a)) * 62.0
+				draw_arc(c_pos, 46.0, a - 1.1, a + 1.1, 24, col, 4.2)
+			draw_circle(Vector2.ZERO, 22.0, col)
+		"world_7":
+			# Rovine Astrali: Bussola Celestiale a 8 Punte Dorate
+			var star := PackedVector2Array()
+			for i in range(17):
+				var a: float = float(i) * TAU / 16.0 + pulse_t * 0.18
+				var r: float = 142.0 if i % 2 == 0 else 56.0
+				star.append(Vector2(cos(a), sin(a)) * r)
+			draw_polyline(star, col, 2.8)
+		"world_8":
+			# Nexus della Singolarità: Orizzonte degli Eventi del Buco Nero
+			draw_circle(Vector2.ZERO, 54.0, Color(0.02, 0.0, 0.05, 0.88))
+			draw_arc(Vector2.ZERO, 56.0, 0.0, TAU, 48, Color(1.0, 0.15, 0.50, 0.85), 3.6)
+			for i in range(4):
+				var a: float = float(i) * PI * 0.5 + pulse_t * 0.9
+				draw_arc(Vector2.ZERO, 96.0, a, a + 0.9, 20, Color(0.65, 0.20, 1.0, ring_alpha * 1.5), 3.5)

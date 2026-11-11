@@ -147,7 +147,9 @@ func load_game() -> void:
 	if data.has("talents") and data["talents"] is Dictionary:
 		var tm: Node = get_node_or_null("/root/TalentManager")
 		if tm and "talent_levels" in tm and data["talents"].get("levels") is Dictionary:
-			tm.talent_levels = data["talents"]["levels"]
+			var loaded_lvls: Dictionary = data["talents"]["levels"]
+			for k in loaded_lvls.keys():
+				tm.talent_levels[str(k)] = int(loaded_lvls[k])
 
 	# Restore Quests
 	if data.has("quests") and data["quests"] is Dictionary:
@@ -187,4 +189,5 @@ func reset_save() -> void:
 
 	var tm: Node = get_node_or_null("/root/TalentManager")
 	if tm and "talent_levels" in tm:
-		tm.talent_levels = {"atk": 0, "hp": 0, "crit": 0, "recovery": 0, "speed": 0, "gold": 0}
+		for k in tm.talent_levels.keys():
+			tm.talent_levels[k] = 0

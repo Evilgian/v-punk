@@ -14,6 +14,9 @@ var anim_t: float = 0.0
 var aim_angle: float = 0.0
 var world_id: String = "world_1"
 var unit_tint: Color = Color(1.0, 0.35, 0.35, 1.0)
+var is_elite: bool = false
+var lunge_cd: float = 2.0
+var lunge_t: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -45,24 +48,42 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var dir := (player.global_position - global_position).normalized()
+	var dist := global_position.distance_to(player.global_position)
 	aim_angle = dir.angle()
-	velocity = dir * speed
+
+	var move_dir := dir
+	if world_id == "world_3" or world_id == "world_4" or world_id == "world_7":
+		var perp := Vector2(-dir.y, dir.x)
+		move_dir = (dir + perp * sin(anim_t * 5.2) * 0.36).normalized()
+
+	var spd_mult: float = 1.0
+	if is_elite or world_id == "world_2" or world_id == "world_5" or world_id == "world_8":
+		if lunge_t > 0.0:
+			lunge_t -= delta
+			spd_mult = 2.05
+		else:
+			lunge_cd -= delta
+			if lunge_cd <= 0.0 and dist < 195.0:
+				lunge_t = 0.26
+				lunge_cd = randf_range(2.2, 3.2)
+
+	velocity = move_dir * speed * spd_mult
 	move_and_slide()
 
-	var dist := global_position.distance_to(player.global_position)
 	if dist <= 42.0 and damage_cooldown <= 0.0:
 		if player.has_method("take_damage"):
 			player.take_damage(damage)
 			damage_cooldown = 1.0
 
 func _draw() -> void:
-	CyberModels.draw_melee_enemy(self, world_id, anim_t, unit_tint, aim_angle)
+	CyberModels.draw_melee_enemy(self, world_id, anim_t, unit_tint, aim_angle, is_elite)
 
 	if max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
 		var bar_alpha := 0.95 if hp < max_hp else 0.72
+		var bar_col := Color(1.0, 0.82, 0.15, bar_alpha) if is_elite else Color(1.0, 0.24, 0.32, bar_alpha)
 		draw_rect(Rect2(Vector2(-19, -45), Vector2(38, 6)), Color(0.04, 0.05, 0.10, bar_alpha), true)
-		draw_rect(Rect2(Vector2(-18, -44), Vector2(36.0 * ratio, 4)), Color(1.0, 0.24, 0.32, bar_alpha), true)
+		draw_rect(Rect2(Vector2(-18, -44), Vector2(36.0 * ratio, 4)), bar_col, true)
 
 func take_damage(amount: int) -> void:
 	if max_hp < hp: max_hp = hp

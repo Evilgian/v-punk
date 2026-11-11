@@ -208,55 +208,58 @@ static func make_rarity_pill_box(rarity_str: String) -> StyleBoxFlat:
 	sb.content_margin_bottom = 2
 	return sb
 
-## Crea uno StyleBoxFlat 3D smussato (usato per ProgressBar, badge compatti e fallback)
+## Crea uno StyleBoxFlat 3D smussato moderno (senza inclinazione stilizzata, con bisello 3D e ombra morbida)
 static func make_cyber_box(
 	bg: Color = COL_PANEL,
 	border: Color = COL_CYAN,
-	skew_x: float = 0.04,
+	_skew_x: float = 0.0,
 	border_w: int = 2,
-	left_accent_w: int = 4,
-	glow_size: int = 6
+	left_accent_w: int = 3,
+	glow_size: int = 8
 ) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg.lightened(0.05)
-	sb.skew = Vector2(skew_x * 0.5, 0.0)
-	sb.border_width_left = max(border_w, left_accent_w)
+	sb.bg_color = bg.lightened(0.06)
+	sb.skew = Vector2.ZERO
+	sb.border_width_left = maxi(border_w, left_accent_w)
 	sb.border_width_top = border_w
 	sb.border_width_right = border_w
-	sb.border_width_bottom = border_w + 3
+	sb.border_width_bottom = border_w + 4
 	sb.border_color = border
-	sb.corner_radius_top_left = 8
-	sb.corner_radius_top_right = 10
-	sb.corner_radius_bottom_left = 10
-	sb.corner_radius_bottom_right = 8
-	sb.content_margin_left = 12
-	sb.content_margin_right = 12
-	sb.content_margin_top = 8
-	sb.content_margin_bottom = 9
+	sb.corner_radius_top_left = 12
+	sb.corner_radius_top_right = 12
+	sb.corner_radius_bottom_left = 12
+	sb.corner_radius_bottom_right = 12
+	sb.content_margin_left = 14
+	sb.content_margin_right = 14
+	sb.content_margin_top = 9
+	sb.content_margin_bottom = 11
 	if glow_size > 0:
-		sb.shadow_color = Color(0.0, 0.02, 0.06, 0.48)
-		sb.shadow_size = glow_size
-		sb.shadow_offset = Vector2(0, 3)
+		sb.shadow_color = Color(0.0, 0.02, 0.07, 0.58)
+		sb.shadow_size = maxi(6, glow_size)
+		sb.shadow_offset = Vector2(0, 4)
 	return sb
 
-## Applica un vero pulsante 3D fisico tattile (con spessore inferiore 3D ed effetto pressione reale!)
+## Applica un vero pulsante 3D fisico tattile moderno (con spessore inferiore 3D ed effetto pressione reale!)
 static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yellow: bool = false) -> void:
 	if not btn:
 		return
 
+	if not btn.has_theme_font_size_override("font_size"):
+		btn.add_theme_font_size_override("font_size", 19)
+
 	# Per micro-pulsanti molto bassi (< 34px, es. RIDUCI nel tutorial) usa stile compatto 3D
 	if btn.custom_minimum_size.y > 0 and btn.custom_minimum_size.y < 34:
-		var mini_norm := make_cyber_box(Color(0.08, 0.14, 0.25, 0.96), accent, 0.0, 1, 3, 3)
-		mini_norm.content_margin_top = 2
-		mini_norm.content_margin_bottom = 3
-		mini_norm.content_margin_left = 6
-		mini_norm.content_margin_right = 6
+		var mini_norm := make_cyber_box(Color(0.08, 0.14, 0.25, 0.96), accent, 0.0, 2, 2, 4)
+		mini_norm.content_margin_top = 3
+		mini_norm.content_margin_bottom = 4
+		mini_norm.content_margin_left = 8
+		mini_norm.content_margin_right = 8
 		btn.add_theme_stylebox_override("normal", mini_norm)
 		btn.add_theme_stylebox_override("hover", mini_norm)
 		btn.add_theme_stylebox_override("pressed", mini_norm)
 		btn.add_theme_color_override("font_color", Color.WHITE)
-		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.95))
-		btn.add_theme_constant_override("outline_size", 2)
+		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
+		btn.add_theme_constant_override("outline_size", 3)
 		return
 
 	var base_name := "ui_btn_cyan_3d"
@@ -268,7 +271,9 @@ static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yello
 		base_name = "ui_btn_magenta_3d"
 
 	var tex_norm := get_model_texture("res://assets/cyber_models/" + base_name + ".png")
-	var tex_prs := get_model_texture("res://assets/cyber_models/" + base_name + "_pressed.png")
+	var tex_prs := get_model_texture("res://assets/cyber_models/" + base_name.replace("_3d", "_pressed_3d") + ".png")
+	if not tex_prs:
+		tex_prs = get_model_texture("res://assets/cyber_models/" + base_name + "_pressed.png")
 	var tex_dis := get_model_texture("res://assets/cyber_models/ui_btn_disabled_3d.png")
 
 	if tex_norm and tex_prs and tex_dis:
@@ -276,54 +281,56 @@ static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yello
 		sb_n.texture = tex_norm
 		sb_n.texture_margin_left = 20; sb_n.texture_margin_right = 20
 		sb_n.texture_margin_top = 15; sb_n.texture_margin_bottom = 19
-		sb_n.content_margin_left = 12; sb_n.content_margin_right = 12
-		sb_n.content_margin_top = 6; sb_n.content_margin_bottom = 10
+		sb_n.content_margin_left = 14; sb_n.content_margin_right = 14
+		sb_n.content_margin_top = 7; sb_n.content_margin_bottom = 11
 
 		var sb_h := sb_n.duplicate() as StyleBoxTexture
-		sb_h.modulate_color = Color(1.10, 1.10, 1.12, 1.0)
+		sb_h.modulate_color = Color(1.12, 1.12, 1.15, 1.0)
 
 		var sb_p := StyleBoxTexture.new()
 		sb_p.texture = tex_prs
 		sb_p.texture_margin_left = 20; sb_p.texture_margin_right = 20
 		sb_p.texture_margin_top = 17; sb_p.texture_margin_bottom = 15
-		sb_p.content_margin_left = 12; sb_p.content_margin_right = 12
-		sb_p.content_margin_top = 9; sb_p.content_margin_bottom = 7
+		sb_p.content_margin_left = 14; sb_p.content_margin_right = 14
+		sb_p.content_margin_top = 10; sb_p.content_margin_bottom = 8
 
 		var sb_d := StyleBoxTexture.new()
 		sb_d.texture = tex_dis
 		sb_d.texture_margin_left = 20; sb_d.texture_margin_right = 20
 		sb_d.texture_margin_top = 16; sb_d.texture_margin_bottom = 16
-		sb_d.content_margin_left = 12; sb_d.content_margin_right = 12
-		sb_d.content_margin_top = 7; sb_d.content_margin_bottom = 8
+		sb_d.content_margin_left = 14; sb_d.content_margin_right = 14
+		sb_d.content_margin_top = 8; sb_d.content_margin_bottom = 9
 
 		btn.add_theme_stylebox_override("normal", sb_n)
 		btn.add_theme_stylebox_override("hover", sb_h)
 		btn.add_theme_stylebox_override("pressed", sb_p)
 		btn.add_theme_stylebox_override("disabled", sb_d)
 	else:
-		btn.add_theme_stylebox_override("normal", make_cyber_box(COL_YELLOW if is_primary_yellow else COL_PANEL, accent, 0.04, 2, 5, 8))
+		btn.add_theme_stylebox_override("normal", make_cyber_box(COL_YELLOW if is_primary_yellow else COL_PANEL, accent, 0.0, 2, 4, 8))
 
 	if is_primary_yellow:
-		btn.add_theme_color_override("font_color", Color(0.05, 0.04, 0.02, 1.0))
-		btn.add_theme_color_override("font_hover_color", Color(0.02, 0.02, 0.02, 1.0))
-		btn.add_theme_color_override("font_pressed_color", Color(0.05, 0.04, 0.02, 1.0))
+		btn.add_theme_color_override("font_color", Color(1.0, 0.98, 0.90, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color.WHITE)
+		btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.90, 0.55, 1.0))
 		btn.add_theme_color_override("font_disabled_color", Color(0.55, 0.58, 0.65, 0.78))
-		btn.add_theme_color_override("font_outline_color", Color(1.0, 0.96, 0.72, 0.55))
-		btn.add_theme_constant_override("outline_size", 2)
+		btn.add_theme_color_override("font_outline_color", Color(0.06, 0.04, 0.01, 0.98))
+		btn.add_theme_constant_override("outline_size", 4)
 	else:
-		btn.add_theme_color_override("font_color", Color(0.97, 0.99, 1.0, 1.0))
+		btn.add_theme_color_override("font_color", Color(0.98, 0.99, 1.0, 1.0))
 		btn.add_theme_color_override("font_hover_color", Color.WHITE)
 		btn.add_theme_color_override("font_pressed_color", accent.lightened(0.45))
 		btn.add_theme_color_override("font_disabled_color", Color(0.52, 0.57, 0.66, 0.78))
-		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
-		btn.add_theme_constant_override("outline_size", 3)
+		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.98))
+		btn.add_theme_constant_override("outline_size", 4)
 
 ## Stilizza un Label con outline profondo e leggibilità moderna
-static func style_label(lbl: Label, col: Color = Color.WHITE, outline_size: int = 3) -> void:
+static func style_label(lbl: Label, col: Color = Color.WHITE, outline_size: int = 4) -> void:
 	if not lbl: return
 	lbl.add_theme_color_override("font_color", col)
-	lbl.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.95))
+	lbl.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
 	lbl.add_theme_constant_override("outline_size", outline_size)
+	if not lbl.has_theme_font_size_override("font_size"):
+		lbl.add_theme_font_size_override("font_size", 18)
 
 ## Percorre ricorsivamente un albero UI per applicare il look 3D Cyberpunk a Button, PanelContainer e Label
 static func apply_recursive_cyber_style(root: Node) -> void:
@@ -336,9 +343,11 @@ static func apply_recursive_cyber_style(root: Node) -> void:
 		style_button(b, col, is_yellow)
 	elif root is Label:
 		var l := root as Label
-		l.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.92))
+		l.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.95))
 		if not l.has_theme_constant_override("outline_size"):
-			l.add_theme_constant_override("outline_size", 3)
+			l.add_theme_constant_override("outline_size", 4)
+		if not l.has_theme_font_size_override("font_size"):
+			l.add_theme_font_size_override("font_size", 18)
 
 	for child in root.get_children():
 		apply_recursive_cyber_style(child)

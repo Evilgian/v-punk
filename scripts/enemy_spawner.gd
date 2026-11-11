@@ -45,11 +45,14 @@ func start_room() -> void:
 				boss.global_position = Vector2(360, 360)
 				if "is_final_boss" in boss:
 					boss.is_final_boss = is_final
-				var progress_ratio: float = clampf(float(current_room) / float(maxi(1, current_world.total_rooms)), 0.55, 1.0)
+				var progress_ratio: float = clampf(float(current_room) / float(maxi(1, current_world.total_rooms)), 0.65, 1.0)
+				var boss_stage_bonus: float = 1.0 + float(maxi(0, current_room - 10)) * 0.045
 				if "hp" in boss:
-					boss.hp = int(float(boss.hp) * current_world.enemy_hp_multiplier * progress_ratio)
+					boss.hp = int(float(boss.hp) * current_world.enemy_hp_multiplier * progress_ratio * boss_stage_bonus)
 				if "max_hp" in boss:
 					boss.max_hp = boss.hp
+				if "speed" in boss:
+					boss.speed = float(boss.speed) * minf(1.40, 1.0 + float(current_room) * 0.008)
 				_spawn_into_arena(boss)
 		_update_hud_counter()
 		return
@@ -117,10 +120,15 @@ func start_room() -> void:
 			crate.global_position = crate_pos
 			_spawn_into_arena(crate)
 
-	# Stanze Standard: Nemici con moltiplicatori HP e Danno bioma + progressione graduale stanza per stanza
-	total_room_enemies = 3 if (is_tutorial_world and current_room == 1) else (3 + mini(int(current_room / 2), 9))
-	var room_hp_scale: float = 1.0 + float(current_room - 1) * 0.04
-	var room_dmg_scale: float = 1.0 + float(current_room - 1) * 0.025
+	# Stanze Standard: Nemici con moltiplicatori HP e Danno bioma + progressione più incisiva stanza per stanza + Campioni Élite
+	total_room_enemies = 3 if (is_tutorial_world and current_room == 1) else clampi(4 + int(floor(float(current_room) * 0.45)), 4, 12)
+	var r_step: float = float(maxi(0, current_room - 1))
+	var room_hp_scale: float = 1.0 + r_step * 0.085 + pow(r_step, 1.32) * 0.018
+	var room_dmg_scale: float = 1.0 + r_step * 0.055 + pow(r_step, 1.18) * 0.010
+	var room_spd_scale: float = minf(1.48, 1.0 + r_step * 0.014)
+	var elite_chance: float = clampf(0.14 + float(current_room - 4) * 0.018, 0.14, 0.42) if current_room >= 4 else 0.0
+	var max_elites: int = 1 if current_room < 9 else (2 if current_room < 18 else 3)
+	var elites_spawned: int = 0
 	print("Generazione di ", total_room_enemies, " nemici nella Stanza ", current_room)
 
 	for i in range(total_room_enemies):
@@ -132,9 +140,9 @@ func start_room() -> void:
 			scene_to_spawn = enemy_scene
 		elif is_tutorial_world and current_room == 2:
 			scene_to_spawn = ranged_enemy_scene if (i < 2 and ranged_enemy_scene != null) else enemy_scene
-		elif current_room >= 3 and roll <= 0.25 and heavy_enemy_scene:
+		elif current_room >= 3 and roll <= clampf(0.22 + r_step * 0.006, 0.22, 0.36) and heavy_enemy_scene:
 			scene_to_spawn = heavy_enemy_scene
-		elif current_room >= 2 and roll <= 0.50 and ranged_enemy_scene:
+		elif current_room >= 2 and roll <= clampf(0.50 + r_step * 0.008, 0.50, 0.68) and ranged_enemy_scene:
 			scene_to_spawn = ranged_enemy_scene
 		else:
 			scene_to_spawn = enemy_scene
@@ -143,12 +151,25 @@ func start_room() -> void:
 			var enemy := scene_to_spawn.instantiate() as Node2D
 			if enemy:
 				enemy.global_position = spawn_pos
+				var make_elite: bool = (elites_spawned < max_elites) and (randf() < elite_chance)
+				if make_elite:
+					elites_spawned += 1
+					if "is_elite" in enemy:
+						enemy.is_elite = true
+					enemy.scale *= 1.18
+				var e_hp_mult: float = room_hp_scale * (1.80 if make_elite else 1.0)
+				var e_dmg_mult: float = room_dmg_scale * (1.35 if make_elite else 1.0)
+				var e_spd_mult: float = room_spd_scale * (1.14 if make_elite else 1.0)
 				if "hp" in enemy:
-					enemy.hp = int(float(enemy.hp) * current_world.enemy_hp_multiplier * room_hp_scale)
+					enemy.hp = int(round(float(enemy.hp) * current_world.enemy_hp_multiplier * e_hp_mult))
 				if "max_hp" in enemy and "hp" in enemy:
 					enemy.max_hp = enemy.hp
 				if "damage" in enemy:
-					enemy.damage = int(float(enemy.damage) * current_world.enemy_dmg_multiplier * room_dmg_scale)
+					enemy.damage = int(round(float(enemy.damage) * current_world.enemy_dmg_multiplier * e_dmg_mult))
+				if "speed" in enemy:
+					enemy.speed = float(enemy.speed) * e_spd_mult
+				if "fire_rate" in enemy:
+					enemy.fire_rate = maxf(0.85, float(enemy.fire_rate) / (1.0 + r_step * 0.018))
 				_spawn_into_arena(enemy)
 
 	_update_hud_counter()

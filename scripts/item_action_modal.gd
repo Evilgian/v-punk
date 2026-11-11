@@ -70,22 +70,22 @@ func setup_item(item_data: Dictionary) -> void:
 
 	if item_title:
 		item_title.text = str(item_data.get("name", "Oggetto")).to_upper() + "  [LV. " + str(cur_lvl) + "]"
-		item_title.add_theme_font_size_override("font_size", 21)
+		item_title.add_theme_font_size_override("font_size", 23)
 		CyberTheme.style_label(item_title, rar_col, 4)
 	if item_info:
 		var eq_tag := "  •  ✓ INDOSSATO" if is_eq else ""
 		item_info.text = "SLOT: " + islot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nRisorse: 🪙 " + str(Global.total_coins) + "   |   ⚙️ Nuclei: " + str(Global.upgrade_scrolls)
-		item_info.add_theme_font_size_override("font_size", 15)
+		item_info.add_theme_font_size_override("font_size", 17)
 		CyberTheme.style_label(item_info, CyberTheme.COL_EQUIPPED if is_eq else rar_col, 3)
 	if item_desc:
 		item_desc.text = stat_desc
 		item_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		item_desc.add_theme_font_size_override("font_size", 16)
+		item_desc.add_theme_font_size_override("font_size", 18)
 		CyberTheme.style_label(item_desc, Color(0.92, 0.97, 1.0, 1.0), 2)
 
 	if btn_action:
-		btn_action.custom_minimum_size = Vector2(0, 56)
-		btn_action.add_theme_font_size_override("font_size", 17)
+		btn_action.custom_minimum_size = Vector2(0, 58)
+		btn_action.add_theme_font_size_override("font_size", 19)
 		for conn in btn_action.pressed.get_connections():
 			btn_action.pressed.disconnect(conn["callable"])
 		if is_eq:

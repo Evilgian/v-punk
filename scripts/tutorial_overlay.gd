@@ -74,7 +74,7 @@ func _build_hud_banner() -> void:
 
 	step_badge_lbl = Label.new()
 	step_badge_lbl.text = "🎓 GUIDA OPERATIVA [1/6]"
-	step_badge_lbl.add_theme_font_size_override("font_size", 12)
+	step_badge_lbl.add_theme_font_size_override("font_size", 15)
 	CyberTheme.style_label(step_badge_lbl, CyberTheme.COL_YELLOW, 3)
 	top_row.add_child(step_badge_lbl)
 
@@ -82,15 +82,15 @@ func _build_hud_banner() -> void:
 	title_lbl.text = "MOVIMENTO & FUOCO AUTOMATICO"
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_font_size_override("font_size", 17)
 	CyberTheme.style_label(title_lbl, CyberTheme.COL_CYAN, 3)
 	top_row.add_child(title_lbl)
 
 	toggle_btn = Button.new()
-	toggle_btn.custom_minimum_size = Vector2(76, 26)
+	toggle_btn.custom_minimum_size = Vector2(88, 30)
 	toggle_btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	toggle_btn.text = "RIDUCI ▲"
-	toggle_btn.add_theme_font_size_override("font_size", 11)
+	toggle_btn.add_theme_font_size_override("font_size", 14)
 	CyberTheme.style_button(toggle_btn, CyberTheme.COL_CYAN, false)
 	toggle_btn.pressed.connect(func():
 		SoundFX.play_click()
@@ -98,7 +98,7 @@ func _build_hud_banner() -> void:
 		if body_lbl:
 			body_lbl.visible = not is_collapsed
 		toggle_btn.text = "APRI ▼" if is_collapsed else "RIDUCI ▲"
-		card_panel.offset_bottom = 144.0 if is_collapsed else 210.0
+		card_panel.offset_bottom = 148.0 if is_collapsed else 224.0
 	)
 	top_row.add_child(toggle_btn)
 
@@ -106,7 +106,7 @@ func _build_hud_banner() -> void:
 	body_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	body_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body_lbl.add_theme_font_size_override("font_size", 13)
+	body_lbl.add_theme_font_size_override("font_size", 16)
 	CyberTheme.style_label(body_lbl, Color(0.92, 0.96, 1.0, 1.0), 2)
 	vbox.add_child(body_lbl)
 

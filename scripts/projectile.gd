@@ -6,6 +6,7 @@ extends Area2D
 @export var is_homing: bool = false
 @export var is_melee_slash: bool = false
 @export var bounces_left: int = 0
+@export var ricochet_left: int = 0
 @export var hit_particles_scene: PackedScene = preload("res://scenes/HitParticles.tscn")
 
 var weapon_type: String = "pistol_base"
@@ -99,8 +100,9 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 
 	if body.is_in_group("enemies"):
-		if is_melee_slash:
-			hit_enemies[body.get_instance_id()] = true
+		if (is_melee_slash or ricochet_left > 0) and hit_enemies.has(body.get_instance_id()):
+			return
+		hit_enemies[body.get_instance_id()] = true
 
 		if body.has_method("take_damage"):
 			body.take_damage(damage)
@@ -111,6 +113,21 @@ func _on_body_entered(body: Node2D) -> void:
 				if hit_fx:
 					hit_fx.global_position = global_position
 					get_tree().current_scene.add_child.call_deferred(hit_fx)
+
+		if ricochet_left > 0 and not is_melee_slash:
+			var next_target: Node2D = null
+			var best_d: float = 280.0
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if is_instance_valid(e) and e != body and e is Node2D and not hit_enemies.has(e.get_instance_id()):
+					var d := global_position.distance_to((e as Node2D).global_position)
+					if d < best_d:
+						best_d = d
+						next_target = e as Node2D
+			if next_target:
+				ricochet_left -= 1
+				direction = (next_target.global_position - global_position).normalized()
+				rotation = direction.angle()
+				return
 
 		if not is_piercing and not is_melee_slash:
 			queue_free()

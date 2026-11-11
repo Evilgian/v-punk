@@ -14,6 +14,8 @@ var shoot_timer: Timer
 var aim_dir: Vector2 = Vector2.DOWN
 var anim_t: float = 0.0
 var accent_col: Color = Color(0.85, 0.30, 1.0, 1.0)
+var world_id: String = "world_1"
+var is_elite: bool = false
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -23,6 +25,7 @@ func _ready() -> void:
 	var w: WorldData = WorldDB.get_selected_world()
 	if w:
 		accent_col = w.accent_color
+		world_id = w.id
 
 	shoot_timer = Timer.new()
 	shoot_timer.wait_time = fire_rate
@@ -60,13 +63,14 @@ func _draw() -> void:
 	if is_charging:
 		draw_line(Vector2.ZERO, aim_dir * 180.0, Color(1.0, 0.15, 0.25, 0.50), 1.5)
 
-	CyberModels.draw_ranged_enemy(self, anim_t, accent_col, aim_dir.angle(), is_charging)
+	CyberModels.draw_ranged_enemy(self, anim_t, accent_col, aim_dir.angle(), is_charging, world_id, is_elite)
 
 	if max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
 		var bar_alpha := 0.95 if hp < max_hp else 0.72
+		var bar_col := Color(1.0, 0.82, 0.15, bar_alpha) if is_elite else Color(0.95, 0.32, 1.0, bar_alpha)
 		draw_rect(Rect2(Vector2(-19, -53), Vector2(38, 6)), Color(0.04, 0.05, 0.10, bar_alpha), true)
-		draw_rect(Rect2(Vector2(-18, -52), Vector2(36.0 * ratio, 4)), Color(0.95, 0.32, 1.0, bar_alpha), true)
+		draw_rect(Rect2(Vector2(-18, -52), Vector2(36.0 * ratio, 4)), bar_col, true)
 
 func _on_shoot_timer_timeout() -> void:
 	if not is_shooting:
@@ -78,13 +82,24 @@ func _on_shoot_timer_timeout() -> void:
 
 	var player := players[0] as Node2D
 	if enemy_projectile_scene:
-		var projectile := enemy_projectile_scene.instantiate() as Area2D
-		if projectile:
-			projectile.global_position = global_position
-			var dir := (player.global_position - global_position).normalized()
-			projectile.direction = dir
-			projectile.look_at(player.global_position)
-			get_tree().current_scene.add_child.call_deferred(projectile)
+		var base_dir := (player.global_position - global_position).normalized()
+		var angles: Array[float] = [0.0]
+		match world_id:
+			"world_3", "world_4":
+				angles = [-0.12, 0.12] if not is_elite else [-0.18, 0.0, 0.18]
+			"world_5", "world_6", "world_7", "world_8":
+				angles = [-0.18, 0.0, 0.18]
+			_:
+				if is_elite:
+					angles = [-0.13, 0.13]
+		for a_off in angles:
+			var projectile := enemy_projectile_scene.instantiate() as Area2D
+			if projectile:
+				projectile.global_position = global_position
+				var dir := base_dir.rotated(a_off)
+				projectile.direction = dir
+				projectile.rotation = dir.angle()
+				get_tree().current_scene.add_child.call_deferred(projectile)
 
 func take_damage(amount: int) -> void:
 	if max_hp < hp: max_hp = hp

@@ -34,7 +34,7 @@ func _ready() -> void:
 	if reward_label:
 		reward_label.text = txt
 		reward_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		reward_label.add_theme_font_size_override("font_size", 16)
+		reward_label.add_theme_font_size_override("font_size", 19)
 		CyberTheme.style_label(reward_label, CyberTheme.COL_CYAN, 3)
 
 	# Visualizza le Card 3D degli equipaggiamenti vinti con il VERO colore di Rarità!
@@ -53,7 +53,7 @@ func _ready() -> void:
 				var rcol := CyberTheme.get_rarity_color(irar)
 
 				var item_card := PanelContainer.new()
-				item_card.custom_minimum_size = Vector2(235, 168)
+				item_card.custom_minimum_size = Vector2(240, 174)
 				item_card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(irar, 10, 8))
 
 				var cv := VBoxContainer.new()
@@ -64,7 +64,7 @@ func _ready() -> void:
 				var r_lbl := Label.new()
 				r_lbl.text = CyberTheme.get_rarity_badge_text(irar)
 				r_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				r_lbl.add_theme_font_size_override("font_size", 12)
+				r_lbl.add_theme_font_size_override("font_size", 15)
 				CyberTheme.style_label(r_lbl, rcol, 3)
 				cv.add_child(r_lbl)
 
@@ -79,7 +79,7 @@ func _ready() -> void:
 				n_lbl.text = iname
 				n_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				n_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				n_lbl.add_theme_font_size_override("font_size", 13)
+				n_lbl.add_theme_font_size_override("font_size", 16)
 				CyberTheme.style_label(n_lbl, rcol, 3)
 				cv.add_child(n_lbl)
 

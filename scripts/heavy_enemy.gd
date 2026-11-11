@@ -14,12 +14,18 @@ var damage_cooldown: float = 0.0
 var bomb_timer: float = 0.0
 var anim_t: float = 0.0
 var aim_angle: float = 0.0
+var world_id: String = "world_1"
+var is_elite: bool = false
 
 func _ready() -> void:
 	add_to_group("enemies")
 	max_hp = hp
 	if sprite: sprite.visible = false
 	if shadow: shadow.visible = false
+
+	var w: WorldData = WorldDB.get_selected_world()
+	if w:
+		world_id = w.id
 
 	var players := get_tree().get_nodes_in_group("player")
 	if not players.is_empty():
@@ -56,13 +62,14 @@ func _physics_process(delta: float) -> void:
 
 func _draw() -> void:
 	var charge_ratio := clampf(bomb_timer / 3.5, 0.0, 1.0)
-	CyberModels.draw_heavy_enemy(self, anim_t, charge_ratio, aim_angle)
+	CyberModels.draw_heavy_enemy(self, anim_t, charge_ratio, aim_angle, world_id, is_elite)
 
 	if max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
 		var bar_alpha := 0.96 if hp < max_hp else 0.78
+		var bar_col := Color(1.0, 0.84, 0.15, bar_alpha) if is_elite else Color(1.0, 0.58, 0.12, bar_alpha)
 		draw_rect(Rect2(Vector2(-23, -61), Vector2(46, 7)), Color(0.04, 0.05, 0.10, bar_alpha), true)
-		draw_rect(Rect2(Vector2(-22, -60), Vector2(44.0 * ratio, 5)), Color(1.0, 0.58, 0.12, bar_alpha), true)
+		draw_rect(Rect2(Vector2(-22, -60), Vector2(44.0 * ratio, 5)), bar_col, true)
 
 func _launch_parabolic_bomb() -> void:
 	if not is_instance_valid(player): return

@@ -57,52 +57,68 @@ func setup(player: Node) -> void:
 
 func _apply_cyber_hud_styles() -> void:
 	if hp_bar:
-		var sb_bg := CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.12, 0.92), CyberTheme.COL_GREEN, 0.16, 2, 5, 4)
+		var sb_bg := CyberTheme.make_cyber_box(Color(0.04, 0.07, 0.14, 0.95), CyberTheme.COL_GREEN, 0.0, 2, 3, 6)
 		var sb_fill := StyleBoxFlat.new()
-		sb_fill.bg_color = Color(0.10, 0.95, 0.50, 0.95)
-		sb_fill.skew = Vector2(0.16, 0.0)
+		sb_fill.bg_color = Color(0.10, 0.95, 0.52, 0.98)
+		sb_fill.border_width_top = 2
+		sb_fill.border_color = Color(0.65, 1.0, 0.85, 0.75)
+		sb_fill.corner_radius_top_left = 10
+		sb_fill.corner_radius_top_right = 10
+		sb_fill.corner_radius_bottom_left = 10
+		sb_fill.corner_radius_bottom_right = 10
 		hp_bar.add_theme_stylebox_override("background", sb_bg)
 		hp_bar.add_theme_stylebox_override("fill", sb_fill)
+		hp_bar.add_theme_font_size_override("font_size", 16)
 		var hp_lbl := hp_bar.get_node_or_null("HPLabel") as Label
 		if hp_lbl:
-			hp_lbl.text = "SYS.HP //"
-			CyberTheme.style_label(hp_lbl, Color.WHITE, 3)
+			hp_lbl.text = "HP"
+			hp_lbl.add_theme_font_size_override("font_size", 16)
+			CyberTheme.style_label(hp_lbl, Color.WHITE, 4)
 
 	if exp_bar:
-		var sb_bg := CyberTheme.make_cyber_box(Color(0.04, 0.06, 0.12, 0.92), CyberTheme.COL_CYAN, 0.16, 1, 5, 4)
+		var sb_bg := CyberTheme.make_cyber_box(Color(0.04, 0.07, 0.14, 0.95), CyberTheme.COL_CYAN, 0.0, 2, 3, 6)
 		var sb_fill := StyleBoxFlat.new()
 		sb_fill.bg_color = CyberTheme.COL_CYAN
-		sb_fill.skew = Vector2(0.16, 0.0)
+		sb_fill.border_width_top = 2
+		sb_fill.border_color = Color(0.75, 0.98, 1.0, 0.80)
+		sb_fill.corner_radius_top_left = 10
+		sb_fill.corner_radius_top_right = 10
+		sb_fill.corner_radius_bottom_left = 10
+		sb_fill.corner_radius_bottom_right = 10
 		exp_bar.add_theme_stylebox_override("background", sb_bg)
 		exp_bar.add_theme_stylebox_override("fill", sb_fill)
 		if level_label:
-			CyberTheme.style_label(level_label, CyberTheme.COL_YELLOW, 3)
+			level_label.add_theme_font_size_override("font_size", 16)
+			CyberTheme.style_label(level_label, CyberTheme.COL_YELLOW, 4)
 
 	if boss_hp_bar:
-		var sb_bg := CyberTheme.make_cyber_box(Color(0.08, 0.03, 0.08, 0.95), CyberTheme.COL_MAGENTA, 0.12, 2, 6, 8)
+		var sb_bg := CyberTheme.make_cyber_box(Color(0.08, 0.03, 0.08, 0.96), CyberTheme.COL_MAGENTA, 0.0, 2, 4, 8)
 		var sb_fill := StyleBoxFlat.new()
 		sb_fill.bg_color = CyberTheme.COL_MAGENTA
-		sb_fill.skew = Vector2(0.12, 0.0)
+		sb_fill.border_width_top = 2
+		sb_fill.border_color = Color(1.0, 0.70, 0.88, 0.80)
+		sb_fill.corner_radius_top_left = 10
+		sb_fill.corner_radius_top_right = 10
+		sb_fill.corner_radius_bottom_left = 10
+		sb_fill.corner_radius_bottom_right = 10
 		boss_hp_bar.add_theme_stylebox_override("background", sb_bg)
 		boss_hp_bar.add_theme_stylebox_override("fill", sb_fill)
 		if boss_hp_label:
+			boss_hp_label.add_theme_font_size_override("font_size", 17)
 			CyberTheme.style_label(boss_hp_label, CyberTheme.COL_YELLOW, 4)
 
 	if room_label:
-		CyberTheme.style_label(room_label, CyberTheme.COL_YELLOW, 3)
+		room_label.add_theme_font_size_override("font_size", 18)
+		CyberTheme.style_label(room_label, CyberTheme.COL_YELLOW, 4)
 
 	if btn_pause:
-		btn_pause.texture_normal = null
-		var pause_bg := PanelContainer.new()
-		pause_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pause_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-		pause_bg.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.06, 0.09, 0.18, 0.95), CyberTheme.COL_YELLOW, -0.10, 2, 6, 6))
-		btn_pause.add_child(pause_bg)
-		btn_pause.move_child(pause_bg, 0)
+		btn_pause.texture_normal = CyberTheme.get_model_texture("res://assets/cyber_models/ui_btn_gold_3d.png")
+		btn_pause.texture_pressed = CyberTheme.get_model_texture("res://assets/cyber_models/ui_btn_gold_pressed_3d.png")
 		var p_lbl := btn_pause.get_node_or_null("Label") as Label
 		if p_lbl:
-			p_lbl.text = "// PAUSA"
-			CyberTheme.style_label(p_lbl, CyberTheme.COL_YELLOW, 3)
+			p_lbl.text = "⏸ PAUSA"
+			p_lbl.add_theme_font_size_override("font_size", 18)
+			CyberTheme.style_label(p_lbl, Color(1.0, 0.98, 0.90), 4)
 
 	if pause_overlay:
 		pause_overlay.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(16, 14))

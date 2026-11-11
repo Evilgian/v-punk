@@ -111,25 +111,38 @@ func _draw() -> void:
 
 	CyberModels.draw_boss(self, world_id, anim_t, boss_col, in_phase_2, aim_angle)
 
+var spiral_step: float = 0.0
+var burst_counter: int = 0
+
 func _on_attack_timer_timeout() -> void:
 	if is_dying:
 		return
 	is_attacking = true
+	burst_counter += 1
+	_execute_world_boss_pattern()
 
-	if in_phase_2:
-		_fire_radial_pattern(12)
-	else:
-		_fire_fan_pattern()
-
-	await get_tree().create_timer(0.6).timeout
+	await get_tree().create_timer(0.55).timeout
 	if is_dying:
 		return
 	is_attacking = false
 
-func _fire_fan_pattern() -> void:
+func _spawn_boss_proj(dir: Vector2, spd_mult: float = 1.0) -> void:
 	if not enemy_projectile_scene:
 		return
+	var proj := enemy_projectile_scene.instantiate() as Area2D
+	if proj:
+		proj.global_position = global_position
+		proj.direction = dir
+		proj.rotation = dir.angle()
+		if "speed" in proj:
+			proj.speed = float(proj.speed) * spd_mult
+		var target_p: Node = get_tree().current_scene if (is_inside_tree() and get_tree() and get_tree().current_scene != null) else get_parent()
+		if target_p:
+			target_p.add_child.call_deferred(proj)
+		else:
+			proj.queue_free()
 
+func _execute_world_boss_pattern() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty() or not (players[0] is Node2D):
 		return
@@ -137,27 +150,87 @@ func _fire_fan_pattern() -> void:
 	var base_dir := (player.global_position - global_position).normalized()
 	aim_angle = base_dir.angle()
 
-	for angle in [-30.0, -15.0, 0.0, 15.0, 30.0]:
-		var proj := enemy_projectile_scene.instantiate() as Area2D
-		if proj:
-			proj.global_position = global_position
-			var dir := base_dir.rotated(deg_to_rad(angle))
-			proj.direction = dir
-			proj.rotation = dir.angle()
-			get_tree().current_scene.add_child.call_deferred(proj)
-
-func _fire_radial_pattern(count: int = 8) -> void:
-	if not enemy_projectile_scene:
-		return
-
-	for i in range(count):
-		var dir := Vector2.RIGHT.rotated(i * TAU / float(count))
-		var proj := enemy_projectile_scene.instantiate() as Area2D
-		if proj:
-			proj.global_position = global_position
-			proj.direction = dir
-			proj.rotation = dir.angle()
-			get_tree().current_scene.add_child.call_deferred(proj)
+	match world_id:
+		"world_1":
+			# GOLEM SILVANO: Ventaglio di Spore a 5 vie + Anello Radici
+			if not in_phase_2 and burst_counter % 2 == 1:
+				for deg in [-28.0, -14.0, 0.0, 14.0, 28.0]:
+					_spawn_boss_proj(base_dir.rotated(deg_to_rad(deg)), 1.0)
+			else:
+				var cnt: int = 10 if in_phase_2 else 8
+				for i in range(cnt):
+					_spawn_boss_proj(Vector2.RIGHT.rotated(spiral_step + i * TAU / float(cnt)), 0.95)
+				spiral_step += 0.35
+		"world_2":
+			# SCORPIONE MECCANICO: Triplo Dardo Pungiglione ad alta velocità + Tempesta di Sabbia
+			for deg in [-10.0, 0.0, 10.0]:
+				_spawn_boss_proj(base_dir.rotated(deg_to_rad(deg)), 1.32)
+			if in_phase_2 or burst_counter % 2 == 0:
+				for i in range(8):
+					_spawn_boss_proj(Vector2.RIGHT.rotated(spiral_step + i * TAU / 8.0), 0.92)
+				spiral_step += 0.40
+		"world_3":
+			# MEGA DRON-CORE 3000: Croce Laser Rotante + Doppio Colpo Mirato
+			for i in range(4):
+				var a: float = spiral_step + float(i) * (PI * 0.5)
+				_spawn_boss_proj(Vector2.RIGHT.rotated(a), 1.10)
+				_spawn_boss_proj(Vector2.RIGHT.rotated(a + 0.14), 0.95)
+			_spawn_boss_proj(base_dir.rotated(-0.08), 1.25)
+			_spawn_boss_proj(base_dir.rotated(0.08), 1.25)
+			spiral_step += 0.45
+		"world_4":
+			# CRYO-VALKYRIE ZERO: Supernova Cristalli di Ghiaccio a doppia velocità
+			var shards: int = 12 if in_phase_2 else 10
+			for i in range(shards):
+				var a: float = spiral_step + float(i) * (TAU / float(shards))
+				_spawn_boss_proj(Vector2.RIGHT.rotated(a), 1.15 if i % 2 == 0 else 0.85)
+			_spawn_boss_proj(base_dir, 1.35)
+			spiral_step += 0.32
+		"world_5":
+			# VULCAN OVERLORD: Eruzione Magmatica a 14 vie + Salva Piroclastica a 5 vie
+			if burst_counter % 2 == 1:
+				var ring: int = 14 if in_phase_2 else 10
+				for i in range(ring):
+					_spawn_boss_proj(Vector2.RIGHT.rotated(spiral_step + float(i) * (TAU / float(ring))), 1.0)
+				spiral_step += 0.28
+			else:
+				for deg in [-24.0, -12.0, 0.0, 12.0, 24.0]:
+					_spawn_boss_proj(base_dir.rotated(deg_to_rad(deg)), 1.22)
+		"world_6":
+			# HYDRA CHIMERA X: 3 Teste d'Idra che sparano 3 coni d'acido simultanei!
+			for head_idx in [-1, 0, 1]:
+				var h_dir := base_dir.rotated(float(head_idx) * 0.36)
+				_spawn_boss_proj(h_dir.rotated(-0.07), 1.12)
+				_spawn_boss_proj(h_dir.rotated(0.07), 1.12)
+			if in_phase_2:
+				for i in range(6):
+					_spawn_boss_proj(Vector2.RIGHT.rotated(spiral_step + float(i) * TAU / 6.0), 0.90)
+				spiral_step += 0.38
+		"world_7":
+			# ARCHON SERAPHIM: Stella Celestiale a 6 Ali + Lancia Astrale Tripla
+			for i in range(6):
+				var a: float = spiral_step + float(i) * (TAU / 6.0)
+				_spawn_boss_proj(Vector2.RIGHT.rotated(a), 1.18)
+				_spawn_boss_proj(Vector2.RIGHT.rotated(a + PI / 6.0), 0.92)
+			for deg in [-10.0, 0.0, 10.0]:
+				_spawn_boss_proj(base_dir.rotated(deg_to_rad(deg)), 1.32)
+			spiral_step += 0.36
+		"world_8":
+			# OMEGA PROTOCOL A.R.G.O.N.: Doppia Elica Quantistica + Ventaglio della Singolarità
+			var spokes: int = 14 if in_phase_2 else 10
+			for i in range(spokes):
+				var a: float = spiral_step + float(i) * (TAU / float(spokes))
+				_spawn_boss_proj(Vector2.RIGHT.rotated(a), 1.15)
+			for deg in [-20.0, -10.0, 0.0, 10.0, 20.0]:
+				_spawn_boss_proj(base_dir.rotated(deg_to_rad(deg)), 1.35)
+			spiral_step += 0.44
+		_:
+			if in_phase_2:
+				for i in range(12):
+					_spawn_boss_proj(Vector2.RIGHT.rotated(i * TAU / 12.0), 1.0)
+			else:
+				for deg in [-30.0, -15.0, 0.0, 15.0, 30.0]:
+					_spawn_boss_proj(base_dir.rotated(deg_to_rad(deg)), 1.0)
 
 func take_damage(amount: int) -> void:
 	if is_dying:
@@ -201,7 +274,11 @@ func _spawn_minions(count: int) -> void:
 		var drone := ranged_enemy_scene.instantiate() as Node2D
 		if drone:
 			drone.global_position = global_position + Vector2(randf_range(-60, 60), randf_range(-60, 60))
-			get_tree().current_scene.add_child.call_deferred(drone)
+			var target_p: Node = get_tree().current_scene if (is_inside_tree() and get_tree() and get_tree().current_scene != null) else get_parent()
+			if target_p:
+				target_p.add_child.call_deferred(drone)
+			else:
+				drone.queue_free()
 
 func _die() -> void:
 	if is_dying:

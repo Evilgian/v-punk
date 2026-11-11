@@ -440,8 +440,9 @@ func _has_affordable_talent() -> bool:
 	var tm: Node = get_node_or_null("/root/TalentManager")
 	if not tm or not tm.has_method("get_cost"):
 		return false
-	for k in ["atk", "hp", "crit", "recovery", "speed", "gold"]:
-		var c: int = int(tm.get_cost(k))
+	var keys: Array = tm.TALENT_ORDER if ("TALENT_ORDER" in tm) else ["atk", "hp", "crit", "recovery", "speed", "gold"]
+	for k in keys:
+		var c: int = int(tm.get_cost(str(k)))
 		if c > 0 and Global.total_coins >= c:
 			return true
 	return false
@@ -617,11 +618,11 @@ func _rebuild_home_loadout_dashboard() -> void:
 	# Banner contestuale intelligente 1-Tocco se c'è un'azione immediata utile!
 	if can_auto_eq:
 		var btn_alert := Button.new()
-		btn_alert.custom_minimum_size = Vector2(0, 48)
+		btn_alert.custom_minimum_size = Vector2(0, 50)
 		btn_alert.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn_alert.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_alert.text = "⚡ NUOVO EQUIPAGGIAMENTO TROVATO: TOCCA PER INDOSSARLO SUBITO!"
-		btn_alert.add_theme_font_size_override("font_size", 15)
+		btn_alert.add_theme_font_size_override("font_size", 17)
 		CyberTheme.style_button(btn_alert, CyberTheme.COL_YELLOW, true)
 		btn_alert.pressed.connect(func():
 			if im and im.has_method("auto_equip_best"):
@@ -634,11 +635,11 @@ func _rebuild_home_loadout_dashboard() -> void:
 		dash.add_child(btn_alert)
 	elif fusible_cnt > 0:
 		var btn_f_alert := Button.new()
-		btn_f_alert.custom_minimum_size = Vector2(0, 46)
+		btn_f_alert.custom_minimum_size = Vector2(0, 48)
 		btn_f_alert.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn_f_alert.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_f_alert.text = "🔨 FUSIONE 3-IN-1 PRONTA (" + str(fusible_cnt) + ") — TOCCA PER EVOLVERE RARITÀ!"
-		btn_f_alert.add_theme_font_size_override("font_size", 15)
+		btn_f_alert.add_theme_font_size_override("font_size", 17)
 		CyberTheme.style_button(btn_f_alert, CyberTheme.COL_MAGENTA, true)
 		btn_f_alert.pressed.connect(func():
 			current_equip_tab = "MERGE"
@@ -649,7 +650,7 @@ func _rebuild_home_loadout_dashboard() -> void:
 	var hdr := Label.new()
 	hdr.text = "⚡ DOTAZIONE ATTIVA EROE (TOCCA PER GESTIRE)"
 	hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hdr.add_theme_font_size_override("font_size", 16)
+	hdr.add_theme_font_size_override("font_size", 18)
 	CyberTheme.style_label(hdr, CyberTheme.COL_YELLOW, 3)
 	dash.add_child(hdr)
 
@@ -713,14 +714,14 @@ func _rebuild_home_loadout_dashboard() -> void:
 		l_name.text = s_info["title"]
 		l_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		l_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		l_name.add_theme_font_size_override("font_size", 15)
+		l_name.add_theme_font_size_override("font_size", 17)
 		CyberTheme.style_label(l_name, Color.WHITE if s_active else Color(0.68, 0.75, 0.85, 0.88), 3)
 		vb.add_child(l_name)
 
 		var l_st := Label.new()
 		l_st.text = s_info["stat"]
 		l_st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l_st.add_theme_font_size_override("font_size", 13)
+		l_st.add_theme_font_size_override("font_size", 15)
 		CyberTheme.style_label(l_st, c_acc.lightened(0.18), 2)
 		vb.add_child(l_st)
 
@@ -738,11 +739,11 @@ func _rebuild_home_loadout_dashboard() -> void:
 	quick_row.add_theme_constant_override("separation", 8)
 
 	var btn_quick_equip := Button.new()
-	btn_quick_equip.custom_minimum_size = Vector2(0, 50)
+	btn_quick_equip.custom_minimum_size = Vector2(0, 52)
 	btn_quick_equip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_quick_equip.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_quick_equip.text = "🎒 EQUIP"
-	btn_quick_equip.add_theme_font_size_override("font_size", 15)
+	btn_quick_equip.add_theme_font_size_override("font_size", 17)
 	CyberTheme.style_button(btn_quick_equip, CyberTheme.COL_CYAN, false)
 	btn_quick_equip.pressed.connect(func():
 		current_equip_tab = "ARSENAL"
@@ -751,11 +752,11 @@ func _rebuild_home_loadout_dashboard() -> void:
 	quick_row.add_child(btn_quick_equip)
 
 	var btn_quick_upg := Button.new()
-	btn_quick_upg.custom_minimum_size = Vector2(0, 50)
+	btn_quick_upg.custom_minimum_size = Vector2(0, 52)
 	btn_quick_upg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_quick_upg.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_quick_upg.text = "⬆️ POTENZIA"
-	btn_quick_upg.add_theme_font_size_override("font_size", 15)
+	btn_quick_upg.add_theme_font_size_override("font_size", 17)
 	CyberTheme.style_button(btn_quick_upg, CyberTheme.COL_YELLOW, false)
 	btn_quick_upg.pressed.connect(func():
 		current_equip_tab = "UPGRADE"
@@ -764,11 +765,11 @@ func _rebuild_home_loadout_dashboard() -> void:
 	quick_row.add_child(btn_quick_upg)
 
 	var btn_quick_mrg := Button.new()
-	btn_quick_mrg.custom_minimum_size = Vector2(0, 50)
+	btn_quick_mrg.custom_minimum_size = Vector2(0, 52)
 	btn_quick_mrg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_quick_mrg.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_quick_mrg.text = "🔨 FUSIONE"
-	btn_quick_mrg.add_theme_font_size_override("font_size", 15)
+	btn_quick_mrg.add_theme_font_size_override("font_size", 17)
 	CyberTheme.style_button(btn_quick_mrg, CyberTheme.COL_MAGENTA, fusible_cnt > 0)
 	btn_quick_mrg.pressed.connect(func():
 		current_equip_tab = "MERGE"
@@ -791,7 +792,7 @@ func _show_inventory_view() -> void:
 func _show_upgrades_view() -> void:
 	current_view = ViewMode.UPGRADES
 	_update_nav_styles()
-	if section_title: section_title.text = "ALBERO TALENTI PERMANENTI (6)"
+	if section_title: section_title.text = "ALBERO TALENTI PERMANENTI (14)"
 	_hide_all_views()
 	_fade_in_view(upgrades_view)
 	_populate_upgrades()
@@ -853,7 +854,7 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 
 	if lbl:
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		lbl.add_theme_font_size_override("font_size", 13)
+		lbl.add_theme_font_size_override("font_size", 15)
 		if is_empty:
 			lbl.text = slot_type + "\n[VUOTO]"
 			lbl.modulate = Color(0.68, 0.76, 0.88, 0.85)
@@ -903,28 +904,28 @@ func _setup_equip_subtabs() -> void:
 
 		btn_equip_tab_arsenal = Button.new()
 		btn_equip_tab_arsenal.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn_equip_tab_arsenal.custom_minimum_size = Vector2(0, 48)
+		btn_equip_tab_arsenal.custom_minimum_size = Vector2(0, 52)
 		btn_equip_tab_arsenal.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_equip_tab_arsenal.text = "🎒 ARSENALE"
-		btn_equip_tab_arsenal.add_theme_font_size_override("font_size", 15)
+		btn_equip_tab_arsenal.add_theme_font_size_override("font_size", 17)
 		btn_equip_tab_arsenal.pressed.connect(func(): _switch_equip_tab("ARSENAL"))
 		equip_sub_nav.add_child(btn_equip_tab_arsenal)
 
 		btn_equip_tab_upgrade = Button.new()
 		btn_equip_tab_upgrade.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn_equip_tab_upgrade.custom_minimum_size = Vector2(0, 48)
+		btn_equip_tab_upgrade.custom_minimum_size = Vector2(0, 52)
 		btn_equip_tab_upgrade.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_equip_tab_upgrade.text = "⬆️ POTENZIA"
-		btn_equip_tab_upgrade.add_theme_font_size_override("font_size", 15)
+		btn_equip_tab_upgrade.add_theme_font_size_override("font_size", 17)
 		btn_equip_tab_upgrade.pressed.connect(func(): _switch_equip_tab("UPGRADE"))
 		equip_sub_nav.add_child(btn_equip_tab_upgrade)
 
 		btn_equip_tab_merge = Button.new()
 		btn_equip_tab_merge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn_equip_tab_merge.custom_minimum_size = Vector2(0, 48)
+		btn_equip_tab_merge.custom_minimum_size = Vector2(0, 52)
 		btn_equip_tab_merge.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn_equip_tab_merge.text = "🔨 FUSIONE"
-		btn_equip_tab_merge.add_theme_font_size_override("font_size", 15)
+		btn_equip_tab_merge.add_theme_font_size_override("font_size", 17)
 		btn_equip_tab_merge.pressed.connect(func(): _switch_equip_tab("MERGE"))
 		equip_sub_nav.add_child(btn_equip_tab_merge)
 
@@ -937,10 +938,10 @@ func _setup_equip_subtabs() -> void:
 		if hero_vb and not hero_vb.get_node_or_null("BtnAutoEquipBest"):
 			btn_auto_equip_best = Button.new()
 			btn_auto_equip_best.name = "BtnAutoEquipBest"
-			btn_auto_equip_best.custom_minimum_size = Vector2(440, 48)
+			btn_auto_equip_best.custom_minimum_size = Vector2(440, 52)
 			btn_auto_equip_best.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 			btn_auto_equip_best.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-			btn_auto_equip_best.add_theme_font_size_override("font_size", 16)
+			btn_auto_equip_best.add_theme_font_size_override("font_size", 18)
 			btn_auto_equip_best.pressed.connect(func():
 				var im: Node = get_node_or_null("/root/InventoryManager")
 				if im and im.has_method("auto_equip_best"):
@@ -1060,7 +1061,7 @@ func _populate_inventory() -> void:
 				r_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box(r_key))
 				var r_lbl := Label.new()
 				r_lbl.text = CyberTheme.get_rarity_badge_text(r_key)
-				r_lbl.add_theme_font_size_override("font_size", 12)
+				r_lbl.add_theme_font_size_override("font_size", 14)
 				CyberTheme.style_label(r_lbl, CyberTheme.get_rarity_color(r_key).lightened(0.20), 2)
 				r_pill.add_child(r_lbl)
 				leg_row.add_child(r_pill)
@@ -1069,7 +1070,7 @@ func _populate_inventory() -> void:
 			eq_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
 			var eq_lbl := Label.new()
 			eq_lbl.text = "✓ INDOSSATO"
-			eq_lbl.add_theme_font_size_override("font_size", 12)
+			eq_lbl.add_theme_font_size_override("font_size", 14)
 			CyberTheme.style_label(eq_lbl, Color(0.88, 1.0, 0.94, 1.0), 2)
 			eq_pill.add_child(eq_lbl)
 			leg_row.add_child(eq_pill)
@@ -1477,7 +1478,7 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 	rar_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box(rarity_str))
 	var rar_lbl := Label.new()
 	rar_lbl.text = CyberTheme.get_rarity_badge_text(rarity_str)
-	rar_lbl.add_theme_font_size_override("font_size", 12)
+	rar_lbl.add_theme_font_size_override("font_size", 14)
 	CyberTheme.style_label(rar_lbl, rarity_col.lightened(0.22), 2)
 	rar_pill.add_child(rar_lbl)
 	top_tags.add_child(rar_pill)
@@ -1492,7 +1493,7 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 		eq_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
 		var eq_lbl := Label.new()
 		eq_lbl.text = "✓ INDOSSATO"
-		eq_lbl.add_theme_font_size_override("font_size", 12)
+		eq_lbl.add_theme_font_size_override("font_size", 14)
 		CyberTheme.style_label(eq_lbl, Color(0.88, 1.0, 0.94, 1.0), 2)
 		eq_pill.add_child(eq_lbl)
 		top_tags.add_child(eq_pill)
@@ -1501,7 +1502,7 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 		cnt_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box(rarity_str))
 		var cnt_lbl := Label.new()
 		cnt_lbl.text = "x" + str(count)
-		cnt_lbl.add_theme_font_size_override("font_size", 12)
+		cnt_lbl.add_theme_font_size_override("font_size", 14)
 		CyberTheme.style_label(cnt_lbl, Color.WHITE, 2)
 		cnt_pill.add_child(cnt_lbl)
 		top_tags.add_child(cnt_pill)
@@ -1518,14 +1519,14 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 	lbl_name.text = item_name + (" (x" + str(count) + ")" if (count > 1 and is_eq) else "")
 	lbl_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_name.add_theme_font_size_override("font_size", 16)
+	lbl_name.add_theme_font_size_override("font_size", 18)
 	CyberTheme.style_label(lbl_name, Color.WHITE, 3)
 	vb.add_child(lbl_name)
 
 	var lbl_meta := Label.new()
 	lbl_meta.text = "Lv." + str(item_lvl) + "  •  " + slot_name
 	lbl_meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_meta.add_theme_font_size_override("font_size", 14)
+	lbl_meta.add_theme_font_size_override("font_size", 16)
 	CyberTheme.style_label(lbl_meta, rarity_col.lightened(0.24), 2)
 	vb.add_child(lbl_meta)
 
@@ -1535,10 +1536,10 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 	vb.add_child(act_row)
 
 	var btn_eq := Button.new()
-	btn_eq.custom_minimum_size = Vector2(0, 44)
+	btn_eq.custom_minimum_size = Vector2(0, 48)
 	btn_eq.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_eq.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	btn_eq.add_theme_font_size_override("font_size", 14)
+	btn_eq.add_theme_font_size_override("font_size", 16)
 	if is_eq:
 		btn_eq.text = "✓ IN USO"
 		CyberTheme.style_button(btn_eq, CyberTheme.COL_GREEN, false)
@@ -1560,10 +1561,10 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 	act_row.add_child(btn_eq)
 
 	var btn_info := Button.new()
-	btn_info.custom_minimum_size = Vector2(92, 44)
+	btn_info.custom_minimum_size = Vector2(96, 48)
 	btn_info.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_info.text = "⬆️ LV."
-	btn_info.add_theme_font_size_override("font_size", 14)
+	btn_info.add_theme_font_size_override("font_size", 16)
 	CyberTheme.style_button(btn_info, CyberTheme.COL_MAGENTA, false)
 	btn_info.pressed.connect(func():
 		SoundFX.play_click()
@@ -1601,13 +1602,24 @@ func _populate_upgrades() -> void:
 	for child in talent_grid.get_children(): child.queue_free()
 
 	var tm: Node = get_node_or_null("/root/TalentManager")
-	var talent_keys := ["atk", "hp", "crit", "recovery", "speed", "gold"]
+	var talent_keys: Array[String] = tm.TALENT_ORDER if (tm and "TALENT_ORDER" in tm) else [
+		"atk", "hp", "fire_rate", "crit", "crit_dmg", "speed", "dodge",
+		"aegis", "recovery", "vampirism", "armor_pen", "drone_tech", "exp_boost", "gold"
+	]
 	var talent_models := {
 		"atk": "weapon_katana",
 		"hp": "armor_nano_armor",
+		"fire_rate": "weapon_smg",
 		"crit": "ring_crit",
-		"recovery": "drone_shield",
+		"crit_dmg": "weapon_plasma_cannon",
 		"speed": "ring_speed",
+		"dodge": "armor_kevlar",
+		"aegis": "drone_shield",
+		"recovery": "drone_shield",
+		"vampirism": "weapon_scythe",
+		"armor_pen": "weapon_laser_rifle",
+		"drone_tech": "drone_laser",
+		"exp_boost": "weapon_homing_wand",
 		"gold": "drone_laser"
 	}
 
@@ -1619,49 +1631,57 @@ func _populate_upgrades() -> void:
 		var cost: int = tm.get_cost(t_id) if (tm and tm.has_method("get_cost")) else 100
 
 		var card := PanelContainer.new()
-		card.custom_minimum_size = Vector2(315, 258)
+		card.custom_minimum_size = Vector2(315, 286)
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var border_c := CyberTheme.COL_CYAN if cur_lvl > 0 else Color(0.55, 0.65, 0.80, 0.90)
 		card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("RARE" if cur_lvl > 0 else "COMMON", 10, 10))
 
 		var vbox := VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 6)
+		vbox.add_theme_constant_override("separation", 5)
 		vbox.alignment = BoxContainer.ALIGNMENT_END
 
 		var model_box := Control.new()
-		model_box.custom_minimum_size = Vector2(0, 88)
+		model_box.custom_minimum_size = Vector2(0, 82)
 		model_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var m_key: String = str(talent_models.get(t_id, "weapon_pistol_base"))
 		model_box.draw.connect(func():
-			CyberTheme.draw_item_icon(model_box, Vector2(model_box.size.x * 0.5, 44.0), m_key, "", border_c, 78.0)
+			CyberTheme.draw_item_icon(model_box, Vector2(model_box.size.x * 0.5, 41.0), m_key, "", border_c, 74.0)
 		)
 		vbox.add_child(model_box)
 
 		var lbl_title := Label.new()
 		lbl_title.text = str(def.get("icon", "⭐")) + " " + str(def.get("name", t_id))
 		lbl_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl_title.add_theme_font_size_override("font_size", 17)
-		CyberTheme.style_label(lbl_title, CyberTheme.COL_CYAN, 3)
+		lbl_title.add_theme_font_size_override("font_size", 19)
+		CyberTheme.style_label(lbl_title, CyberTheme.COL_CYAN, 4)
 		vbox.add_child(lbl_title)
 
 		var lbl_lvl := Label.new()
 		lbl_lvl.text = "GRADO: Lv. " + str(cur_lvl) + " / " + str(max_lvl)
 		lbl_lvl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl_lvl.add_theme_font_size_override("font_size", 15)
+		lbl_lvl.add_theme_font_size_override("font_size", 16)
 		CyberTheme.style_label(lbl_lvl, CyberTheme.COL_YELLOW, 3)
 		vbox.add_child(lbl_lvl)
 
+		var lbl_info := Label.new()
+		lbl_info.text = str(def.get("desc", ""))
+		lbl_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl_info.add_theme_font_size_override("font_size", 15)
+		CyberTheme.style_label(lbl_info, Color(0.84, 0.92, 1.0, 1.0), 3)
+		vbox.add_child(lbl_info)
+
 		var lbl_desc := Label.new()
-		lbl_desc.text = "Bonus: +" + str(bonus_val) + " " + str(def.get("unit", ""))
+		lbl_desc.text = "Bonus Attivo: +" + str(int(bonus_val)) + " " + str(def.get("unit", ""))
 		lbl_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl_desc.add_theme_font_size_override("font_size", 15)
-		CyberTheme.style_label(lbl_desc, Color(0.90, 0.96, 1.0, 1.0), 2)
+		lbl_desc.add_theme_font_size_override("font_size", 16)
+		CyberTheme.style_label(lbl_desc, CyberTheme.COL_GREEN if cur_lvl > 0 else Color(0.75, 0.84, 0.96, 1.0), 3)
 		vbox.add_child(lbl_desc)
 
 		var btn_upg := Button.new()
-		btn_upg.custom_minimum_size = Vector2(250, 48)
+		btn_upg.custom_minimum_size = Vector2(260, 50)
 		btn_upg.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		btn_upg.add_theme_font_size_override("font_size", 15)
+		btn_upg.add_theme_font_size_override("font_size", 17)
 		if cost == -1:
 			btn_upg.disabled = true
 			btn_upg.text = "LIVELLO MASSIMO"
@@ -1945,7 +1965,7 @@ func _populate_quests() -> void:
 		lbl_title.text = q_title
 		lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl_title.add_theme_font_size_override("font_size", 16)
+		lbl_title.add_theme_font_size_override("font_size", 18)
 		CyberTheme.style_label(lbl_title, CyberTheme.COL_YELLOW if (is_ready and not is_claimed) else CyberTheme.COL_CYAN, 3)
 		vbox.add_child(lbl_title)
 
@@ -1953,20 +1973,20 @@ func _populate_quests() -> void:
 		lbl_desc.text = q_desc
 		lbl_desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl_desc.add_theme_font_size_override("font_size", 14)
+		lbl_desc.add_theme_font_size_override("font_size", 16)
 		CyberTheme.style_label(lbl_desc, Color(0.90, 0.95, 1.0, 1.0), 2)
 		vbox.add_child(lbl_desc)
 
 		var pbar := ProgressBar.new()
-		pbar.custom_minimum_size = Vector2(0, 22)
+		pbar.custom_minimum_size = Vector2(0, 24)
 		pbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		pbar.max_value = max_val
 		pbar.value = clamped_val
 		pbar.show_percentage = false
-		var pb_bg := CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.95), Color(0.22, 0.34, 0.50, 0.8), 0.10, 1, 3, 0)
+		var pb_bg := CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.95), Color(0.22, 0.34, 0.50, 0.8), 0.0, 1, 3, 0)
 		var pb_fill := StyleBoxFlat.new()
 		pb_fill.bg_color = CyberTheme.COL_GREEN if is_ready else CyberTheme.COL_CYAN
-		pb_fill.skew = Vector2(0.10, 0.0)
+		pb_fill.corner_radius_top_left = 6; pb_fill.corner_radius_top_right = 6; pb_fill.corner_radius_bottom_left = 6; pb_fill.corner_radius_bottom_right = 6
 		pbar.add_theme_stylebox_override("background", pb_bg)
 		pbar.add_theme_stylebox_override("fill", pb_fill)
 
@@ -1974,7 +1994,7 @@ func _populate_quests() -> void:
 		pbar_lbl.text = str(clamped_val) + " / " + str(max_val)
 		pbar_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		pbar_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		pbar_lbl.add_theme_font_size_override("font_size", 13)
+		pbar_lbl.add_theme_font_size_override("font_size", 15)
 		CyberTheme.style_label(pbar_lbl, Color.WHITE, 3)
 		pbar.add_child(pbar_lbl)
 		pbar_lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1984,28 +2004,28 @@ func _populate_quests() -> void:
 
 		# 3. Colonna Destra Compatta Impilata (Badge Ricompensa + Pulsante Azione -> rientra sempre nei 720px!)
 		var right_col := VBoxContainer.new()
-		right_col.custom_minimum_size = Vector2(126, 0)
+		right_col.custom_minimum_size = Vector2(130, 0)
 		right_col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		right_col.alignment = BoxContainer.ALIGNMENT_CENTER
 		right_col.add_theme_constant_override("separation", 6)
 
 		var badge := PanelContainer.new()
-		badge.custom_minimum_size = Vector2(126, 32)
-		badge.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.09, 0.12, 0.22, 0.95), CyberTheme.COL_MAGENTA, 0.06, 1, 4, 2))
+		badge.custom_minimum_size = Vector2(130, 34)
+		badge.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.09, 0.12, 0.22, 0.95), CyberTheme.COL_MAGENTA, 0.0, 1, 4, 2))
 
 		var badge_lbl := Label.new()
 		badge_lbl.text = ("🪙 +" if q["reward_type"] == "coins" else "💎 +") + str(q["reward_amt"])
 		badge_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		badge_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		badge_lbl.add_theme_font_size_override("font_size", 15)
+		badge_lbl.add_theme_font_size_override("font_size", 16)
 		CyberTheme.style_label(badge_lbl, CyberTheme.COL_YELLOW if q["reward_type"] == "coins" else CyberTheme.COL_CYAN, 3)
 		badge.add_child(badge_lbl)
 		right_col.add_child(badge)
 
 		var btn_claim := Button.new()
-		btn_claim.custom_minimum_size = Vector2(126, 46)
+		btn_claim.custom_minimum_size = Vector2(130, 48)
 		btn_claim.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-		btn_claim.add_theme_font_size_override("font_size", 14)
+		btn_claim.add_theme_font_size_override("font_size", 16)
 
 		if is_claimed:
 			btn_claim.disabled = true
@@ -2556,7 +2576,7 @@ func _style_archetype_card_btn(btn: Button, c_def: Dictionary, is_selected: bool
 	var ccol: Color = c_def["col"]
 	var sel_prefix := "✓ " if is_selected else ""
 	btn.text = "\n\n\n\n" + sel_prefix + str(c_def["title"]) + "\n" + str(c_def["wep_name"]) + "\n" + str(c_def["bonus"]) + "\n" + str(c_def["stats"])
-	btn.add_theme_font_size_override("font_size", 13)
+	btn.add_theme_font_size_override("font_size", 15)
 
 	var sb_card := CyberTheme.make_rarity_card_box("LEGENDARY" if is_selected else rar_key, 8, 8)
 	if sb_card is StyleBoxTexture:

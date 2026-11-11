@@ -19,10 +19,10 @@ func _ready() -> void:
 	if panel:
 		panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(16, 14))
 		# Pannello più largo e alto: 3 card grandi e leggibili
-		panel.offset_left = -320.0
-		panel.offset_right = 320.0
-		panel.offset_top = -330.0
-		panel.offset_bottom = 330.0
+		panel.offset_left = -325.0
+		panel.offset_right = 325.0
+		panel.offset_top = -345.0
+		panel.offset_bottom = 345.0
 
 	if not player_ref:
 		var players := get_tree().get_nodes_in_group("player")
@@ -39,7 +39,7 @@ func _populate_perks() -> void:
 		if child is Label:
 			var hdr := child as Label
 			hdr.text = "⚡ LIVELLO SUPERIORE! INSTALLA CYBERWARE ⚡"
-			hdr.add_theme_font_size_override("font_size", 24)
+			hdr.add_theme_font_size_override("font_size", 25)
 			hdr.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			CyberTheme.style_label(hdr, CyberTheme.COL_YELLOW, 4)
 		else:
@@ -54,10 +54,10 @@ func _populate_perks() -> void:
 		var owned: int = int(stacks.get(perk.id, 0))
 
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(0, 138)
+		btn.custom_minimum_size = Vector2(0, 146)
 		btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 		btn.focus_mode = Control.FOCUS_NONE
-		btn.add_theme_font_size_override("font_size", 18)
+		btn.add_theme_font_size_override("font_size", 19)
 		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 		var lvl_txt := ""

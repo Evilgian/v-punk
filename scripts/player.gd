@@ -34,13 +34,34 @@ var anim_t: float = 0.0
 var aim_angle: float = -PI * 0.5
 var target_aim_angle: float = -PI * 0.5
 
-# --- Abilità Neurali della run (scelte al Level Up) ---
+# --- Abilità Neurali della run (scelte al Level Up) + Talenti Permanenti ---
 var perk_stacks: Dictionary = {}
 var has_rear_arrow: bool = false
 var has_side_arrows: bool = false
 var has_homing_rounds: bool = false
 var shot_scale: float = 1.0
 var crit_chance: float = 0.0
+var crit_dmg_mult: float = 2.0
+var proj_speed_mult: float = 1.0
+var ricochet_stacks: int = 0
+var twin_shot_stacks: int = 0
+var burst_volley_stacks: int = 0
+var shot_counter: int = 0
+var executioner_stacks: int = 0
+var berserker_stacks: int = 0
+var shockwave_stacks: int = 0
+var shockwave_timer: float = 0.0
+var missile_stacks: int = 0
+var missile_timer: float = 0.0
+var plasma_trail_stacks: int = 0
+var plasma_trail_timer: float = 0.0
+var static_field_stacks: int = 0
+var static_field_timer: float = 0.0
+var damage_reduction: float = 0.0
+var armor_pen_bonus: float = 0.0
+var drone_tech_bonus: float = 0.0
+var exp_boost_bonus: float = 0.0
+var vampire_talent_chance: float = 0.0
 var explosive_stacks: int = 0
 var chain_stacks: int = 0
 var has_freeze: bool = false
@@ -80,6 +101,21 @@ func _ready() -> void:
 	var atk_talent: int = int(tm.get_bonus_value("atk")) if (tm and tm.has_method("get_bonus_value")) else 0
 	var hp_talent: int = int(tm.get_bonus_value("hp")) if (tm and tm.has_method("get_bonus_value")) else 0
 	var speed_talent: float = tm.get_bonus_value("speed") if (tm and tm.has_method("get_bonus_value")) else 0.0
+	if tm and tm.has_method("get_bonus_value"):
+		var fr_pct: float = tm.get_bonus_value("fire_rate")
+		if fr_pct > 0.0:
+			fire_rate = maxf(0.08, fire_rate / (1.0 + fr_pct / 100.0))
+		crit_chance += tm.get_bonus_value("crit") / 100.0
+		crit_dmg_mult += tm.get_bonus_value("crit_dmg") / 100.0
+		dodge_chance += tm.get_bonus_value("dodge") / 100.0
+		var start_shields: int = int(tm.get_bonus_value("aegis"))
+		if start_shields > 0:
+			shield_max += start_shields
+			shield_charges = shield_max
+		vampire_talent_chance = tm.get_bonus_value("vampirism") / 100.0
+		armor_pen_bonus = tm.get_bonus_value("armor_pen") / 100.0
+		drone_tech_bonus = tm.get_bonus_value("drone_tech") / 100.0
+		exp_boost_bonus = tm.get_bonus_value("exp_boost") / 100.0
 
 	var im: Node = get_node_or_null("/root/InventoryManager")
 	var pet_laser_lvl: int = 1
@@ -145,44 +181,67 @@ func apply_perk(perk_id: String) -> void:
 	perk_stacks[perk_id] = int(perk_stacks.get(perk_id, 0)) + 1
 	match perk_id:
 		"front_arrow": extra_projectiles += 1
+		"twin_shot": twin_shot_stacks += 1
 		"diagonal_arrow": has_diagonal_arrow = true
 		"spread_shot": has_spread_shot = true
 		"rear_arrow": has_rear_arrow = true
 		"side_arrows": has_side_arrows = true
 		"bouncy_wall": has_bouncy_wall = true
+		"ricochet": ricochet_stacks += 1
 		"piercing": has_piercing = true
 		"homing_rounds": has_homing_rounds = true
 		"giant_shots":
 			shot_scale += 0.25
-			bonus_damage += 3
+			bonus_damage += 4
+		"burst_volley": burst_volley_stacks += 1
 		"attack_speed":
-			fire_rate = max(0.08, fire_rate * 0.8)
+			fire_rate = maxf(0.08, fire_rate * 0.8)
 			if shoot_timer: shoot_timer.wait_time = fire_rate
 		"damage_up": bonus_damage += 8
-		"crit_up": crit_chance = minf(0.75, crit_chance + 0.12)
+		"crit_up": crit_chance = minf(0.85, crit_chance + 0.12)
+		"sniper_caliber":
+			proj_speed_mult += 0.35
+			bonus_damage += 6
+			crit_dmg_mult += 0.15
+		"executioner": executioner_stacks += 1
+		"berserker": berserker_stacks += 1
+		"lucky_overdrive":
+			crit_chance = minf(0.85, crit_chance + 0.10)
+			dodge_chance = minf(0.60, dodge_chance + 0.08)
+			Global.total_coins += 35
 		"explosive": explosive_stacks += 1
 		"chain_lightning": chain_stacks += 1
 		"freeze_shot": has_freeze = true
 		"burn_shot": burn_stacks += 1
+		"static_field": static_field_stacks += 1
+		"plasma_trail": plasma_trail_stacks += 1
 		"orbit_blades": orbit_blades += 1
+		"shoulder_missiles": missile_stacks += 1
+		"shockwave_nova":
+			shockwave_stacks += 1
+			_trigger_shockwave_nova()
 		"energy_shield":
 			shield_max += 1
 			shield_charges = shield_max
 		"vampire": vampire_stacks += 1
-		"dodge": dodge_chance = minf(0.45, dodge_chance + 0.12)
+		"dodge": dodge_chance = minf(0.60, dodge_chance + 0.12)
 		"regen": regen_stacks += 1
 		"max_hp_up":
 			max_hp += 30
-			current_hp = min(max_hp, current_hp + 30)
+			current_hp = mini(max_hp, current_hp + 30)
+		"titan_heart":
+			max_hp += 60
+			current_hp = mini(max_hp, current_hp + 60)
+			damage_reduction = minf(0.45, damage_reduction + 0.12)
 		"move_speed": speed_modifier += 0.10
 		"heal":
-			current_hp = min(max_hp, current_hp + int(max_hp * 0.35))
+			current_hp = mini(max_hp, current_hp + int(max_hp * 0.35))
 	hp_changed.emit(current_hp, max_hp)
 
 func heal(amount: int) -> void:
 	if amount <= 0 or current_hp <= 0: return
 	var before := current_hp
-	current_hp = min(max_hp, current_hp + amount)
+	current_hp = mini(max_hp, current_hp + amount)
 	if current_hp != before:
 		hp_changed.emit(current_hp, max_hp)
 		var vfx: Node = get_node_or_null("/root/VFXManager")
@@ -191,8 +250,19 @@ func heal(amount: int) -> void:
 
 ## Effetti delle abilità "al colpo" (chiamato dai proiettili del giocatore)
 func on_projectile_hit(body: Node, dmg: int, hit_pos: Vector2) -> void:
-	if vampire_stacks > 0 and randf() < 0.25:
-		heal(vampire_stacks * 2)
+	var vamp_chance: float = (0.25 if vampire_stacks > 0 else 0.0) + vampire_talent_chance
+	if vamp_chance > 0.0 and randf() < vamp_chance:
+		heal(maxi(2, vampire_stacks * 2 + 2))
+
+	if is_instance_valid(body) and body.has_method("take_damage"):
+		var extra_pct: float = 0.0
+		if executioner_stacks > 0 and "hp" in body and "max_hp" in body and int(body.max_hp) > 0:
+			if float(body.hp) / float(body.max_hp) <= 0.40:
+				extra_pct += 0.45 * float(executioner_stacks)
+		if armor_pen_bonus > 0.0 and (("is_elite" in body and body.is_elite) or ("is_final_boss" in body)):
+			extra_pct += armor_pen_bonus
+		if extra_pct > 0.0:
+			body.take_damage(maxi(1, int(round(float(dmg) * extra_pct))))
 
 	var enemies := get_tree().get_nodes_in_group("enemies")
 	if explosive_stacks > 0:
@@ -352,13 +422,59 @@ func _process(delta: float) -> void:
 
 	if has_pet_laser:
 		pet_shoot_timer += delta
-		if pet_shoot_timer >= 1.3:
+		var pet_cd: float = 1.3 / (1.0 + drone_tech_bonus)
+		if pet_shoot_timer >= pet_cd:
 			pet_shoot_timer = 0.0
 			var target := get_closest_enemy()
 			if target:
 				var pet_pos := global_position + Vector2.RIGHT.rotated(anim_t * 2.5) * 42.0
 				var dir := (target.global_position - pet_pos).normalized()
-				_spawn_projectile_from(pet_pos, dir, 0.5)
+				_spawn_projectile_from(pet_pos, dir, 0.55 * (1.0 + drone_tech_bonus))
+
+	# Gestione Campo Elettrostatico (static_field)
+	if static_field_stacks > 0:
+		static_field_timer += delta
+		if static_field_timer >= 1.2:
+			static_field_timer = 0.0
+			var sf_dmg: int = maxi(4, int((weapon_base_damage + bonus_damage) * 0.45 * static_field_stacks))
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if is_instance_valid(e) and e is Node2D and e.has_method("take_damage"):
+					if (e as Node2D).global_position.distance_to(global_position) <= 135.0:
+						_spawn_lightning(global_position, (e as Node2D).global_position)
+						e.take_damage(sf_dmg)
+
+	# Gestione Scia al Plasma (plasma_trail) mentre l'eroe si muove
+	if plasma_trail_stacks > 0 and velocity.length() > 25.0:
+		plasma_trail_timer += delta
+		if plasma_trail_timer >= 0.42:
+			plasma_trail_timer = 0.0
+			var pt_dmg: int = maxi(4, int((weapon_base_damage + bonus_damage) * 0.42 * plasma_trail_stacks))
+			var vfx: Node = get_node_or_null("/root/VFXManager")
+			if vfx and vfx.has_method("spawn_burst"):
+				vfx.spawn_burst(global_position, Color(0.2, 1.0, 0.45, 0.85))
+			for e in get_tree().get_nodes_in_group("enemies"):
+				if is_instance_valid(e) and e is Node2D and e.has_method("take_damage"):
+					if (e as Node2D).global_position.distance_to(global_position) <= 85.0:
+						e.take_damage(pt_dmg)
+
+	# Gestione Lanciamissili Spalla (shoulder_missiles)
+	if missile_stacks > 0:
+		missile_timer += delta
+		if missile_timer >= 2.8:
+			missile_timer = 0.0
+			var m_target := get_closest_enemy()
+			if m_target:
+				var m_dir := (m_target.global_position - global_position).normalized()
+				for m_i in range(missile_stacks * 2):
+					var spread_a: float = float(m_i - missile_stacks) * 0.22
+					_spawn_Smart_missile(global_position + Vector2(0, -24), m_dir.rotated(spread_a))
+
+	# Gestione Supernova Difensiva periodica (shockwave_nova)
+	if shockwave_stacks > 0:
+		shockwave_timer += delta
+		if shockwave_timer >= 9.0:
+			shockwave_timer = 0.0
+			_trigger_shockwave_nova()
 
 	var active_cam: Camera2D = get_viewport().get_camera_2d()
 	if active_cam and shake_intensity > 0.0:
@@ -445,9 +561,13 @@ func take_damage(amount: int) -> void:
 
 	invulnerable_time = 0.25
 
-	current_hp = max(0, current_hp - amount)
+	var final_amt: int = maxi(1, int(round(float(amount) * (1.0 - damage_reduction))))
+	current_hp = maxi(0, current_hp - final_amt)
 	hp_changed.emit(current_hp, max_hp)
 	apply_shake(10.0)
+
+	if shockwave_stacks > 0 and current_hp > 0:
+		_trigger_shockwave_nova()
 
 	var tween := create_tween()
 	modulate = Color(3.5, 0.2, 0.2, 1.0)
@@ -455,6 +575,33 @@ func take_damage(amount: int) -> void:
 
 	if current_hp <= 0:
 		die()
+
+func _trigger_shockwave_nova() -> void:
+	var vfx: Node = get_node_or_null("/root/VFXManager")
+	if vfx and vfx.has_method("spawn_explosion"):
+		vfx.spawn_explosion(global_position, Color(0.15, 0.95, 1.0, 1.0))
+	var nova_dmg: int = maxi(12, int((weapon_base_damage + bonus_damage) * 1.15 * maxf(1.0, float(shockwave_stacks))))
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(e) and e is Node2D and e.has_method("take_damage"):
+			var en := e as Node2D
+			if en.global_position.distance_to(global_position) <= 190.0:
+				en.take_damage(nova_dmg)
+
+func _spawn_Smart_missile(origin: Vector2, dir: Vector2) -> void:
+	if not projectile_scene:
+		return
+	var proj := projectile_scene.instantiate() as Area2D
+	if proj:
+		proj.global_position = origin
+		proj.direction = dir
+		proj.rotation = dir.angle()
+		if "is_homing" in proj:
+			proj.is_homing = true
+		if "speed" in proj:
+			proj.speed = 620.0
+		if "damage" in proj:
+			proj.damage = maxi(8, int((weapon_base_damage + bonus_damage) * 0.85))
+		get_tree().current_scene.add_child(proj)
 
 func die() -> void:
 	SoundFX.play_explosion()
@@ -466,7 +613,8 @@ func die() -> void:
 			get_tree().current_scene.add_child(game_over)
 
 func add_exp(amount: int) -> void:
-	current_exp += amount
+	var boosted_exp: int = maxi(1, int(round(float(amount) * (1.0 + exp_boost_bonus))))
+	current_exp += boosted_exp
 
 	while current_exp >= exp_to_next_level:
 		current_exp -= exp_to_next_level
@@ -526,6 +674,9 @@ func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0
 			projectile.is_piercing = true
 			if "speed" in projectile: projectile.speed = 480.0
 
+		if "speed" in projectile and proj_speed_mult != 1.0:
+			projectile.speed = float(projectile.speed) * proj_speed_mult
+
 		if "is_piercing" in projectile and has_piercing:
 			projectile.is_piercing = true
 
@@ -538,13 +689,18 @@ func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0
 		if "bounces_left" in projectile and has_bouncy_wall:
 			projectile.bounces_left = 2
 
+		if "ricochet_left" in projectile and ricochet_stacks > 0:
+			projectile.ricochet_left = ricochet_stacks
+
 		if "damage" in projectile:
 			var base_dmg: int = weapon_base_damage + bonus_damage
 			var raw_dmg: float = (base_dmg * 1.5 if eq_w == "katana" else float(base_dmg)) * dmg_mult
-			# Calcolo critico con perk crit_up
+			if berserker_stacks > 0 and max_hp > 0:
+				var missing_ratio: float = clampf(1.0 - float(current_hp) / float(max_hp), 0.0, 0.85)
+				raw_dmg *= (1.0 + missing_ratio * 0.35 * float(berserker_stacks))
 			var is_crit: bool = (randf() <= (0.15 + crit_chance))
-			if is_crit: raw_dmg *= 2.0
-			projectile.damage = max(1, int(raw_dmg))
+			if is_crit: raw_dmg *= crit_dmg_mult
+			projectile.damage = maxi(1, int(raw_dmg))
 			if projectile.has_meta("is_crit"): projectile.set_meta("is_crit", is_crit)
 
 		if projectile.has_signal("body_entered"):
@@ -553,7 +709,12 @@ func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0
 					on_projectile_hit(hit_b, projectile.damage, projectile.global_position)
 			)
 
-		get_tree().current_scene.add_child(projectile)
+		var parent_node: Node = get_tree().current_scene if (is_inside_tree() and get_tree() and get_tree().current_scene != null) else get_parent()
+		if parent_node:
+			parent_node.add_child(projectile)
+		else:
+			projectile.queue_free()
+			return
 		if dmg_mult >= 1.0:
 			SoundFX.play_shoot()
 
@@ -565,8 +726,23 @@ func _on_shoot_timer_timeout() -> void:
 	if target_enemy:
 		var base_dir := (target_enemy.global_position - global_position).normalized()
 		aim_angle = base_dir.angle()
+		shot_counter += 1
 
-		_spawn_projectile(base_dir)
+		if twin_shot_stacks > 0:
+			var perp := Vector2(-base_dir.y, base_dir.x)
+			_spawn_projectile_from(global_position - perp * 8.5, base_dir, 0.90)
+			_spawn_projectile_from(global_position + perp * 8.5, base_dir, 0.90)
+			if twin_shot_stacks >= 2:
+				_spawn_projectile(base_dir)
+		else:
+			_spawn_projectile(base_dir)
+
+		if burst_volley_stacks > 0 and (shot_counter % 4 == 0):
+			for b_step in range(1, 1 + burst_volley_stacks):
+				get_tree().create_timer(0.08 * float(b_step), false).timeout.connect(func():
+					if is_inside_tree() and current_hp > 0:
+						_spawn_projectile(base_dir.rotated(randf_range(-0.05, 0.05)))
+				)
 
 		if WeaponDB.equipped_weapon_id == "shotgun":
 			_spawn_projectile(base_dir.rotated(deg_to_rad(10.0)))
