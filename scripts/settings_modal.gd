@@ -43,7 +43,7 @@ func _build_ui() -> void:
 
 	# Header (senza versione in bella vista)
 	var lbl_title := Label.new()
-	lbl_title.text = "// ⚙️ IMPOSTAZIONI //"
+	lbl_title.text = "// IMPOSTAZIONI //"
 	lbl_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_title.add_theme_font_size_override("font_size", 23)
 	CyberTheme.style_label(lbl_title, CyberTheme.COL_YELLOW, 4)
@@ -67,7 +67,7 @@ func _build_ui() -> void:
 	audio_card.add_child(audio_vbox)
 
 	var lbl_audio_hdr := Label.new()
-	lbl_audio_hdr.text = "🔊 MIXER AUDIO CYBERDECK"
+	lbl_audio_hdr.text = "★ MIXER AUDIO CYBERDECK"
 	lbl_audio_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_audio_hdr.add_theme_font_size_override("font_size", 16)
 	CyberTheme.style_label(lbl_audio_hdr, CyberTheme.COL_YELLOW, 3)
@@ -111,7 +111,7 @@ func _build_ui() -> void:
 	google_card.add_child(g_vbox)
 
 	var lbl_g_hdr := Label.new()
-	lbl_g_hdr.text = "🎮 GOOGLE PLAY GAMES & SALVATAGGIO CLOUD"
+	lbl_g_hdr.text = "◆ GOOGLE PLAY GAMES & SALVATAGGIO CLOUD"
 	lbl_g_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_g_hdr.add_theme_font_size_override("font_size", 16)
 	CyberTheme.style_label(lbl_g_hdr, CyberTheme.COL_GREEN if Global.google_account_linked else CyberTheme.COL_YELLOW, 3)
@@ -120,24 +120,24 @@ func _build_ui() -> void:
 	var lbl_g_status := Label.new()
 	if Global.google_account_linked:
 		var acc_name := Global.google_account_name if not Global.google_account_name.is_empty() else (Global.player_name + "@playgames")
-		lbl_g_status.text = "✅ STATO: COLLEGATO (" + acc_name + ")\nSincronizzazione automatica dei progressi attiva."
+		lbl_g_status.text = "✓ STATO: COLLEGATO (" + acc_name + ")\nSincronizzazione automatica dei progressi attiva."
 		CyberTheme.style_label(lbl_g_status, CyberTheme.COL_GREEN, 2)
 	else:
-		lbl_g_status.text = "⚪ STATO: ACCOUNT GOOGLE NON COLLEGATO\nI tuoi progressi sono salvati nella memoria locale del dispositivo."
+		lbl_g_status.text = "• STATO: ACCOUNT GOOGLE NON COLLEGATO\nI tuoi progressi sono salvati nella memoria locale del dispositivo."
 		CyberTheme.style_label(lbl_g_status, Color(0.85, 0.92, 1.0, 1.0), 2)
 	lbl_g_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_g_status.add_theme_font_size_override("font_size", 13)
 	g_vbox.add_child(lbl_g_status)
 
 	var btn_google := Button.new()
-	btn_google.custom_minimum_size = Vector2(460, 54)
+	btn_google.custom_minimum_size = Vector2(480, 54)
 	btn_google.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_google.add_theme_font_size_override("font_size", 15)
 	if Global.google_account_linked:
-		btn_google.text = "☁️ SINCRONIZZA ORA / SCOLLEGA GOOGLE PLAY"
+		btn_google.text = "▲ SINCRONIZZA / SCOLLEGA GOOGLE PLAY"
 		CyberTheme.style_button(btn_google, CyberTheme.COL_CYAN, false)
 	else:
-		btn_google.text = "🔗 COLLEGA ACCOUNT GOOGLE PLAY GAMES"
+		btn_google.text = "★ COLLEGA ACCOUNT GOOGLE PLAY GAMES"
 		CyberTheme.style_button(btn_google, CyberTheme.COL_GREEN, true)
 
 	btn_google.pressed.connect(func():
@@ -163,10 +163,10 @@ func _build_ui() -> void:
 	opt_card.add_child(opt_vbox)
 
 	var btn_shake := Button.new()
-	btn_shake.custom_minimum_size = Vector2(460, 50)
+	btn_shake.custom_minimum_size = Vector2(480, 50)
 	btn_shake.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_shake.add_theme_font_size_override("font_size", 15)
-	btn_shake.text = "📳 VIBRAZIONE & SCREEN SHAKE: " + ("ATTIVO (ON)" if Global.screen_shake_enabled else "DISATTIVATO (OFF)")
+	btn_shake.text = "⚡ VIBRAZIONE & SHAKE: " + ("ATTIVO (ON)" if Global.screen_shake_enabled else "DISATTIVATO (OFF)")
 	CyberTheme.style_button(btn_shake, CyberTheme.COL_CYAN if Global.screen_shake_enabled else CyberTheme.COL_MAGENTA, false)
 	btn_shake.pressed.connect(func():
 		SoundFX.play_click()
@@ -178,10 +178,10 @@ func _build_ui() -> void:
 
 	if show_char_creator_btn:
 		var btn_char := Button.new()
-		btn_char.custom_minimum_size = Vector2(460, 50)
+		btn_char.custom_minimum_size = Vector2(480, 50)
 		btn_char.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		btn_char.add_theme_font_size_override("font_size", 15)
-		btn_char.text = "👤 CAMBIA NOME / RICREA OPERATIVO (" + Global.player_name + ")"
+		btn_char.text = "★ CAMBIA NOME / RICREA OPERATIVO (" + Global.player_name + ")"
 		CyberTheme.style_button(btn_char, CyberTheme.COL_YELLOW, false)
 		btn_char.pressed.connect(func():
 			SoundFX.play_click()
@@ -231,8 +231,9 @@ func _create_volume_row(label_text: String, cur_val: float, accent: Color, on_ch
 	row_vbox.add_child(hbox)
 
 	var btn_mute := Button.new()
-	btn_mute.custom_minimum_size = Vector2(68, 44)
-	btn_mute.text = "🔇" if pct > 0 else "🔊"
+	btn_mute.custom_minimum_size = Vector2(78, 44)
+	btn_mute.add_theme_font_size_override("font_size", 14)
+	btn_mute.text = "MUTO" if pct > 0 else "ATTIVA"
 	CyberTheme.style_button(btn_mute, CyberTheme.COL_MAGENTA if pct == 0 else accent, false)
 	btn_mute.pressed.connect(func():
 		on_change.call(0.0 if pct > 0 else 0.75)
@@ -240,8 +241,9 @@ func _create_volume_row(label_text: String, cur_val: float, accent: Color, on_ch
 	hbox.add_child(btn_mute)
 
 	var btn_minus := Button.new()
-	btn_minus.custom_minimum_size = Vector2(68, 44)
-	btn_minus.text = "➖"
+	btn_minus.custom_minimum_size = Vector2(64, 44)
+	btn_minus.add_theme_font_size_override("font_size", 22)
+	btn_minus.text = "-"
 	CyberTheme.style_button(btn_minus, accent, false)
 	btn_minus.pressed.connect(func():
 		on_change.call(max(0.0, cur_val - 0.15))
@@ -249,7 +251,7 @@ func _create_volume_row(label_text: String, cur_val: float, accent: Color, on_ch
 	hbox.add_child(btn_minus)
 
 	var pbar := ProgressBar.new()
-	pbar.custom_minimum_size = Vector2(230, 28)
+	pbar.custom_minimum_size = Vector2(220, 28)
 	pbar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pbar.max_value = 100
 	pbar.value = pct
@@ -263,8 +265,9 @@ func _create_volume_row(label_text: String, cur_val: float, accent: Color, on_ch
 	hbox.add_child(pbar)
 
 	var btn_plus := Button.new()
-	btn_plus.custom_minimum_size = Vector2(68, 44)
-	btn_plus.text = "➕"
+	btn_plus.custom_minimum_size = Vector2(64, 44)
+	btn_plus.add_theme_font_size_override("font_size", 22)
+	btn_plus.text = "+"
 	CyberTheme.style_button(btn_plus, accent, false)
 	btn_plus.pressed.connect(func():
 		on_change.call(min(1.0, cur_val + 0.15))

@@ -126,8 +126,10 @@ func _apply_cyber_hud_styles() -> void:
 		if p_vbox and not p_vbox.get_node_or_null("BtnPauseSettings"):
 			var btn_ps := Button.new()
 			btn_ps.name = "BtnPauseSettings"
-			btn_ps.custom_minimum_size = Vector2(260, 56)
-			btn_ps.text = "⚙️ IMPOSTAZIONI & AUDIO"
+			btn_ps.custom_minimum_size = Vector2(280, 56)
+			btn_ps.icon = CyberTheme.get_ui_icon("settings")
+			btn_ps.expand_icon = true
+			btn_ps.text = "IMPOSTAZIONI & AUDIO"
 			CyberTheme.style_button(btn_ps, CyberTheme.COL_YELLOW, false)
 			btn_ps.pressed.connect(func():
 				SoundFX.play_click()

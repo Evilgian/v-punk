@@ -130,6 +130,10 @@ static func get_item_model_texture(item_id: String, slot_name: String = "") -> T
 
 	return get_model_texture("res://assets/cyber_models/" + file_name)
 
+## Restituisce l'icona UI 3D (core, coin, gem, gift, settings, nav_shop, nav_equip, nav_play, nav_talents, nav_quests)
+static func get_ui_icon(icon_name: String) -> Texture2D:
+	return get_model_texture("res://assets/cyber_models/icon_" + icon_name + "_3d.png")
+
 ## Helper interno per costruire uno StyleBoxTexture 9-slice 3D scolpito
 static func _make_9slice_box(tex_path: String, margin_xy: int, pad_l: int, pad_r: int, pad_t: int, pad_b: int, tint: Color = Color.WHITE) -> StyleBox:
 	var tex := get_model_texture(tex_path)
@@ -279,27 +283,27 @@ static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yello
 	if tex_norm and tex_prs and tex_dis:
 		var sb_n := StyleBoxTexture.new()
 		sb_n.texture = tex_norm
-		sb_n.texture_margin_left = 20; sb_n.texture_margin_right = 20
-		sb_n.texture_margin_top = 15; sb_n.texture_margin_bottom = 19
-		sb_n.content_margin_left = 14; sb_n.content_margin_right = 14
-		sb_n.content_margin_top = 7; sb_n.content_margin_bottom = 11
+		sb_n.texture_margin_left = 18; sb_n.texture_margin_right = 18
+		sb_n.texture_margin_top = 14; sb_n.texture_margin_bottom = 18
+		sb_n.content_margin_left = 8; sb_n.content_margin_right = 8
+		sb_n.content_margin_top = 5; sb_n.content_margin_bottom = 7
 
 		var sb_h := sb_n.duplicate() as StyleBoxTexture
 		sb_h.modulate_color = Color(1.12, 1.12, 1.15, 1.0)
 
 		var sb_p := StyleBoxTexture.new()
 		sb_p.texture = tex_prs
-		sb_p.texture_margin_left = 20; sb_p.texture_margin_right = 20
-		sb_p.texture_margin_top = 17; sb_p.texture_margin_bottom = 15
-		sb_p.content_margin_left = 14; sb_p.content_margin_right = 14
-		sb_p.content_margin_top = 10; sb_p.content_margin_bottom = 8
+		sb_p.texture_margin_left = 18; sb_p.texture_margin_right = 18
+		sb_p.texture_margin_top = 16; sb_p.texture_margin_bottom = 14
+		sb_p.content_margin_left = 8; sb_p.content_margin_right = 8
+		sb_p.content_margin_top = 7; sb_p.content_margin_bottom = 5
 
 		var sb_d := StyleBoxTexture.new()
 		sb_d.texture = tex_dis
-		sb_d.texture_margin_left = 20; sb_d.texture_margin_right = 20
-		sb_d.texture_margin_top = 16; sb_d.texture_margin_bottom = 16
-		sb_d.content_margin_left = 14; sb_d.content_margin_right = 14
-		sb_d.content_margin_top = 8; sb_d.content_margin_bottom = 9
+		sb_d.texture_margin_left = 18; sb_d.texture_margin_right = 18
+		sb_d.texture_margin_top = 15; sb_d.texture_margin_bottom = 15
+		sb_d.content_margin_left = 8; sb_d.content_margin_right = 8
+		sb_d.content_margin_top = 6; sb_d.content_margin_bottom = 6
 
 		btn.add_theme_stylebox_override("normal", sb_n)
 		btn.add_theme_stylebox_override("hover", sb_h)
@@ -505,8 +509,15 @@ static func draw_item_icon(c: CanvasItem, center: Vector2, item_id: String, slot
 	# 5. Modello 3D dell'oggetto sospeso sopra il piedistallo
 	var tex := get_item_model_texture(item_id, slot_name)
 	if tex:
-		var rect := Rect2(center - Vector2(icon_size * 0.5, icon_size * 0.54), Vector2(icon_size, icon_size))
-		c.draw_texture_rect(tex, rect, false)
+		var is_wep: bool = ("ARMA" in slot_name.to_upper() or "WEAPON" in slot_name.to_upper() or "pistol" in item_id or "smg" in item_id or "shotgun" in item_id or "rifle" in item_id or "plasma" in item_id or "katana" in item_id or "wand" in item_id or "scythe" in item_id)
+		if is_wep:
+			var w_size: float = icon_size * 1.16
+			c.draw_set_transform(center + Vector2(0.0, -icon_size * 0.05), -0.38, Vector2.ONE)
+			c.draw_texture_rect(tex, Rect2(Vector2(-w_size * 0.5, -w_size * 0.5), Vector2(w_size, w_size)), false)
+			c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		else:
+			var rect := Rect2(center - Vector2(icon_size * 0.5, icon_size * 0.54), Vector2(icon_size, icon_size))
+			c.draw_texture_rect(tex, rect, false)
 	else:
 		c.draw_circle(center, 14.0, col)
 

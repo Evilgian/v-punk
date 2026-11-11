@@ -216,26 +216,26 @@ text = "Operativo • Lv. 1"
 text_overrun_behavior = 3
 
 [node name="BtnCheckinTop" type="Button" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
-custom_minimum_size = Vector2(130, 56)
+custom_minimum_size = Vector2(142, 56)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 18
-text = "🎁 PREMI"
+theme_override_font_sizes/font_size = 17
+text = "PREMI"
 
 [node name="BtnSettingsTop" type="Button" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
 custom_minimum_size = Vector2(60, 56)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 25
-text = "⚙️"
+theme_override_font_sizes/font_size = 22
+text = ""
 
 [node name="ResourceBar" type="HBoxContainer" parent="MarginContainer/MainVBox/TopHeaderBox"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="PillScrolls" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
@@ -243,13 +243,13 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
 [node name="EnergyLabel" type="Label" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar/PillScrolls"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.15, 0.95, 0.55, 1)
-theme_override_font_sizes/font_size = 19
-text = "⚙️ Nuclei: 0"
+theme_override_font_sizes/font_size = 18
+text = "Nuclei: 0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="PillCoins" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
@@ -257,13 +257,13 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
 [node name="CoinsLabel" type="Label" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar/PillCoins"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.1, 1)
-theme_override_font_sizes/font_size = 19
-text = "🪙 0"
+theme_override_font_sizes/font_size = 18
+text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="PillGems" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
@@ -271,8 +271,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
 [node name="GemsLabel" type="Label" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar/PillGems"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 19
-text = "💎 0"
+theme_override_font_sizes/font_size = 18
+text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -511,25 +511,25 @@ alignment = 1
 [node name="AtkLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 19
-text = "⚔️ ATK: 15"
+theme_override_font_sizes/font_size = 18
+text = "★ ATK: 15"
 
 [node name="HpLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 0.4, 1)
-theme_override_font_sizes/font_size = 19
-text = "❤️ HP: 150"
+theme_override_font_sizes/font_size = 18
+text = "✦ HP: 150"
 
 [node name="CritLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.2, 1, 1)
-theme_override_font_sizes/font_size = 19
-text = "🎯 CRIT: 10%"
+theme_override_font_sizes/font_size = 18
+text = "◆ CRIT: 10%"
 
 [node name="SpeedLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/StatsBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 18
 text = "⚡ VEL: 330"
 
 [node name="ForgeSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
@@ -546,7 +546,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
 theme_override_font_sizes/font_size = 20
-text = "🔨 FUCINA RIPPERDOC: FUSIONE 3-IN-1"
+text = "▲ FUCINA RIPPERDOC: FUSIONE 3-IN-1"
 horizontal_alignment = 1
 
 [node name="MergeStatusLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/ForgeSection/VBox"]
@@ -558,11 +558,11 @@ horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="BtnMergeAll" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/ForgeSection/VBox"]
-custom_minimum_size = Vector2(340, 54)
+custom_minimum_size = Vector2(360, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
@@ -571,8 +571,8 @@ text = "⚡ FONDI TUTTI 3-IN-1 ⚡"
 [node name="InventoryTitle" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 19
-text = "🎒 DOTAZIONE POSSEDUTA (1 TOCCO PER EQUIPAGGIARE)"
+theme_override_font_sizes/font_size = 18
+text = "★ DOTAZIONE POSSEDUTA (1 TOCCO PER EQUIPAGGIARE)"
 horizontal_alignment = 1
 
 [node name="InventoryGrid" type="GridContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
@@ -677,7 +677,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 20
-text = "🎁 FORZIERI CYBER-ARMERIA"
+text = "★ FORZIERI CYBER-ARMERIA"
 horizontal_alignment = 1
 
 [node name="HBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox"]
@@ -689,13 +689,13 @@ alignment = 1
 custom_minimum_size = Vector2(290, 235)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "\n\n\n\n\nCASSA MILITECH\nArmi & Corazze Rare\n[ 100 💎 ]"
+text = "\n\n\n\n\nCASSA MILITECH\nArmi & Corazze Rare\n[ 100 GEMME ]"
 
 [node name="BtnBuyEpicCrate" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox/HBox"]
 custom_minimum_size = Vector2(290, 235)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "\n\n\n\n\nCASSA ARASAKA OVERLORD\nKatana / Falce / Plasma\n[ 300 💎 ]"
+text = "\n\n\n\n\nCASSA ARASAKA OVERLORD\nKatana / Falce / Plasma\n[ 300 GEMME ]"
 
 [node name="FreeAdsSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 custom_minimum_size = Vector2(0, 175)
@@ -711,7 +711,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
 theme_override_font_sizes/font_size = 19
-text = "📺 TRASMISSIONE NETRUNNER: GEMME GRATIS"
+text = "▶ TRASMISSIONE NETRUNNER: GEMME GRATIS"
 horizontal_alignment = 1
 
 [node name="AdHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox"]
@@ -725,10 +725,10 @@ theme_override_font_sizes/font_size = 17
 text = "Rimasti oggi: 3 / 3"
 
 [node name="BtnWatchAd" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox/AdHBox"]
-custom_minimum_size = Vector2(270, 56)
+custom_minimum_size = Vector2(284, 56)
 layout_mode = 2
-theme_override_font_sizes/font_size = 17
-text = "▶ SINCRONIZZA (+20 💎)"
+theme_override_font_sizes/font_size = 16
+text = "▶ SINCRONIZZA (+20 GEMME)"
 
 [node name="IapSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 custom_minimum_size = Vector2(0, 250)
@@ -744,7 +744,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 19
-text = "💳 BANCA CORPORATIVA: CREDITI GEMME"
+text = "◆ BANCA CORPORATIVA: CREDITI GEMME"
 horizontal_alignment = 1
 
 [node name="IapHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox"]
@@ -756,19 +756,19 @@ alignment = 1
 custom_minimum_size = Vector2(198, 146)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "💎 100 GEMME\nRecluta\n[ $0.99 ]"
+text = "◆ 100 GEMME\nRecluta\n[ $0.99 ]"
 
 [node name="BtnIap2" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox/IapHBox"]
 custom_minimum_size = Vector2(198, 146)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "💎 500 GEMME\nMercenario\n[ $4.99 ]"
+text = "◆ 500 GEMME\nMercenario\n[ $4.99 ]"
 
 [node name="BtnIap3" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox/IapHBox"]
 custom_minimum_size = Vector2(198, 146)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "💎 1200 GEMME\nNight City\n[ $9.99 ]"
+text = "◆ 1200 GEMME\nNight City\n[ $9.99 ]"
 
 [node name="ShopResultLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 layout_mode = 2
@@ -777,7 +777,7 @@ theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 
 [node name="FooterNavBar" type="HBoxContainer" parent="MarginContainer/MainVBox"]
-custom_minimum_size = Vector2(0, 86)
+custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1
@@ -791,9 +791,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnNavShop"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 17
-text = "🛒
-NEGOZIO"
+theme_override_font_sizes/font_size = 15
+text = "NEGOZIO"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -806,9 +805,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnNavEquip"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 17
-text = "🎒
-EQUIP"
+theme_override_font_sizes/font_size = 15
+text = "EQUIP"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -822,9 +820,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 18
-text = "⚔️
-GIOCA"
+theme_override_font_sizes/font_size = 16
+text = "GIOCA"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -837,9 +834,8 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnUpgrades"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 17
-text = "🧬
-TALENTI"
+theme_override_font_sizes/font_size = 15
+text = "TALENTI"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -852,8 +848,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nav_btn")
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/FooterNavBar/BtnNavQuests"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 17
-text = "🎯
-MISSIONI"
+theme_override_font_sizes/font_size = 15
+text = "MISSIONI"
 horizontal_alignment = 1
 vertical_alignment = 1

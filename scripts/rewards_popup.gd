@@ -5,10 +5,25 @@ extends CanvasLayer
 @onready var title_label: Label = $Control/PanelContainer/VBox/TitleLabel
 @onready var amount_label: Label = $Control/PanelContainer/VBox/AmountLabel
 
-func show_reward(icon_str: String, title_text: String, amount_text: String) -> void:
+func show_reward(_icon_str: String, title_text: String, amount_text: String) -> void:
 	if panel:
 		panel.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("LEGENDARY", 16, 14))
-	if icon_label: icon_label.text = icon_str
+		var vbox := panel.get_node_or_null("VBox") as VBoxContainer
+		if vbox and not vbox.get_node_or_null("Reward3DIcon"):
+			var tr := TextureRect.new()
+			tr.name = "Reward3DIcon"
+			tr.custom_minimum_size = Vector2(72, 72)
+			tr.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			var ico_key := "gift"
+			if "GEMM" in amount_text.to_upper(): ico_key = "gem"
+			elif "MONET" in amount_text.to_upper() or "ORO" in amount_text.to_upper(): ico_key = "coin"
+			tr.texture = CyberTheme.get_ui_icon(ico_key)
+			vbox.add_child(tr)
+			vbox.move_child(tr, 0)
+	if icon_label:
+		icon_label.visible = false
 	if title_label:
 		title_label.text = "// " + title_text + " //"
 		CyberTheme.style_label(title_label, CyberTheme.COL_CYAN, 3)

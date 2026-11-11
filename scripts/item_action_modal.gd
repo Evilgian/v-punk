@@ -45,9 +45,12 @@ func setup_item(item_data: Dictionary) -> void:
 			if old_upg: old_upg.queue_free()
 			var btn_upg := Button.new()
 			btn_upg.name = "BtnUpgradeItem"
-			btn_upg.custom_minimum_size = Vector2(0, 54)
+			btn_upg.custom_minimum_size = Vector2(0, 56)
 			var can_afford := (Global.total_coins >= coin_cost and Global.upgrade_scrolls >= scroll_cost)
-			btn_upg.text = "⬆️ POTENZIA A LV. " + str(cur_lvl + 1) + "  (" + str(coin_cost) + " 🪙 + " + str(scroll_cost) + " ⚙️)"
+			btn_upg.icon = CyberTheme.get_ui_icon("core")
+			btn_upg.expand_icon = true
+			btn_upg.add_theme_font_size_override("font_size", 16)
+			btn_upg.text = "POTENZIA A LV. " + str(cur_lvl + 1) + "  (" + str(coin_cost) + " Oro + " + str(scroll_cost) + " Nuclei)"
 			CyberTheme.style_button(btn_upg, CyberTheme.COL_GREEN if can_afford else CyberTheme.COL_CYAN, can_afford)
 			btn_upg.pressed.connect(func():
 				if im and im.has_method("upgrade_item_level"):
@@ -74,7 +77,7 @@ func setup_item(item_data: Dictionary) -> void:
 		CyberTheme.style_label(item_title, rar_col, 4)
 	if item_info:
 		var eq_tag := "  •  ✓ INDOSSATO" if is_eq else ""
-		item_info.text = "SLOT: " + islot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nRisorse: 🪙 " + str(Global.total_coins) + "   |   ⚙️ Nuclei: " + str(Global.upgrade_scrolls)
+		item_info.text = "SLOT: " + islot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nOro: " + str(Global.total_coins) + "   |   Nuclei: " + str(Global.upgrade_scrolls)
 		item_info.add_theme_font_size_override("font_size", 17)
 		CyberTheme.style_label(item_info, CyberTheme.COL_EQUIPPED if is_eq else rar_col, 3)
 	if item_desc:

@@ -2,9 +2,12 @@ class_name CyberModels
 extends RefCounted
 
 # ==============================================================================
-# RENDERING 2.5D "ARCHERO-STYLE" v5.0:
-# - Eroe 3D Articolato (2 Gambe Indipendenti + Busto 3D senza braccia morte +
-#   2 Braccia Corazzate IK a 2 snodi + Spallaccio Samurai 3D + Impugnatura Credibile)
+# RENDERING 2.5D "ARCHERO-STYLE" v6.0:
+# - Eroe 3D Articolato a 2 Snodi per Gamba (Coscia + Stinco/Stivale 3D senza
+#   cosce statiche dietro) + Busto 3D tagliato in vita + Braccia Corazzate 3D
+#   con Impugnatura Tattica Naturale (calcio al petto/spalla, mani sul grip)
+# - Locomozione Bipede Articolata per Nemici Melee, Heavy e Boss (gambe
+#   indipendenti animate con draw_texture_rect_region + oscillazione busto)
 # - 8 Varianti Bioma per Nemici Melee, Ranged, Heavy, Ostacoli e 8 Boss 3D Unici
 # - Supporto Campioni Élite (Corona Dorata + Aura Esagonale)
 # ==============================================================================
@@ -48,6 +51,68 @@ static func _draw_grounded_sprite(c: CanvasItem, tex: Texture2D, feet: Vector2, 
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
+static func _draw_biped_animated_sprite(
+	c: CanvasItem,
+	tex: Texture2D,
+	feet: Vector2,
+	height: float,
+	stride_phase: float,
+	stride_amp: float,
+	lift_amp: float,
+	torso_rot: float,
+	flip_h: bool,
+	modulate: Color = Color.WHITE
+) -> void:
+	if not tex:
+		return
+	var tw: float = float(tex.get_width())
+	var th: float = float(tex.get_height())
+	if tw <= 1.0 or th <= 1.0:
+		return
+	var w: float = height * (tw / th)
+	var sx: float = -1.0 if flip_h else 1.0
+	var s_wave: float = sin(stride_phase)
+	var c_wave: float = absf(cos(stride_phase))
+	var hip_y: float = feet.y - height * 0.45 - c_wave * lift_amp * 0.35
+
+	# Regioni UV dello sprite 3D: Gamba Sinistra, Gamba Destra e Busto Superiore
+	var src_l_leg := Rect2(0.0, th * 0.52, tw * 0.50, th * 0.48)
+	var src_r_leg := Rect2(tw * 0.50, th * 0.52, tw * 0.50, th * 0.48)
+	var src_upper := Rect2(0.0, 0.0, tw, th * 0.58)
+
+	var leg_w: float = w * 0.50
+	var leg_h: float = height * 0.48
+	var upper_h: float = height * 0.58
+
+	var l_lift: float = -maxf(0.0, s_wave) * lift_amp
+	var r_lift: float = -maxf(0.0, -s_wave) * lift_amp
+	var l_rot: float = s_wave * stride_amp
+	var r_rot: float = -s_wave * stride_amp
+
+	var l_hip := Vector2(feet.x - sx * w * 0.16, hip_y + l_lift)
+	var r_hip := Vector2(feet.x + sx * w * 0.16, hip_y + r_lift)
+	var l_mod := modulate if s_wave >= 0.0 else Color(modulate.r * 0.82, modulate.g * 0.84, modulate.b * 0.88, modulate.a)
+	var r_mod := modulate if s_wave <= 0.0 else Color(modulate.r * 0.82, modulate.g * 0.84, modulate.b * 0.88, modulate.a)
+
+	# Disegna prima la gamba arretrata e poi quella avanzata per corretta profondità
+	if s_wave >= 0.0:
+		c.draw_set_transform(r_hip, r_rot, Vector2(sx, 1.0))
+		c.draw_texture_rect_region(tex, Rect2(Vector2(-leg_w * 0.35, -leg_h * 0.08), Vector2(leg_w, leg_h)), src_r_leg, r_mod)
+		c.draw_set_transform(l_hip, l_rot, Vector2(sx, 1.0))
+		c.draw_texture_rect_region(tex, Rect2(Vector2(-leg_w * 0.65, -leg_h * 0.08), Vector2(leg_w, leg_h)), src_l_leg, l_mod)
+	else:
+		c.draw_set_transform(l_hip, l_rot, Vector2(sx, 1.0))
+		c.draw_texture_rect_region(tex, Rect2(Vector2(-leg_w * 0.65, -leg_h * 0.08), Vector2(leg_w, leg_h)), src_l_leg, l_mod)
+		c.draw_set_transform(r_hip, r_rot, Vector2(sx, 1.0))
+		c.draw_texture_rect_region(tex, Rect2(Vector2(-leg_w * 0.35, -leg_h * 0.08), Vector2(leg_w, leg_h)), src_r_leg, r_mod)
+
+	# Busto + Testa con oscillazione dinamica e respirazione corazzata
+	var waist_pos := Vector2(feet.x, hip_y + height * 0.05)
+	c.draw_set_transform(waist_pos, torso_rot, Vector2(sx, 1.0))
+	c.draw_texture_rect_region(tex, Rect2(Vector2(-w * 0.50, -upper_h * 0.92), Vector2(w, upper_h)), src_upper, modulate)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 static func _get_world_profile(world_id: String) -> Dictionary:
 	match world_id:
 		"world_1":
@@ -87,7 +152,7 @@ static func _draw_elite_crown(c: CanvasItem, feet: Vector2, top_y: float, radius
 
 
 # ==============================================================================
-# 1. EROE: CYBER-RONIN EXO-SLAYER 3D CON GAMBE INDIPENDENTI E BRACCIA IK
+# 1. EROE: CYBER-RONIN EXO-SLAYER 3D CON GAMBE A 2 SNODI E IMPUGNATURA REALISTICA
 # ==============================================================================
 static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving: bool, is_shooting: bool, aim_angle: float, move_vec: Vector2 = Vector2.ZERO, body_h: float = 68.0) -> void:
 	var aura := Global.get_player_accent_color()
@@ -96,9 +161,9 @@ static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving
 	var k: float = body_h / 68.0
 
 	var pose: String = "side"
-	if sin_a < -0.45:
+	if sin_a < -0.48:
 		pose = "back"
-	elif sin_a > 0.55:
+	elif sin_a > 0.58:
 		pose = "front"
 	var face_left: bool = cos_a < -0.05
 
@@ -107,14 +172,14 @@ static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving
 		mv = Vector2(cos_a, sin_a)
 	var move_ratio: float = clampf(mv.length(), 0.0, 1.0) if is_moving else 0.0
 
-	# Locomozione naturale a 2 gambe indipendenti (senza shear/skew artificiale)
-	var stride_phase: float = anim_t * 13.5
+	# Ciclo di corsa biomeccanico a 2 fasi (anca + ginocchio)
+	var stride_phase: float = anim_t * 12.8
 	var stride_s: float = sin(stride_phase) * move_ratio
 	var stride_c: float = absf(cos(stride_phase)) * move_ratio
-	var bob: float = (-stride_c * 3.2 + sin(anim_t * 3.2) * (1.0 - move_ratio) * 1.1) * k
+	var bob: float = (-stride_c * 2.8 + sin(anim_t * 3.0) * (1.0 - move_ratio) * 1.0) * k
 	var recoil_phase: float = fmod(anim_t * 11.5, 1.0) if is_shooting else 1.0
 	var recoil_kick: float = clampf(1.0 - recoil_phase * 2.6, 0.0, 1.0) if is_shooting else 0.0
-	var body_shift := Vector2(mv.x * 2.0 * k, 0.0) - Vector2(cos_a, 0.0) * (1.8 * recoil_kick * k)
+	var body_shift := Vector2(mv.x * 1.8 * k, 0.0) - Vector2(cos_a, 0.0) * (1.6 * recoil_kick * k)
 	var feet := Vector2(body_shift.x, 18.0 * k)
 
 	# Ombra dinamica, anello direzionale a terra e freccia di mira
@@ -132,16 +197,37 @@ static func draw_hero(c: CanvasItem, weapon_id: String, anim_t: float, is_moving
 	if is_moving:
 		for t_i in range(3):
 			var trail_off := -Vector2(mv.x, mv.y * 0.65) * (10.0 + float(t_i) * 8.0) * k
-			c.draw_circle(Vector2(0, feet.y - 3.0) + trail_off, (4.8 - float(t_i) * 1.3) * k, Color(aura.r, aura.g, aura.b, 0.38 - float(t_i) * 0.10))
+			c.draw_circle(Vector2(0, feet.y - 3.0) + trail_off, (4.4 - float(t_i) * 1.2) * k, Color(aura.r, aura.g, aura.b, 0.35 - float(t_i) * 0.09))
 
 	# Mirando a Nord l'arma è impugnata davanti al petto -> dietro la schiena rispetto alla camera
 	if pose == "back":
 		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura)
 
-	_draw_hero_articulated_body(c, pose, face_left, feet, body_h, bob, stride_s, move_ratio, mv, k, aura, anim_t)
+	_draw_hero_articulated_body(c, pose, face_left, feet, body_h, bob, stride_phase, stride_s, move_ratio, mv, k, aura, anim_t)
 
 	if pose != "back":
 		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura)
+
+
+static func _draw_hero_2joint_leg(
+	c: CanvasItem,
+	thigh_tex: Texture2D,
+	shin_tex: Texture2D,
+	hip_pos: Vector2,
+	thigh_rot: float,
+	shin_rot: float,
+	thigh_w: float,
+	thigh_h: float,
+	shin_w: float,
+	shin_h: float,
+	flip_h: bool,
+	modulate: Color
+) -> void:
+	# 1. Coscia (Anca -> Ginocchio)
+	_draw_part(c, thigh_tex, hip_pos, thigh_rot, Rect2(Vector2(-thigh_w * 0.50, -thigh_h * 0.14), Vector2(thigh_w, thigh_h)), flip_h, modulate)
+	# 2. Posizione del ginocchio articolato e Stinco + Stivale (Ginocchio -> Piede)
+	var knee_pos: Vector2 = hip_pos + Vector2(0.0, thigh_h * 0.74).rotated(thigh_rot)
+	_draw_part(c, shin_tex, knee_pos, shin_rot, Rect2(Vector2(-shin_w * 0.50, -shin_h * 0.14), Vector2(shin_w, shin_h)), flip_h, modulate)
 
 
 static func _draw_hero_articulated_body(
@@ -149,8 +235,9 @@ static func _draw_hero_articulated_body(
 	pose: String,
 	face_left: bool,
 	feet: Vector2,
-	body_h: float,
+	_body_h: float,
 	bob: float,
+	stride_phase: float,
 	stride_s: float,
 	move_ratio: float,
 	mv: Vector2,
@@ -159,67 +246,88 @@ static func _draw_hero_articulated_body(
 	anim_t: float
 ) -> void:
 	var upper_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_upper_" + pose + ".png")
-	var leg_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_leg_" + pose + ".png")
-	if not upper_tex or not leg_tex:
+	var thigh_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_thigh_" + pose + ".png")
+	var shin_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_shin_" + pose + ".png")
+	if not upper_tex or not thigh_tex or not shin_tex:
 		return
 
-	var hip_y: float = feet.y - 28.0 * k + bob
+	var hip_y: float = feet.y - 28.5 * k + bob
 	var face_sign: float = -1.0 if face_left else 1.0
 
 	if pose == "side":
-		# 2 Gambe 3D indipendenti in vista laterale: oscillazione opposta + sollevamento ginocchio
-		var leg_w: float = 21.0 * k
-		var leg_h: float = 34.0 * k
-		var rear_rot: float = -stride_s * 0.46
-		var front_rot: float = stride_s * 0.46
-		var rear_lift: float = -maxf(0.0, -stride_s) * 5.8 * k
-		var front_lift: float = -maxf(0.0, stride_s) * 5.8 * k
+		# Locomozione biomeccanica laterale a 2 snodi (Anca + Ginocchio che flette sempre all'indietro)
+		var thigh_w: float = 17.5 * k
+		var thigh_h: float = 18.5 * k
+		var shin_w: float = 16.5 * k
+		var shin_h: float = 19.5 * k
 
-		var rear_hip := Vector2(feet.x - face_sign * 2.5 * k, hip_y + rear_lift)
-		var front_hip := Vector2(feet.x + face_sign * 2.0 * k, hip_y + front_lift)
+		# Fase gamba anteriore (stride_phase) e gamba posteriore (stride_phase + PI)
+		var f_sin: float = sin(stride_phase) * move_ratio
+		var f_cos: float = cos(stride_phase) * move_ratio
+		var r_sin: float = -f_sin
+		var r_cos: float = -f_cos
 
-		# Gamba posteriore (leggermente ombreggiata per profondità 3D)
-		_draw_part(c, leg_tex, rear_hip, rear_rot, Rect2(Vector2(-leg_w * 0.50, -leg_h * 0.12), Vector2(leg_w, leg_h)), face_left, Color(0.74, 0.78, 0.86, 1.0))
-		# Gamba anteriore
-		_draw_part(c, leg_tex, front_hip, front_rot, Rect2(Vector2(-leg_w * 0.50, -leg_h * 0.12), Vector2(leg_w, leg_h)), face_left, Color.WHITE)
+		# In Godot 2D: Vector2(0, 1).rotated(rot) ha x = -sin(rot).
+		# Quindi per portare la coscia in avanti (nella direzione face_sign), thigh_rot ha segno -face_sign * f_sin.
+		# Il ginocchio umano si piega SEMPRE all'indietro (+face_sign * knee_bend).
+		var f_thigh_rot: float = -f_sin * 0.48 * face_sign
+		var f_knee_bend: float = (0.08 + maxf(0.0, -f_cos) * 0.58) * move_ratio
+		var f_shin_rot: float = f_thigh_rot + f_knee_bend * face_sign
 
-		# Busto + Casco 3D con inclinazione dinamica in avanti durante la corsa
-		var uw: float = 48.0 * k
-		var uh: float = 50.0 * k
-		var lean_rot: float = clampf(mv.x * 0.13, -0.14, 0.14) if move_ratio > 0.05 else 0.0
-		var waist_pivot := Vector2(feet.x, hip_y + 3.5 * k)
-		_draw_part(c, upper_tex, waist_pivot, lean_rot, Rect2(Vector2(-uw * 0.48, -uh * 0.86), Vector2(uw, uh)), face_left, Color.WHITE)
+		var r_thigh_rot: float = -r_sin * 0.48 * face_sign
+		var r_knee_bend: float = (0.08 + maxf(0.0, -r_cos) * 0.58) * move_ratio
+		var r_shin_rot: float = r_thigh_rot + r_knee_bend * face_sign
+
+		var rear_hip := Vector2(feet.x - face_sign * 2.8 * k, hip_y - maxf(0.0, r_sin) * 2.5 * k)
+		var front_hip := Vector2(feet.x + face_sign * 2.2 * k, hip_y - maxf(0.0, f_sin) * 2.5 * k)
+
+		# 1. Gamba posteriore (ombreggiata per profondità 3D)
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, rear_hip, r_thigh_rot, r_shin_rot, thigh_w, thigh_h, shin_w, shin_h, face_left, Color(0.72, 0.76, 0.86, 1.0))
+		# 2. Gamba anteriore
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, front_hip, f_thigh_rot, f_shin_rot, thigh_w, thigh_h, shin_w, shin_h, face_left, Color.WHITE)
+
+		# 3. Busto + Casco 3D (tagliato esattamente alla cintura, senza cosce statiche dietro)
+		var uw: float = 44.0 * k
+		var uh: float = 46.0 * k
+		var lean_rot: float = clampf(mv.x * 0.11, -0.12, 0.12) if move_ratio > 0.05 else sin(anim_t * 2.5) * 0.015
+		var waist_pivot := Vector2(feet.x, hip_y + 3.0 * k)
+		_draw_part(c, upper_tex, waist_pivot, lean_rot, Rect2(Vector2(-uw * 0.48, -uh * 0.90), Vector2(uw, uh)), face_left, Color.WHITE)
 	else:
-		# Vista Frontale / Spalle: 2 gambe 3D simmetriche che alternano passo verticale e scala prospettica
-		var leg_w: float = 19.0 * k
-		var leg_h: float = 34.0 * k
-		var l_lift: float = -maxf(0.0, stride_s) * 7.5 * k
-		var r_lift: float = -maxf(0.0, -stride_s) * 7.5 * k
-		var l_scale: float = 1.0 + stride_s * 0.08
-		var r_scale: float = 1.0 - stride_s * 0.08
-		var l_rot: float = stride_s * 0.08
-		var r_rot: float = stride_s * 0.08
+		# Vista Frontale / Spalle: 2 gambe a 2 snodi con sollevamento ginocchio e passo prospettico
+		var thigh_w: float = 16.5 * k
+		var thigh_h: float = 18.0 * k
+		var shin_w: float = 15.5 * k
+		var shin_h: float = 19.0 * k
 
-		var hip_l := Vector2(feet.x - 8.5 * k, hip_y + l_lift)
-		var hip_r := Vector2(feet.x + 8.5 * k, hip_y + r_lift)
-		var l_mod := Color.WHITE if stride_s >= 0.0 else Color(0.80, 0.84, 0.90, 1.0)
-		var r_mod := Color.WHITE if stride_s <= 0.0 else Color(0.80, 0.84, 0.90, 1.0)
+		var l_lift: float = -maxf(0.0, stride_s) * 5.5 * k
+		var r_lift: float = -maxf(0.0, -stride_s) * 5.5 * k
+		var l_scale: float = 1.0 + stride_s * 0.07
+		var r_scale: float = 1.0 - stride_s * 0.07
+		var l_thigh_rot: float = stride_s * 0.08
+		var r_thigh_rot: float = stride_s * 0.08
+		var l_shin_rot: float = -stride_s * 0.05
+		var r_shin_rot: float = -stride_s * 0.05
 
-		_draw_part(c, leg_tex, hip_l, l_rot, Rect2(Vector2(-leg_w * 0.52 * l_scale, -leg_h * 0.10 * l_scale), Vector2(leg_w * l_scale, leg_h * l_scale)), false, l_mod)
-		_draw_part(c, leg_tex, hip_r, r_rot, Rect2(Vector2(-leg_w * 0.52 * r_scale, -leg_h * 0.10 * r_scale), Vector2(leg_w * r_scale, leg_h * r_scale)), true, r_mod)
+		var hip_l := Vector2(feet.x - 8.2 * k, hip_y + l_lift)
+		var hip_r := Vector2(feet.x + 8.2 * k, hip_y + r_lift)
+		var l_mod := Color.WHITE if stride_s >= 0.0 else Color(0.78, 0.82, 0.90, 1.0)
+		var r_mod := Color.WHITE if stride_s <= 0.0 else Color(0.78, 0.82, 0.90, 1.0)
 
-		# Busto + Casco 3D con leggero rollio di bilanciamento
-		var uw: float = 48.0 * k
-		var uh: float = 50.0 * k
-		var sway_rot: float = clampf(mv.x * 0.08, -0.09, 0.09) - stride_s * 0.04
-		var waist_pivot := Vector2(feet.x, hip_y + 3.5 * k)
-		_draw_part(c, upper_tex, waist_pivot, sway_rot, Rect2(Vector2(-uw * 0.50, -uh * 0.86), Vector2(uw, uh)), false, Color.WHITE)
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, hip_l, l_thigh_rot, l_shin_rot, thigh_w * l_scale, thigh_h * l_scale, shin_w * l_scale, shin_h * l_scale, false, l_mod)
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, hip_r, r_thigh_rot, r_shin_rot, thigh_w * r_scale, thigh_h * r_scale, shin_w * r_scale, shin_h * r_scale, true, r_mod)
+
+		# Busto + Casco 3D con bilanciamento spalle
+		var uw: float = 46.0 * k
+		var uh: float = 46.0 * k
+		var sway_rot: float = clampf(mv.x * 0.07, -0.08, 0.08) - stride_s * 0.035
+		var waist_pivot := Vector2(feet.x, hip_y + 3.0 * k)
+		_draw_part(c, upper_tex, waist_pivot, sway_rot, Rect2(Vector2(-uw * 0.50, -uh * 0.90), Vector2(uw, uh)), false, Color.WHITE)
 
 	# Dettaglio visiera luminosa o propulsori dorsali
 	if pose != "back":
-		var head_p := Vector2(feet.x + (-1.0 if face_left else 1.0) * (2.5 * k if pose == "side" else 0.0), hip_y - 31.0 * k)
-		c.draw_circle(head_p, 5.5 * k, Color(aura.r, aura.g, aura.b, 0.26))
-		c.draw_circle(head_p, 2.2 * k, Color(1, 1, 1, 0.55))
+		var head_p := Vector2(feet.x + face_sign * (2.5 * k if pose == "side" else 0.0), hip_y - 31.0 * k)
+		c.draw_circle(head_p, 5.2 * k, Color(aura.r, aura.g, aura.b, 0.24))
+		c.draw_circle(head_p, 2.0 * k, Color(1, 1, 1, 0.52))
 	else:
 		var back_p := Vector2(feet.x, hip_y - 16.0 * k)
 		var jet_r: float = ((3.8 + sin(anim_t * 26.0) * 1.1) if move_ratio > 0.1 else 2.2) * k
@@ -228,31 +336,51 @@ static func _draw_hero_articulated_body(
 
 
 static func _draw_arm_limb(c: CanvasItem, shoulder: Vector2, elbow: Vector2, hand: Vector2, k: float, aura: Color, is_rear: bool) -> void:
-	var shade: float = 0.72 if is_rear else 1.0
-	var dark_out := Color(0.04, 0.05, 0.09, 0.98)
-	var armor_col := Color(0.18 * shade, 0.22 * shade, 0.30 * shade, 1.0)
-	var hi_col := Color(0.36 * shade, 0.42 * shade, 0.54 * shade, 1.0)
-	var neon_col := Color(aura.r * shade, aura.g * shade, aura.b * shade, 0.95)
+	var shade: float = 0.74 if is_rear else 1.0
+	var mod := Color(shade, shade, minf(1.0, shade * 1.04), 1.0)
+	var dark_out := Color(0.05, 0.07, 0.12, 0.96)
+	var armor_col := Color(0.24 * shade, 0.29 * shade, 0.38 * shade, 1.0)
+	var hi_col := Color(0.48 * shade, 0.56 * shade, 0.68 * shade, 1.0)
+	var neon_col := Color(aura.r * shade, aura.g * shade, aura.b * shade, 0.92)
 
-	# Omero corazzato (Spalla -> Gomito)
-	c.draw_line(shoulder, elbow, dark_out, 8.8 * k)
-	c.draw_line(shoulder, elbow, armor_col, 5.6 * k)
-	c.draw_line(shoulder.lerp(elbow, 0.2), shoulder.lerp(elbow, 0.8), hi_col, 2.2 * k)
+	var u_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_arm_upper.png")
+	var f_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_arm_forearm.png")
+
+	# 1. Omero corazzato 3D (Spalla -> Gomito)
+	var u_vec: Vector2 = elbow - shoulder
+	var u_len: float = maxf(4.0 * k, u_vec.length())
+	var u_rot: float = u_vec.angle() - PI * 0.5
+	if u_tex:
+		var uw: float = 9.5 * k
+		_draw_part(c, u_tex, shoulder, u_rot, Rect2(Vector2(-uw * 0.5, -1.5 * k), Vector2(uw, u_len + 3.0 * k)), false, mod)
+	else:
+		c.draw_line(shoulder, elbow, dark_out, 8.4 * k)
+		c.draw_line(shoulder, elbow, armor_col, 5.4 * k)
+		c.draw_line(shoulder.lerp(elbow, 0.2), shoulder.lerp(elbow, 0.8), hi_col, 2.2 * k)
 
 	# Snodo cibernetico del gomito
-	c.draw_circle(elbow, 4.2 * k, dark_out)
-	c.draw_circle(elbow, 2.8 * k, armor_col)
-	c.draw_circle(elbow, 1.4 * k, neon_col)
+	c.draw_circle(elbow, 3.8 * k, dark_out)
+	c.draw_circle(elbow, 2.5 * k, armor_col)
+	c.draw_circle(elbow, 1.2 * k, neon_col)
 
-	# Avambraccio corazzato (Gomito -> Mano sull'impugnatura)
-	c.draw_line(elbow, hand, dark_out, 8.2 * k)
-	c.draw_line(elbow, hand, armor_col, 5.2 * k)
-	c.draw_line(elbow.lerp(hand, 0.18), elbow.lerp(hand, 0.85), neon_col, 1.9 * k)
+	# 2. Avambraccio corazzato 3D (Gomito -> Mano)
+	var f_vec: Vector2 = hand - elbow
+	var f_len: float = maxf(4.0 * k, f_vec.length())
+	var f_rot: float = f_vec.angle() - PI * 0.5
+	if f_tex:
+		var fw: float = 8.8 * k
+		_draw_part(c, f_tex, elbow, f_rot, Rect2(Vector2(-fw * 0.5, -1.5 * k), Vector2(fw, f_len + 2.5 * k)), false, mod)
+	else:
+		c.draw_line(elbow, hand, dark_out, 7.8 * k)
+		c.draw_line(elbow, hand, armor_col, 4.8 * k)
+		c.draw_line(elbow.lerp(hand, 0.2), elbow.lerp(hand, 0.85), neon_col, 1.8 * k)
 
-	# Guanto d'arme chiuso sul calcio dell'arma
-	c.draw_circle(hand, 4.4 * k, dark_out)
-	c.draw_circle(hand, 3.0 * k, hi_col)
-	c.draw_circle(hand, 1.5 * k, neon_col)
+
+static func _draw_arm_gauntlet(c: CanvasItem, hand: Vector2, k: float, aura: Color, is_rear: bool) -> void:
+	var shade: float = 0.78 if is_rear else 1.0
+	c.draw_circle(hand, 4.2 * k, Color(0.05, 0.07, 0.12, 0.98))
+	c.draw_circle(hand, 2.9 * k, Color(0.42 * shade, 0.50 * shade, 0.62 * shade, 1.0))
+	c.draw_circle(hand, 1.4 * k, Color(aura.r * shade, aura.g * shade, aura.b * shade, 0.95))
 
 
 static func _draw_hero_weapon_and_arms(
@@ -270,99 +398,108 @@ static func _draw_hero_weapon_and_arms(
 	aura: Color
 ) -> void:
 	var dir := Vector2.from_angle(aim_angle)
-	var down_sign: float = -1.0 if face_left else 1.0
+	var face_sign: float = -1.0 if face_left else 1.0
 	var is_melee: bool = (weapon_id == "katana" or weapon_id == "scythe")
-	var is_one_handed: bool = (weapon_id == "pistol_base" or weapon_id == "homing_wand")
+	var is_one_handed: bool = (weapon_id == "pistol_base")
 
-	var chest_center := Vector2(feet.x, feet.y - 45.0 * k + bob)
-	var front_shoulder: Vector2 = chest_center + Vector2((-1.0 if not face_left else 1.0) * 3.0 * k, 1.0 * k)
-	var rear_shoulder: Vector2 = chest_center + Vector2((1.0 if not face_left else -1.0) * 8.0 * k, -1.0 * k)
+	# Posizione naturale delle spalle sotto gli spallacci Samurai del busto 3D
+	var chest_center := Vector2(feet.x, feet.y - 44.0 * k + bob)
+	var front_shoulder := chest_center + Vector2(-face_sign * 6.5 * k, -1.0 * k)
+	var rear_shoulder := chest_center + Vector2(face_sign * 7.5 * k, -1.5 * k)
 	if pose == "front" or pose == "back":
 		var s_sign: float = 1.0 if dir.x >= 0.0 else -1.0
-		front_shoulder = chest_center + Vector2(-s_sign * 11.5 * k, 1.0 * k)
-		rear_shoulder = chest_center + Vector2(s_sign * 11.5 * k, 0.5 * k)
+		front_shoulder = chest_center + Vector2(-s_sign * 11.0 * k, -0.5 * k)
+		rear_shoulder = chest_center + Vector2(s_sign * 11.0 * k, -0.5 * k)
 
-	# Angolo effettivo dell'arma: rinculo balistico o fendente dinamico per Katana/Falce
+	# Orientamento realistico dell'arma:
+	# - Armi da fuoco: tenute all'altezza del petto/fianco con calcio appoggiato alla spalla/petto
+	# - Katana / Falce: tenute in guardia diagonale pronta al taglio quando non colpiscono,
+	#   e animate con un ampio fendente ad arco quando attaccano
 	var eff_angle: float = aim_angle
-	var push_back: float = recoil_kick * 5.2 * k
-	if is_melee and is_shooting:
-		var slash_wave: float = sin(anim_t * 14.0)
-		eff_angle = aim_angle + slash_wave * 1.15 * down_sign
-		push_back = -absf(slash_wave) * 6.0 * k
+	var push_back: float = recoil_kick * 4.5 * k
+	if is_melee:
+		if is_shooting:
+			var slash_wave: float = sin(anim_t * 15.0)
+			eff_angle = aim_angle + slash_wave * 1.18 * face_sign
+			push_back = -absf(slash_wave) * 5.0 * k
+		else:
+			eff_angle = aim_angle - 0.52 * face_sign + sin(anim_t * 3.2) * 0.05
 
 	var w_dir := Vector2.from_angle(eff_angle)
-	var w_perp := Vector2(-w_dir.y, w_dir.x) * down_sign
+	# Vettore "verso il basso" rispetto alla gravità per piegare i gomiti in modo naturale
+	var gravity_down := Vector2(0.0, 1.0)
 
-	var grip_dist: float = (13.5 if is_one_handed else (12.5 if is_melee else 13.0)) * k
-	var grip_pos: Vector2 = chest_center + w_dir * (grip_dist - push_back) + Vector2(0.0, 2.5 * k)
-	var foregrip_pos: Vector2 = grip_pos + w_dir * ((7.5 if is_melee else 10.5) * k) + w_perp * (1.2 * k)
+	# Punto d'impugnatura (grip_pos) raccolto vicino al busto così il calcio resta contro la spalla
+	var grip_dist: float = (9.5 if is_one_handed else (8.0 if is_melee else 6.5)) * k
+	var grip_pos: Vector2 = chest_center + Vector2(face_sign * 3.0 * k, 5.5 * k) + w_dir * (grip_dist - push_back)
+	var foregrip_pos: Vector2 = grip_pos + w_dir * ((6.5 if is_melee else 11.5) * k) + Vector2(0.0, 1.0 * k)
 
-	var rear_elbow: Vector2 = rear_shoulder.lerp(foregrip_pos, 0.52) + w_perp * (5.8 * k)
-	var front_elbow: Vector2 = front_shoulder.lerp(grip_pos, 0.50) + w_perp * (7.5 * k)
+	# I gomiti piegano naturalmente verso il basso/fianco, mai sopra la canna dell'arma
+	var rear_elbow: Vector2 = rear_shoulder.lerp(foregrip_pos, 0.50) + gravity_down * (6.5 * k) + Vector2(face_sign * 2.0 * k, 0.0)
+	var front_elbow: Vector2 = front_shoulder.lerp(grip_pos, 0.48) + gravity_down * (8.5 * k) - Vector2(face_sign * 3.0 * k, 0.0)
 
-	# 1. Braccio di supporto posteriore (dietro l'arma)
+	# 1. Braccio posteriore e Braccio anteriore disegnati PRIMA del corpo dell'arma
+	#    così gli avambracci sostengono l'arma da sotto/dietro senza mai coprire la canna!
 	if not is_one_handed:
 		_draw_arm_limb(c, rear_shoulder, rear_elbow, foregrip_pos, k, aura, true)
 	elif pose == "front" or pose == "back":
-		var off_hand := rear_shoulder + Vector2((4.0 if dir.x >= 0.0 else -4.0) * k, 12.0 * k)
-		var off_elbow := rear_shoulder.lerp(off_hand, 0.5) + Vector2((2.5 if dir.x >= 0.0 else -2.5) * k, 2.0 * k)
+		var off_hand := rear_shoulder + Vector2((4.0 if dir.x >= 0.0 else -4.0) * k, 11.5 * k)
+		var off_elbow := rear_shoulder.lerp(off_hand, 0.5) + Vector2((2.5 if dir.x >= 0.0 else -2.5) * k, 2.5 * k)
 		_draw_arm_limb(c, rear_shoulder, off_elbow, off_hand, k, aura, true)
 
-	# 2. Arma 3D ancorata esattamente sul calcio (grip_pos) e orientata verso il bersaglio
+	_draw_arm_limb(c, front_shoulder, front_elbow, grip_pos, k, aura, false)
+
+	# 2. Modello 3D dell'arma ancorato esattamente sul calcio/impugnatura (grip_pos)
 	var wep_tex := CyberTheme.get_item_model_texture(weapon_id, "ARMA")
 	if wep_tex:
-		var draw_len: float = 44.0 * k
-		var grip_uv := Vector2(0.28, 0.52)
+		var draw_len: float = 48.0 * k
+		var grip_uv := Vector2(0.24, 0.52)
 		match weapon_id:
 			"pistol_base":
-				draw_len = 34.0 * k
-				grip_uv = Vector2(0.26, 0.54)
+				draw_len = 32.0 * k
+				grip_uv = Vector2(0.24, 0.56)
 			"smg":
 				draw_len = 40.0 * k
-				grip_uv = Vector2(0.32, 0.52)
+				grip_uv = Vector2(0.30, 0.55)
 			"shotgun":
-				draw_len = 46.0 * k
-				grip_uv = Vector2(0.26, 0.52)
-			"laser_rifle":
 				draw_len = 50.0 * k
-				grip_uv = Vector2(0.28, 0.50)
+				grip_uv = Vector2(0.22, 0.54)
+			"laser_rifle":
+				draw_len = 52.0 * k
+				grip_uv = Vector2(0.28, 0.52)
 			"plasma_cannon":
-				draw_len = 48.0 * k
-				grip_uv = Vector2(0.30, 0.52)
+				draw_len = 50.0 * k
+				grip_uv = Vector2(0.28, 0.54)
 			"homing_wand":
-				draw_len = 44.0 * k
-				grip_uv = Vector2(0.26, 0.50)
+				draw_len = 48.0 * k
+				grip_uv = Vector2(0.27, 0.54)
 			"katana":
-				draw_len = 56.0 * k
-				grip_uv = Vector2(0.20, 0.52)
-			"scythe":
 				draw_len = 58.0 * k
-				grip_uv = Vector2(0.24, 0.52)
+				grip_uv = Vector2(0.18, 0.50)
+			"scythe":
+				draw_len = 60.0 * k
+				grip_uv = Vector2(0.24, 0.50)
 
 		var sy: float = -1.0 if face_left else 1.0
 		c.draw_set_transform_matrix(Transform2D(eff_angle, Vector2(1.0, sy), 0.0, grip_pos))
 		if is_shooting and not is_melee:
-			c.draw_line(Vector2(draw_len * 0.65, 0.0), Vector2(draw_len * 1.85, 0.0), Color(1.0, 0.15, 0.25, 0.42), 1.5)
+			c.draw_line(Vector2(draw_len * 0.65, -1.5 * k), Vector2(draw_len * 1.85, -1.5 * k), Color(1.0, 0.15, 0.25, 0.40), 1.5)
 		var w_rect := Rect2(-Vector2(draw_len * grip_uv.x, draw_len * grip_uv.y), Vector2(draw_len, draw_len))
 		c.draw_texture_rect(wep_tex, w_rect, false, Color.WHITE)
 
-		if is_shooting and recoil_kick > 0.25:
+		if is_shooting and recoil_kick > 0.22:
 			if is_melee:
-				c.draw_arc(Vector2(draw_len * 0.15, 0.0), draw_len * 0.65, -0.60, 0.60, 14, Color(aura.r, aura.g, aura.b, 0.65 * recoil_kick), 4.0 * k)
+				c.draw_arc(Vector2(draw_len * 0.15, 0.0), draw_len * 0.68, -0.65, 0.65, 16, Color(aura.r, aura.g, aura.b, 0.70 * recoil_kick), 4.2 * k)
 			else:
-				var muz := Vector2(draw_len * (1.0 - grip_uv.x) + 2.5 * k, -1.5 * k)
-				c.draw_circle(muz, 6.8 * k * recoil_kick, Color(aura.r, aura.g, aura.b, 0.80))
-				c.draw_circle(muz, 3.2 * k * recoil_kick, Color.WHITE)
+				var muz := Vector2(draw_len * (1.0 - grip_uv.x) + 2.0 * k, -2.0 * k)
+				c.draw_circle(muz, 6.5 * k * recoil_kick, Color(aura.r, aura.g, aura.b, 0.82))
+				c.draw_circle(muz, 3.0 * k * recoil_kick, Color.WHITE)
 		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	# 3. Braccio primario anteriore + Spallaccio Samurai 3D sulla spalla
-	_draw_arm_limb(c, front_shoulder, front_elbow, grip_pos, k, aura, false)
-	var pauldron_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_pauldron_3d.png")
-	if pauldron_tex:
-		var p_rot: float = clampf((front_elbow - front_shoulder).angle() - PI * 0.5, -0.40, 0.40)
-		var pw: float = 18.0 * k
-		var ph: float = 20.0 * k
-		_draw_part(c, pauldron_tex, front_shoulder + Vector2(0, -1.5 * k), p_rot, Rect2(Vector2(-pw * 0.5, -ph * 0.42), Vector2(pw, ph)), face_left, Color.WHITE)
+	# 3. Guanti corazzati 3D che stringono visibilmente l'impugnatura e il sottocanna
+	if not is_one_handed:
+		_draw_arm_gauntlet(c, foregrip_pos, k * 0.92, aura, true)
+	_draw_arm_gauntlet(c, grip_pos, k, aura, false)
 
 
 # ==============================================================================
@@ -420,12 +557,13 @@ static func _draw_world_enemy_addons(c: CanvasItem, style: String, center: Vecto
 
 
 # ==============================================================================
-# 3. NEMICO MELEE: MANTIS STALKER 3D CON VARIANTI BIOMA E SUPPORTO ÉLITE
+# 3. NEMICO MELEE: MANTIS STALKER 3D CON GAMBE ARTICOLATE E SUPPORTO ÉLITE
 # ==============================================================================
 static func draw_melee_enemy(c: CanvasItem, world_id: String, anim_t: float, accent: Color, aim_angle: float, is_elite: bool = false) -> void:
 	var face_left := cos(aim_angle) < 0.0
-	var scuttle := absf(sin(anim_t * 16.0)) * 2.6
-	var tilt := cos(aim_angle) * 0.08 + sin(anim_t * 16.0) * 0.04
+	var stride_phase: float = anim_t * 15.0
+	var scuttle := absf(cos(stride_phase)) * 2.5
+	var tilt := cos(aim_angle) * 0.09 + sin(stride_phase) * 0.05
 	var prof := _get_world_profile(world_id)
 	var glow: Color = prof.get("glow", accent)
 	var sec: Color = prof.get("sec", accent)
@@ -441,20 +579,20 @@ static func draw_melee_enemy(c: CanvasItem, world_id: String, anim_t: float, acc
 
 	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_melee_v2.png")
 	if tex:
-		var squash := Vector2(1.0 + scuttle * 0.012, 1.0 - scuttle * 0.012)
 		var mod := armor_mod.lerp(Color(1.25, 1.12, 0.82), 0.30) if is_elite else armor_mod
-		_draw_grounded_sprite(c, tex, Vector2(cos(aim_angle) * 2.0, 16.0 - scuttle), 52.0, tilt, not face_left, squash, mod)
+		_draw_biped_animated_sprite(c, tex, Vector2(cos(aim_angle) * 2.0, 16.0), 52.0, stride_phase, 0.24, 4.5, tilt, not face_left, mod)
 	else:
 		c.draw_circle(Vector2(0, -8), 14.0, glow)
 
 
 # ==============================================================================
-# 4. NEMICO RANGED: HOVER-WASP SNIPER DRONE 3D CON VARIANTI BIOMA E ÉLITE
+# 4. NEMICO RANGED: HOVER-WASP SNIPER DRONE 3D CON PROPULSORI E ROLLIO DINAMICO
 # ==============================================================================
 static func draw_ranged_enemy(c: CanvasItem, anim_t: float, _accent: Color, aim_angle: float, is_charging: bool, world_id: String = "world_1", is_elite: bool = false) -> void:
 	var face_left := cos(aim_angle) < 0.0
-	var hover := sin(anim_t * 3.8) * 4.5
-	var bank_rot := cos(aim_angle) * 0.10 + sin(anim_t * 2.6) * 0.06
+	var hover := sin(anim_t * 4.5) * 4.8
+	var wing_buzz := sin(anim_t * 24.0) * 0.04
+	var bank_rot := cos(aim_angle) * 0.11 + sin(anim_t * 3.2) * 0.06 + wing_buzz
 	var prof := _get_world_profile(world_id)
 	var glow: Color = prof.get("glow", _accent)
 	var sec: Color = prof.get("sec", _accent)
@@ -467,11 +605,18 @@ static func draw_ranged_enemy(c: CanvasItem, anim_t: float, _accent: Color, aim_
 		_draw_elite_crown(c, Vector2(0, 16), -42.0 + hover, 24.0, anim_t)
 
 	var body_c := Vector2(0, -16.0 + hover)
+	# Fiamme dei propulsori inferiori del drone
+	for s: float in [-1.0, 1.0]:
+		var jet_p := body_c + Vector2(s * 9.0, 12.0)
+		var flame_len: float = 6.5 + absf(sin(anim_t * 28.0 + s)) * 4.5
+		c.draw_line(jet_p, jet_p + Vector2(-cos(aim_angle) * 2.5, flame_len), Color(glow.r, glow.g, glow.b, 0.75), 3.6)
+		c.draw_circle(jet_p, 2.4, Color.WHITE)
+
 	_draw_world_enemy_addons(c, style, body_c, 22.0, glow, sec, anim_t)
 
 	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_ranged_v2.png")
 	if tex:
-		var w: float = 60.0
+		var w: float = 60.0 * (1.0 + absf(wing_buzz) * 0.4)
 		var h: float = w * float(tex.get_height()) / float(tex.get_width())
 		var mod := armor_mod.lerp(Color(1.25, 1.12, 0.82), 0.30) if is_elite else armor_mod
 		_draw_part(c, tex, body_c, bank_rot, Rect2(Vector2(-w * 0.5, -h * 0.5), Vector2(w, h)), not face_left, mod)
@@ -487,12 +632,13 @@ static func draw_ranged_enemy(c: CanvasItem, anim_t: float, _accent: Color, aim_
 
 
 # ==============================================================================
-# 5. NEMICO PESANTE: GOLIATH SIEGE JUGGERNAUT 3D CON VARIANTI BIOMA E ÉLITE
+# 5. NEMICO PESANTE: GOLIATH SIEGE JUGGERNAUT 3D CON PASSO PESANTE ARTICOLATO
 # ==============================================================================
 static func draw_heavy_enemy(c: CanvasItem, anim_t: float, charge_ratio: float, aim_angle: float, world_id: String = "world_1", is_elite: bool = false) -> void:
 	var face_left := cos(aim_angle) < 0.0
-	var stomp := absf(sin(anim_t * 5.5)) * 2.6
-	var sway := sin(anim_t * 5.5) * 0.05
+	var stride_phase: float = anim_t * 7.5
+	var stomp := absf(cos(stride_phase)) * 2.8
+	var sway := sin(stride_phase) * 0.055
 	var prof := _get_world_profile(world_id)
 	var glow: Color = prof.get("glow", Color(1.0, 0.52, 0.12))
 	var sec: Color = prof.get("sec", Color(1.0, 0.35, 0.10))
@@ -513,7 +659,7 @@ static func draw_heavy_enemy(c: CanvasItem, anim_t: float, charge_ratio: float, 
 	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_heavy_v2.png")
 	if tex:
 		var heat := Color(armor_mod.r + charge_ratio * 0.25, armor_mod.g, armor_mod.b - charge_ratio * 0.15, 1.0)
-		_draw_grounded_sprite(c, tex, Vector2(0, 22.0), 74.0 - stomp, sway, face_left, Vector2(1.0 + stomp * 0.01, 1.0), heat)
+		_draw_biped_animated_sprite(c, tex, Vector2(0, 22.0), 74.0, stride_phase, 0.18, 4.2, sway, face_left, heat)
 	else:
 		c.draw_circle(Vector2(0, -16), 22.0, glow)
 	if charge_ratio > 0.6:
@@ -523,14 +669,15 @@ static func draw_heavy_enemy(c: CanvasItem, anim_t: float, charge_ratio: float, 
 
 
 # ==============================================================================
-# 6. BOSS UNICI PER OGNI MONDO (boss_world_1.png .. boss_world_8.png)
+# 6. BOSS UNICI PER OGNI MONDO (boss_world_1.png .. boss_world_8.png) ARTICOLATI
 # ==============================================================================
 static func draw_boss(c: CanvasItem, world_id: String, anim_t: float, boss_col: Color, in_phase_2: bool, aim_angle: float) -> void:
 	var prof := _get_world_profile(world_id)
 	var active_col: Color = Color(1.0, 0.15, 0.22, 1.0) if in_phase_2 else prof.get("glow", boss_col)
 	var face_left := cos(aim_angle) < 0.0
-	var stomp := absf(sin(anim_t * (4.2 if in_phase_2 else 2.8))) * 3.0
-	var sway := sin(anim_t * (4.2 if in_phase_2 else 2.8)) * 0.04
+	var stride_phase: float = anim_t * (6.8 if in_phase_2 else 4.8)
+	var stomp := absf(cos(stride_phase)) * 3.2
+	var sway := sin(stride_phase) * 0.045
 
 	draw_ground_shadow(c, Vector2(0, 44), 54.0, 0.72)
 	draw_ground_ring(c, Vector2(0, 44), 62.0, active_col, anim_t, 3.6)
@@ -558,7 +705,7 @@ static func draw_boss(c: CanvasItem, world_id: String, anim_t: float, boss_col: 
 		var tint := Color.WHITE
 		if in_phase_2:
 			tint = Color(1.25, 0.88, 0.88, 1.0)
-		_draw_grounded_sprite(c, tex, Vector2(0, 46.0), 146.0 - stomp, sway, face_left, Vector2(1.0 + stomp * 0.006, 1.0), tint)
+		_draw_biped_animated_sprite(c, tex, Vector2(0, 46.0), 146.0, stride_phase, 0.16, 6.5, sway, face_left, tint)
 	else:
 		c.draw_circle(Vector2(0, -20), 40.0, active_col)
 

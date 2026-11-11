@@ -25,7 +25,7 @@ const TALENT_ORDER: Array[String] = [
 const TALENT_DEFS := {
 	"atk": {
 		"name": "Forza Bruta",
-		"icon": "⚔️",
+		"icon": "★",
 		"desc": "+3 ATK base a tutti i colpi",
 		"max_lvl": 15,
 		"base_cost": 90,
@@ -35,7 +35,7 @@ const TALENT_DEFS := {
 	},
 	"hp": {
 		"name": "Telaio Titanio",
-		"icon": "❤️",
+		"icon": "✦",
 		"desc": "+25 HP Massimi per livello",
 		"max_lvl": 15,
 		"base_cost": 90,
@@ -45,7 +45,7 @@ const TALENT_DEFS := {
 	},
 	"fire_rate": {
 		"name": "Canna Overclock",
-		"icon": "🔥",
+		"icon": "▲",
 		"desc": "+3% Cadenza di fuoco base",
 		"max_lvl": 10,
 		"base_cost": 120,
@@ -55,7 +55,7 @@ const TALENT_DEFS := {
 	},
 	"crit": {
 		"name": "Mirino Neurale",
-		"icon": "🎯",
+		"icon": "◆",
 		"desc": "+2% Probabilità Critico",
 		"max_lvl": 10,
 		"base_cost": 110,
@@ -65,7 +65,7 @@ const TALENT_DEFS := {
 	},
 	"crit_dmg": {
 		"name": "Impatto Letale",
-		"icon": "💥",
+		"icon": "★",
 		"desc": "+12% Danno dei Colpi Critici",
 		"max_lvl": 10,
 		"base_cost": 130,
@@ -85,7 +85,7 @@ const TALENT_DEFS := {
 	},
 	"dodge": {
 		"name": "Riflessi Olografici",
-		"icon": "💨",
+		"icon": "✦",
 		"desc": "+2% Schivata danni ostili",
 		"max_lvl": 8,
 		"base_cost": 135,
@@ -95,7 +95,7 @@ const TALENT_DEFS := {
 	},
 	"aegis": {
 		"name": "Scudo d'Ingresso",
-		"icon": "🛡️",
+		"icon": "◆",
 		"desc": "+1 Carica Scudo a inizio run",
 		"max_lvl": 3,
 		"base_cost": 260,
@@ -105,7 +105,7 @@ const TALENT_DEFS := {
 	},
 	"recovery": {
 		"name": "Nano-Riparazione",
-		"icon": "🧪",
+		"icon": "✦",
 		"desc": "Cura +4% HP tra le stanze",
 		"max_lvl": 8,
 		"base_cost": 110,
@@ -115,7 +115,7 @@ const TALENT_DEFS := {
 	},
 	"vampirism": {
 		"name": "Sifone Bio-Cyber",
-		"icon": "🩸",
+		"icon": "★",
 		"desc": "+4% chance di curare +2 HP al colpo",
 		"max_lvl": 6,
 		"base_cost": 160,
@@ -125,7 +125,7 @@ const TALENT_DEFS := {
 	},
 	"armor_pen": {
 		"name": "Proiettili al Tungsteno",
-		"icon": "🔩",
+		"icon": "▲",
 		"desc": "+6% Danno contro Boss ed Élite",
 		"max_lvl": 10,
 		"base_cost": 125,
@@ -135,7 +135,7 @@ const TALENT_DEFS := {
 	},
 	"drone_tech": {
 		"name": "Sincronia Droni",
-		"icon": "🛸",
+		"icon": "◆",
 		"desc": "+12% Danno e Cadenza Droni Pet",
 		"max_lvl": 8,
 		"base_cost": 130,
@@ -145,7 +145,7 @@ const TALENT_DEFS := {
 	},
 	"exp_boost": {
 		"name": "Sinapsi Rapide",
-		"icon": "🧠",
+		"icon": "✦",
 		"desc": "+8% EXP guadagnata in battaglia",
 		"max_lvl": 8,
 		"base_cost": 115,
@@ -155,7 +155,7 @@ const TALENT_DEFS := {
 	},
 	"gold": {
 		"name": "Algoritmo Avarizia",
-		"icon": "🪙",
+		"icon": "★",
 		"desc": "+8% Monete extra guadagnate",
 		"max_lvl": 10,
 		"base_cost": 100,
