@@ -169,27 +169,27 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
 
 [node name="MainVBox" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 8
+theme_override_constants/separation = 12
 
 [node name="TopHeaderBox" type="VBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="TopBar" type="HBoxContainer" parent="MarginContainer/MainVBox/TopHeaderBox"]
-custom_minimum_size = Vector2(0, 60)
-layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="TopBar" type="HBoxContainer" parent="MarginContainer/MainVBox/TopHeaderBox"]
+custom_minimum_size = Vector2(0, 66)
+layout_mode = 2
+theme_override_constants/separation = 10
+
 [node name="ProfileCard" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(0, 66)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
@@ -200,7 +200,7 @@ theme_override_constants/separation = 10
 alignment = 0
 
 [node name="Avatar" type="TextureRect" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar/ProfileCard/Profile"]
-custom_minimum_size = Vector2(48, 48)
+custom_minimum_size = Vector2(52, 52)
 layout_mode = 2
 size_flags_vertical = 4
 texture = ExtResource("2_avatar_tex")
@@ -216,26 +216,26 @@ text = "Operativo • Lv. 1"
 text_overrun_behavior = 3
 
 [node name="BtnCheckinTop" type="Button" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
-custom_minimum_size = Vector2(142, 56)
+custom_minimum_size = Vector2(146, 64)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 17
 text = "PREMI"
 
 [node name="BtnSettingsTop" type="Button" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
-custom_minimum_size = Vector2(60, 56)
+custom_minimum_size = Vector2(66, 64)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 22
 text = ""
 
 [node name="ResourceBar" type="HBoxContainer" parent="MarginContainer/MainVBox/TopHeaderBox"]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 10
 
 [node name="PillScrolls" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
@@ -249,7 +249,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="PillCoins" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
@@ -263,7 +263,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="PillGems" type="PanelContainer" parent="MarginContainer/MainVBox/TopHeaderBox/ResourceBar"]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_top_card")
@@ -283,12 +283,14 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_central")
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainVBox/CentralContainer"]
 layout_mode = 2
+size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="ContentVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+size_flags_vertical = 3
+theme_override_constants/separation = 14
 
 [node name="SectionTitle" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 layout_mode = 2
@@ -300,40 +302,46 @@ horizontal_alignment = 1
 [node name="HomeView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+size_flags_vertical = 3
+theme_override_constants/separation = 14
 alignment = 1
 
 [node name="WorldCard" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView"]
-custom_minimum_size = Vector2(0, 440)
+custom_minimum_size = Vector2(0, 420)
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_card")
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard"]
 layout_mode = 2
-theme_override_constants/separation = 10
+size_flags_vertical = 3
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="PreviewHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 10
 alignment = 1
 
 [node name="BtnPrevWorld" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(58, 165)
+custom_minimum_size = Vector2(64, 92)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 28
 text = "◀"
 
 [node name="PreviewIcon" type="TextureButton" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(496, 204)
+custom_minimum_size = Vector2(496, 224)
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 texture_normal = ExtResource("3_world_preview")
 ignore_texture_size = true
 stretch_mode = 5
 
 [node name="BtnNextWorld" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(58, 165)
+custom_minimum_size = Vector2(64, 92)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 28
@@ -363,19 +371,8 @@ text = "Settore industriale sotto controllo droni."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="BtnPlayHome" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
-custom_minimum_size = Vector2(530, 74)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 26
-theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
-theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
-text = "⚡ GIOCA ORA ⚡"
-
 [node name="EquippedSummaryCard" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView"]
-custom_minimum_size = Vector2(0, 240)
+custom_minimum_size = Vector2(0, 212)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_summary_card")
 
@@ -386,6 +383,17 @@ theme_override_font_sizes/font_size = 18
 text = "EQUIPAGGIATO: Pistola Base"
 horizontal_alignment = 1
 vertical_alignment = 0
+
+[node name="BtnPlayHome" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView"]
+custom_minimum_size = Vector2(640, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 27
+theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
+text = "⚡ GIOCA CAPITOLO ▶"
 
 [node name="InventoryView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 visible = false
@@ -777,9 +785,9 @@ theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 
 [node name="FooterNavBar" type="HBoxContainer" parent="MarginContainer/MainVBox"]
-custom_minimum_size = Vector2(0, 92)
+custom_minimum_size = Vector2(0, 102)
 layout_mode = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="BtnNavShop" type="PanelContainer" parent="MarginContainer/MainVBox/FooterNavBar"]

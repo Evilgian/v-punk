@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v1.5.${{ github.run_number }}"
-          VERSION_NAME="1.5.${{ github.run_number }}"
-          VERSION_CODE="${{ github.run_number }}"
+          VERSION_TAG="v2.0.${{ github.run_number }}"
+          VERSION_NAME="2.0.${{ github.run_number }}"
+          VERSION_CODE=$((100 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,25 +76,36 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v1.5.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v1.5.${{ github.run_number }}.apk
+          name: V-Punk-v2.0.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.0.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.5.${{ github.run_number }}
-          name: "⚡ V-PUNK: Rogue Protocol — Release v1.5.${{ github.run_number }}"
+          tag_name: v2.0.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.0.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### ⚡ V-PUNK: Rogue Protocol — Versione `v1.5.${{ github.run_number }}` (Android APK)
-            - **Firma Digitale Permanente (Keystore Fisso)**: Configurato il keystore crittografico permanente. Da questa release (`v1.5.${{ github.run_number }}`) in poi, tutti gli aggiornamenti futuri si installeranno direttamente sopra la versione esistente senza errori di conflitto firma!
-            - **Personaggio & Boss 3D Aggressivi & Dettagliati**: Nuovo modello Cyber-Ronin Exo-Slayer con elmo cornuto, visiera neon a V, armature a piastre metalliche e locomozione articolata; Boss Robo-Titan ridisegnato come Dreadnought mecha con teschio cornuto, fornace ardente e lanciamissili; nemici 3D potenziati (Mantis Stalker, Hover-Wasp, Goliath).
-            - **Visibilità Cristallina & Nessuna Opacità**: Rimosse le doppie vignettature scure e il bloom eccessivo che causava l'effetto "fantasma/opaco"; unità risaltate con contorni solidi ad alto contrasto e pavimento bilanciato.
-            - **24 Abilità di Livello Uniche & Varie**: Espanso l'albero perk da 8 a 24 abilità (Lame Orbitali, Scudo Energetico, Fulmini a Catena, Munizioni Smart, Fuoco a 360°, Criogenia, Vampirismo) con pesi bilanciati per evitare ripetizioni.
-            - **Logo 3D HD, Entrata Studio & Rarità Chiare**.
-            - Scarica **`V-Punk-v1.5.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android ed aprilo per installare e giocare!
+            ### V-PUNK: Rogue Protocol — Versione `v2.0.${{ github.run_number }}` (Major Overhaul Android APK)
+
+            #### 1. Nuova Interfaccia 3D Moderna & Gestione Spazi Mobile (16:9 - 21:9)
+            - **Pulsanti 3D Tattili Spessi & Smussati**: sostituite tutte le vecchie barre sottili con vere placche 3D cyber-smussate ad alto spessore, selettori segmentati unificati (`Arsenale / Officina / Fusione` e `Giornaliere / Settimanali / Mensili`) e contatori risorse in vetro scuro.
+            - **Layout Full-Screen Bilanciato**: la schermata Home si adatta all'intera altezza dello smartphone con un grande diorama 3D Settore/Boss, vetrina equipaggiamento pulita e pulsante principale `GIOCA CAPITOLO` ad alto impatto in basso; griglia Arsenale a **3 colonne** in stile RPG moderno (1 tocco per aprire scheda dettagliata, equipaggiare o potenziare).
+            - **Schermata d'Ingresso Cinematografica Full-Bleed**: nuovo poster verticale 21:9 a tutto schermo (`edge-to-edge`, zero bande nere sopra o sotto), pioggia neon animata, riflettori volumetrici e palco olografico 3D dell'Operativo.
+
+            #### 2. Corsa Atletica 3D & Impugnatura Armi Realistica
+            - **Locomozione Dinamica in Gioco**: durante lo spostamento col joystick il personaggio ruota istantaneamente nella direzione di corsa con falcata ampia a 2 snodi, sollevamento ginocchia, rimbalzo elastico e oscillazione coordinata di braccia e arma, tornando a puntare il nemico appena ci si ferma per sparare.
+            - **Rig Anatomici Dedicati**: gambe e busti separati per Mech e Boss bipedi, andatura aracnide per Mantis/Scorpioni e torrette rotanti indipendenti.
+
+            #### 3. 7 Archetipi di Nemici, 8 Boss 3D Unici & Bilanciamento Armi
+            - **Nuovi Ostili**: *Ticker Kamikaze Bot*, *Aegis Riot Enforcer* (scudo frontale direzionale), *Cyber-Wraith Assassin* e *Bio-Cryo Spitter Turret*, distribuiti progressivamente nei Mondi 1–8.
+            - **8 Boss 3D Inediti**: modelli 3D dedicati per ciascuno degli 8 mondi con telegrafi d'attacco a terra e barra Boss HUD non sovrapposta.
+            - **Armi Ribilanciate**: onda d'urto perforante da `130px` per la *Katana Cyber*, esplosione AoE da `84px` per il *Cannone al Plasma* e progressione DPS coerente con la rarità (`Comune < Raro < Epico < Leggendario`).
+
+            ---
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.0.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i tuoi salvataggi (`versionCode` incrementato con keystore permanente).
           files: |
-            build/android/V-Punk-v1.5.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.0.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

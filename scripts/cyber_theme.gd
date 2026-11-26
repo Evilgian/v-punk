@@ -142,9 +142,9 @@ static func _make_9slice_box(tex_path: String, margin_xy: int, pad_l: int, pad_r
 		return sbt
 	return make_cyber_box(COL_PANEL, COL_CYAN, 0.0, 2, 4, 8)
 
-## Pannello 3D High-DPI Vetro Scuro + Titanio Smussato (256x256, 9-slice margin=36)
-static func make_3d_panel_box(pad_h: int = 14, pad_v: int = 11, tint: Color = Color.WHITE) -> StyleBox:
-	return _make_9slice_box("res://assets/cyber_models/ui_panel_cyber_3d.png", 36, pad_h, pad_h, pad_v, pad_v + 4, tint)
+## Pannello 3D High-DPI Vetro Scuro + Titanio Smussato (256x256, 9-slice margin=32)
+static func make_3d_panel_box(pad_h: int = 16, pad_v: int = 14, tint: Color = Color.WHITE) -> StyleBox:
+	return _make_9slice_box("res://assets/cyber_models/ui_panel_cyber_3d.png", 32, pad_h, pad_h, pad_v, pad_v + 4, tint)
 
 ## Cornice Card 3D High-DPI specifica per ogni Rarità (Argento / Blu / Viola / Oro)
 static func make_rarity_card_box(rarity_str: String, pad_h: int = 12, pad_v: int = 10) -> StyleBox:
@@ -158,7 +158,59 @@ static func make_rarity_card_box(rarity_str: String, pad_h: int = 12, pad_v: int
 			file_name = "ui_card_legendary_3d.png"
 		_:
 			file_name = "ui_card_common_3d.png"
-	return _make_9slice_box("res://assets/cyber_models/" + file_name, 36, pad_h, pad_h, pad_v, pad_v + 4)
+	return _make_9slice_box("res://assets/cyber_models/" + file_name, 28, pad_h, pad_h, pad_v, pad_v + 4)
+
+## Contatore Risorse / Barra Segmentata Cyber-Glass (pulita, moderna, non "bottone sottile")
+static func make_glass_counter_box(accent: Color) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.045, 0.075, 0.155, 0.94)
+	sb.border_color = Color(accent.r, accent.g, accent.b, 0.72)
+	sb.border_width_left = 4
+	sb.border_width_top = 1
+	sb.border_width_right = 1
+	sb.border_width_bottom = 2
+	sb.corner_radius_top_left = 10
+	sb.corner_radius_top_right = 10
+	sb.corner_radius_bottom_left = 10
+	sb.corner_radius_bottom_right = 10
+	sb.content_margin_left = 10
+	sb.content_margin_right = 10
+	sb.content_margin_top = 6
+	sb.content_margin_bottom = 6
+	return sb
+
+## Stile Tab per Selettore Segmentato Unificato (ARSENALE | OFFICINA | FUSIONE, ecc.)
+static func style_segmented_tab(btn: Button, is_active: bool, accent: Color = COL_CYAN) -> void:
+	if not btn:
+		return
+	var sb := StyleBoxFlat.new()
+	if is_active:
+		sb.bg_color = Color(accent.r * 0.28 + 0.06, accent.g * 0.28 + 0.09, accent.b * 0.28 + 0.16, 0.98)
+		sb.border_color = accent
+		sb.border_width_left = 2
+		sb.border_width_top = 2
+		sb.border_width_right = 2
+		sb.border_width_bottom = 4
+	else:
+		sb.bg_color = Color(0.035, 0.055, 0.115, 0.75)
+		sb.border_color = Color(0.20, 0.30, 0.46, 0.45)
+		sb.border_width_bottom = 2
+	sb.corner_radius_top_left = 10
+	sb.corner_radius_top_right = 10
+	sb.corner_radius_bottom_left = 10
+	sb.corner_radius_bottom_right = 10
+	sb.content_margin_left = 10
+	sb.content_margin_right = 10
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 9
+	btn.add_theme_stylebox_override("normal", sb)
+	btn.add_theme_stylebox_override("hover", sb)
+	btn.add_theme_stylebox_override("pressed", sb)
+	btn.add_theme_color_override("font_color", Color.WHITE if is_active else Color(0.68, 0.78, 0.92, 0.92))
+	btn.add_theme_color_override("font_hover_color", Color.WHITE)
+	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
+	btn.add_theme_constant_override("outline_size", 4 if is_active else 3)
 
 static func make_equipped_badge_box() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
@@ -249,6 +301,9 @@ static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yello
 		btn.add_theme_constant_override("outline_size", 3)
 		return
 
+	if btn.custom_minimum_size.y >= 36 and btn.custom_minimum_size.y < 60:
+		btn.custom_minimum_size.y = 60
+
 	var base_name := "ui_btn_cyan_3d"
 	if is_primary_yellow:
 		base_name = "ui_btn_gold_3d"
@@ -266,27 +321,27 @@ static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yello
 	if tex_norm and tex_prs and tex_dis:
 		var sb_n := StyleBoxTexture.new()
 		sb_n.texture = tex_norm
-		sb_n.texture_margin_left = 28; sb_n.texture_margin_right = 28
-		sb_n.texture_margin_top = 24; sb_n.texture_margin_bottom = 28
-		sb_n.content_margin_left = 10; sb_n.content_margin_right = 10
-		sb_n.content_margin_top = 6; sb_n.content_margin_bottom = 9
+		sb_n.texture_margin_left = 34; sb_n.texture_margin_right = 34
+		sb_n.texture_margin_top = 24; sb_n.texture_margin_bottom = 32
+		sb_n.content_margin_left = 14; sb_n.content_margin_right = 14
+		sb_n.content_margin_top = 8; sb_n.content_margin_bottom = 14
 
 		var sb_h := sb_n.duplicate() as StyleBoxTexture
-		sb_h.modulate_color = Color(1.10, 1.10, 1.14, 1.0)
+		sb_h.modulate_color = Color(1.08, 1.08, 1.12, 1.0)
 
 		var sb_p := StyleBoxTexture.new()
 		sb_p.texture = tex_prs
-		sb_p.texture_margin_left = 28; sb_p.texture_margin_right = 28
-		sb_p.texture_margin_top = 26; sb_p.texture_margin_bottom = 22
-		sb_p.content_margin_left = 10; sb_p.texture_margin_right = 10
-		sb_p.content_margin_top = 8; sb_p.content_margin_bottom = 6
+		sb_p.texture_margin_left = 34; sb_p.texture_margin_right = 34
+		sb_p.texture_margin_top = 28; sb_p.texture_margin_bottom = 20
+		sb_p.content_margin_left = 14; sb_p.content_margin_right = 14
+		sb_p.content_margin_top = 12; sb_p.content_margin_bottom = 8
 
 		var sb_d := StyleBoxTexture.new()
 		sb_d.texture = tex_dis
-		sb_d.texture_margin_left = 28; sb_d.texture_margin_right = 28
-		sb_d.texture_margin_top = 25; sb_d.texture_margin_bottom = 25
-		sb_d.content_margin_left = 10; sb_d.content_margin_right = 10
-		sb_d.content_margin_top = 7; sb_d.content_margin_bottom = 7
+		sb_d.texture_margin_left = 34; sb_d.texture_margin_right = 34
+		sb_d.texture_margin_top = 24; sb_d.texture_margin_bottom = 32
+		sb_d.content_margin_left = 14; sb_d.content_margin_right = 14
+		sb_d.content_margin_top = 8; sb_d.content_margin_bottom = 14
 
 		btn.add_theme_stylebox_override("normal", sb_n)
 		btn.add_theme_stylebox_override("hover", sb_h)

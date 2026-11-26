@@ -384,19 +384,21 @@ func _physics_process(delta: float) -> void:
 	var min_y_bound: float = 96.0 if (global_position.x >= 290.0 and global_position.x <= 430.0) else 122.0
 	global_position.y = clampf(global_position.y, min_y_bound, 1232.0)
 
-	is_shooting = (velocity.length() < 10.0)
+	is_shooting = (velocity.length() < 12.0)
 
-	# L'eroe mantiene SEMPRE lo sguardo e l'arma puntati verso il nemico più vicino
-	# (sia mentre spara da fermo, sia mentre corre o schiva!), e a stanza pulita guarda il Portale a Nord.
+	# In pieno stile Archero: mentre corri col joystick, l'eroe scatta rivolto nella
+	# direzione del movimento (mostrando la vera falcata 3D laterale/frontale/dorsale!);
+	# appena ti fermi per sparare, ruota fulmineo verso il nemico più vicino!
 	var closest := get_closest_enemy()
-	if closest:
-		target_aim_angle = (closest.global_position - global_position).angle()
-	elif velocity.length() > 10.0:
+	if velocity.length() >= 12.0:
 		target_aim_angle = velocity.angle()
+		aim_angle = lerp_angle(aim_angle, target_aim_angle, minf(1.0, delta * 24.0))
+	elif closest:
+		target_aim_angle = (closest.global_position - global_position).angle()
+		aim_angle = lerp_angle(aim_angle, target_aim_angle, minf(1.0, delta * 28.0))
 	else:
 		target_aim_angle = -PI * 0.5
-
-	aim_angle = lerp_angle(aim_angle, target_aim_angle, minf(1.0, delta * 18.0))
+		aim_angle = lerp_angle(aim_angle, target_aim_angle, minf(1.0, delta * 14.0))
 
 func _process(delta: float) -> void:
 	anim_t += delta
@@ -508,10 +510,12 @@ func _process(delta: float) -> void:
 		active_cam.offset = Vector2.ZERO
 
 func _draw() -> void:
-	# Modello 3D Articolato Cyber-Ronin Exo-Suit + Locomozione e Mira Continua sui Nemici
-	var norm_vel: Vector2 = velocity / maxf(1.0, speed * speed_modifier)
+	# Modello 3D Articolato Cyber-Ronin Exo-Suit + Corsa Atletica Dinamica 3D
+	var moving_now: bool = velocity.length() >= 12.0
+	var stride_strength: float = clampf(velocity.length() / maxf(1.0, speed * 0.45), 0.82, 1.0) if moving_now else 0.0
+	var norm_vel: Vector2 = velocity.normalized() * stride_strength if moving_now else Vector2.ZERO
 	var firing_active: bool = is_shooting and (get_closest_enemy() != null)
-	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, velocity.length() > 10.0, firing_active, aim_angle, norm_vel, 86.0)
+	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, moving_now, firing_active, aim_angle, norm_vel, 88.0)
 
 	# Disegna Lame Orbitali
 	if orbit_blades > 0:

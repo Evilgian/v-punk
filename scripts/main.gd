@@ -66,8 +66,14 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	# 1. Sfondo Esterno Metallico Scuro (non nero assoluto)
-	draw_rect(Rect2(Vector2(0, 0), Vector2(720, 1280)), Color(0.06, 0.09, 0.16, 1.0), true)
+	# 1. Superstruttura Esterna Full-Bleed (copre anche schermi 20:9 e 21:9 fino a y=-400..1680 senza bande nere!)
+	draw_rect(Rect2(Vector2(-180, -420), Vector2(1080, 2140)), Color(0.05, 0.08, 0.15, 1.0), true)
+	for ext_y in [-320, -240, -160, -80, 1310, 1390, 1470, 1550]:
+		draw_rect(Rect2(Vector2(-120, ext_y), Vector2(960, 44)), Color(0.08, 0.12, 0.22, 0.95), true)
+		draw_line(Vector2(-120, ext_y), Vector2(840, ext_y), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.24), 2.0)
+	for ext_x in [90, 220, 360, 500, 630]:
+		draw_line(Vector2(ext_x, -400), Vector2(ext_x, 0), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.22), 4.0)
+		draw_line(Vector2(ext_x, 1280), Vector2(ext_x, 1680), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.22), 4.0)
 
 	# 2. Ponte Arena 3D luminoso e ben leggibile
 	var deck_rect := Rect2(Vector2(42, 112), Vector2(636, 1134))

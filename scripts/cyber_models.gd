@@ -201,9 +201,9 @@ static func draw_hero(
 	if use_parade:
 		pose = "front"
 		face_left = false
-	elif sin_a < -0.52:
+	elif sin_a < -0.68:
 		pose = "back"
-	elif sin_a > 0.62:
+	elif sin_a > 0.68:
 		pose = "front"
 
 	var mv: Vector2 = move_vec.limit_length(1.0) if is_moving else Vector2.ZERO
@@ -218,16 +218,19 @@ static func draw_hero(
 		if mv.normalized().dot(look_vec) < -0.15:
 			stride_dir = -1.0
 
-	var stride_phase: float = anim_t * 12.2 * stride_dir
+	var stride_phase: float = anim_t * 14.8 * stride_dir
 	var stride_c: float = absf(cos(stride_phase)) * move_ratio
-	var bob: float = (-stride_c * 2.6 + sin(anim_t * 2.8) * (1.0 - move_ratio) * 0.9) * k
+	# Rimbalzo atletico netto a ogni passo (2 impulsi per ciclo completo di corsa!)
+	var bob: float = (-stride_c * 6.2 + sin(anim_t * 2.8) * (1.0 - move_ratio) * 1.1) * k
 	var recoil_phase: float = fmod(anim_t * 11.5, 1.0) if is_shooting else 1.0
 	var recoil_kick: float = clampf(1.0 - recoil_phase * 2.6, 0.0, 1.0) if is_shooting else 0.0
-	var body_shift := Vector2(mv.x * 1.6 * k, 0.0) - Vector2(cos_a, 0.0) * (1.4 * recoil_kick * k)
+	var lateral_sway: float = (sin(stride_phase) * 3.4 * move_ratio * k) if pose != "side" else 0.0
+	var body_shift := Vector2(mv.x * 2.8 * k + lateral_sway, 0.0) - Vector2(cos_a, 0.0) * (1.5 * recoil_kick * k)
 	var feet := Vector2(body_shift.x, 18.0 * k)
 
-	# Ombra e anello tattico sul pavimento (niente freccia superflua quando è in parata nei menu)
-	draw_ground_shadow(c, Vector2(body_shift.x * 0.4, feet.y), 18.0 * k, 0.58)
+	# Ombra dinamica che si comprime/espande col salto della corsa + anello tattico sul pavimento
+	var shadow_scale: float = 1.0 - stride_c * 0.16
+	draw_ground_shadow(c, Vector2(body_shift.x * 0.45, feet.y), 18.5 * k * shadow_scale, 0.58)
 	if not use_parade:
 		draw_ground_ring(c, Vector2(0, feet.y), 26.0 * k, aura, anim_t, (2.8 if is_shooting else 2.2))
 		var dir_2d := Vector2(cos_a, sin_a * PERSPECTIVE_Y)
@@ -240,17 +243,18 @@ static func draw_hero(
 		]), Color(aura.r, aura.g, aura.b, 0.92))
 
 	if is_moving:
-		for t_i in range(3):
-			var trail_off := -Vector2(mv.x, mv.y * 0.65) * (10.0 + float(t_i) * 7.5) * k
-			c.draw_circle(Vector2(0, feet.y - 2.0) + trail_off, (3.8 - float(t_i) * 1.0) * k, Color(aura.r, aura.g, aura.b, 0.28 - float(t_i) * 0.07))
+		for t_i in range(4):
+			var phase_p: float = fmod(anim_t * 4.5 + float(t_i) * 0.25, 1.0)
+			var trail_off := -Vector2(mv.x, mv.y * 0.65) * (9.0 + phase_p * 26.0) * k + Vector2(sin(float(t_i) * 2.4) * 4.0 * k, 0.0)
+			c.draw_circle(Vector2(0, feet.y - 2.0) + trail_off, (4.4 * (1.0 - phase_p)) * k, Color(aura.r, aura.g, aura.b, 0.42 * (1.0 - phase_p)))
 
 	if pose == "back":
-		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, false)
+		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, false, stride_phase, move_ratio)
 
 	_draw_hero_articulated_body(c, pose, face_left, feet, bob, stride_phase, move_ratio, mv, k, aura, anim_t)
 
 	if pose != "back":
-		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, use_parade)
+		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, use_parade, stride_phase, move_ratio)
 
 
 static func _draw_hero_2joint_leg(
@@ -267,9 +271,9 @@ static func _draw_hero_2joint_leg(
 ) -> void:
 	var thigh_w: float = thigh_h * _aspect(thigh_tex, 0.56)
 	var shin_w: float = shin_h * _aspect(shin_tex, 0.48)
-	_draw_part(c, thigh_tex, hip_pos, thigh_rot, Rect2(Vector2(-thigh_w * 0.50, -thigh_h * 0.12), Vector2(thigh_w, thigh_h)), flip_h, modulate)
-	var knee_pos: Vector2 = hip_pos + Vector2(0.0, thigh_h * 0.74).rotated(thigh_rot)
-	_draw_part(c, shin_tex, knee_pos, shin_rot, Rect2(Vector2(-shin_w * 0.50, -shin_h * 0.12), Vector2(shin_w, shin_h)), flip_h, modulate)
+	_draw_part(c, thigh_tex, hip_pos, thigh_rot, Rect2(Vector2(-thigh_w * 0.50, -thigh_h * 0.22), Vector2(thigh_w, thigh_h)), flip_h, modulate)
+	var knee_pos: Vector2 = hip_pos + Vector2(0.0, thigh_h * 0.66).rotated(thigh_rot)
+	_draw_part(c, shin_tex, knee_pos, shin_rot, Rect2(Vector2(-shin_w * 0.50, -shin_h * 0.16), Vector2(shin_w, shin_h)), flip_h, modulate)
 
 
 static func _draw_hero_articulated_body(
@@ -295,76 +299,100 @@ static func _draw_hero_articulated_body(
 	var face_sign: float = -1.0 if face_left else 1.0
 
 	if pose == "side":
-		var thigh_h: float = 18.0 * k
-		var shin_h: float = 19.4 * k
+		var thigh_h: float = 18.2 * k
+		var shin_h: float = 19.6 * k
 
 		var f_sin: float = sin(stride_phase) * move_ratio
 		var f_cos: float = cos(stride_phase) * move_ratio
 		var r_sin: float = -f_sin
 		var r_cos: float = -f_cos
 
-		# Anca oscilla avanti/indietro; il ginocchio flette SEMPRE all'indietro (+face_sign) nella fase di richiamo!
-		var f_thigh_rot: float = -f_sin * 0.46 * face_sign
-		var f_knee_bend: float = (0.06 + maxf(0.0, -f_cos) * 0.62) * move_ratio
+		# Falcata atletica ampia e connessa al bacino (±40° sull'anca + flessione profonda del ginocchio!)
+		var f_thigh_rot: float = -f_sin * 0.68 * face_sign
+		var f_knee_bend: float = (0.08 + maxf(0.0, -f_cos) * 1.12 + maxf(0.0, -f_sin) * 0.30) * move_ratio
 		var f_shin_rot: float = f_thigh_rot + f_knee_bend * face_sign
 
-		var r_thigh_rot: float = -r_sin * 0.46 * face_sign
-		var r_knee_bend: float = (0.06 + maxf(0.0, -r_cos) * 0.62) * move_ratio
+		var r_thigh_rot: float = -r_sin * 0.68 * face_sign
+		var r_knee_bend: float = (0.08 + maxf(0.0, -r_cos) * 1.12 + maxf(0.0, -r_sin) * 0.30) * move_ratio
 		var r_shin_rot: float = r_thigh_rot + r_knee_bend * face_sign
 
-		var rear_hip := Vector2(feet.x - face_sign * 2.2 * k, hip_y - maxf(0.0, r_sin) * 2.2 * k)
-		var front_hip := Vector2(feet.x + face_sign * 1.8 * k, hip_y - maxf(0.0, f_sin) * 2.2 * k)
+		var rear_hip := Vector2(feet.x + (-1.4 + r_sin * 2.6) * face_sign * k, hip_y + 1.4 * k - maxf(0.0, r_sin) * 2.8 * k)
+		var front_hip := Vector2(feet.x + (1.4 + f_sin * 2.6) * face_sign * k, hip_y + 1.4 * k - maxf(0.0, f_sin) * 2.8 * k)
 
-		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, rear_hip, r_thigh_rot, r_shin_rot, thigh_h, shin_h, face_left, Color(0.70, 0.75, 0.85, 1.0))
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, rear_hip, r_thigh_rot, r_shin_rot, thigh_h, shin_h, face_left, Color(0.66, 0.72, 0.84, 1.0))
 		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, front_hip, f_thigh_rot, f_shin_rot, thigh_h, shin_h, face_left, Color.WHITE)
 
-		# Busto + Spallacci Samurai + Cintura/Bacino con proporzione 1:1 reale (niente dilatazione orizzontale!)
+		# Busto + Spallacci Samurai con inclinazione dinamica in avanti durante lo scatto!
 		var uh: float = 44.5 * k
 		var uw: float = uh * _aspect(upper_tex, 0.72)
-		var lean_rot: float = clampf(mv.x * 0.095, -0.11, 0.11) if move_ratio > 0.05 else sin(anim_t * 2.4) * 0.014
-		var waist_pivot := Vector2(feet.x, hip_y + 4.4 * k)
+		var lean_rot: float = (face_sign * 0.19 * move_ratio + sin(stride_phase * 2.0) * 0.045 * move_ratio) if move_ratio > 0.05 else sin(anim_t * 2.4) * 0.016
+		var waist_pivot := Vector2(feet.x + face_sign * 1.8 * move_ratio * k, hip_y + 4.4 * k)
 		_draw_part(c, upper_tex, waist_pivot, lean_rot, Rect2(Vector2(-uw * 0.50, -uh * 0.90), Vector2(uw, uh)), face_left, Color.WHITE)
 	else:
-		# Vista Frontale e Posteriore: vero passo alternato prospettico (sollevamento ginocchio + accorciamento stinco in richiamo)
-		var base_thigh_h: float = 17.8 * k
-		var base_shin_h: float = 19.2 * k
+		# Vista Frontale e Posteriore: corsa 2.5D ad alta escursione (ginocchio alto, stinco scorciato, suola stivale in spinta!)
+		var base_thigh_h: float = 18.0 * k
+		var base_shin_h: float = 19.4 * k
 
 		var l_wave: float = sin(stride_phase) * move_ratio
 		var r_wave: float = -l_wave
 
 		var l_tuck: float = maxf(0.0, l_wave)
 		var r_tuck: float = maxf(0.0, r_wave)
+		var l_ext: float = maxf(0.0, -l_wave)
+		var r_ext: float = maxf(0.0, -r_wave)
 
-		var l_hip := Vector2(feet.x - 6.0 * k, hip_y - l_tuck * 4.8 * k)
-		var r_hip := Vector2(feet.x + 6.0 * k, hip_y - r_tuck * 4.8 * k)
+		var l_hip := Vector2(feet.x - 6.4 * k, hip_y - l_tuck * 9.5 * k + l_ext * 3.2 * k)
+		var r_hip := Vector2(feet.x + 6.4 * k, hip_y - r_tuck * 9.5 * k + r_ext * 3.2 * k)
 
-		var l_th: float = base_thigh_h * (1.0 - l_tuck * 0.10 + maxf(0.0, -l_wave) * 0.06)
-		var l_sh: float = base_shin_h * (1.0 - l_tuck * 0.16 + maxf(0.0, -l_wave) * 0.05)
-		var r_th: float = base_thigh_h * (1.0 - r_tuck * 0.10 + maxf(0.0, -r_wave) * 0.06)
-		var r_sh: float = base_shin_h * (1.0 - r_tuck * 0.16 + maxf(0.0, -r_wave) * 0.05)
+		var l_th: float = base_thigh_h * (1.0 - l_tuck * 0.24 + l_ext * 0.12)
+		var l_sh: float = base_shin_h * (1.0 - l_tuck * 0.42 + l_ext * 0.12)
+		var r_th: float = base_thigh_h * (1.0 - r_tuck * 0.24 + r_ext * 0.12)
+		var r_sh: float = base_shin_h * (1.0 - r_tuck * 0.42 + r_ext * 0.12)
 
-		# Leggera convergenza naturale delle anche (mai gambe divaricate a pendolo!)
-		var l_rot: float = -0.03 + l_wave * 0.045 + mv.x * 0.04
-		var r_rot: float = 0.03 - r_wave * 0.045 + mv.x * 0.04
+		var l_rot: float = -0.04 + l_wave * 0.14
+		var r_rot: float = 0.04 - r_wave * 0.14
 
-		var l_mod := Color.WHITE if l_wave <= 0.0 else Color(0.76, 0.80, 0.90, 1.0)
-		var r_mod := Color.WHITE if r_wave <= 0.0 else Color(0.76, 0.80, 0.90, 1.0)
+		var l_mod := Color.WHITE if l_wave <= 0.0 else Color(0.70, 0.76, 0.88, 1.0)
+		var r_mod := Color.WHITE if r_wave <= 0.0 else Color(0.70, 0.76, 0.88, 1.0)
 
-		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, l_hip, l_rot, l_rot * 0.5, l_th, l_sh, false, l_mod)
-		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, r_hip, r_rot, r_rot * 0.5, r_th, r_sh, true, r_mod)
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, l_hip, l_rot, l_rot * 0.6, l_th, l_sh, false, l_mod)
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, r_hip, r_rot, r_rot * 0.6, r_th, r_sh, true, r_mod)
+
+		# Dettaglio biomeccanico chiave in corsa verticale: suola corazzata alzata dietro (back) o ginocchiera in luce (front)
+		if move_ratio > 0.15:
+			if pose == "back":
+				if l_tuck > 0.25:
+					var sole_l := l_hip + Vector2(0.0, (l_th + l_sh) * 0.70)
+					c.draw_circle(sole_l, 4.2 * k * l_tuck, Color(0.08, 0.11, 0.18, 0.95))
+					c.draw_circle(sole_l, 2.2 * k * l_tuck, Color(aura.r, aura.g, aura.b, 0.78))
+				if r_tuck > 0.25:
+					var sole_r := r_hip + Vector2(0.0, (r_th + r_sh) * 0.70)
+					c.draw_circle(sole_r, 4.2 * k * r_tuck, Color(0.08, 0.11, 0.18, 0.95))
+					c.draw_circle(sole_r, 2.2 * k * r_tuck, Color(aura.r, aura.g, aura.b, 0.78))
+			elif pose == "front":
+				if l_tuck > 0.25:
+					c.draw_circle(l_hip + Vector2(0.0, l_th * 0.65), 3.4 * k * l_tuck, Color(0.82, 0.92, 1.0, 0.55 * l_tuck))
+				if r_tuck > 0.25:
+					c.draw_circle(r_hip + Vector2(0.0, r_th * 0.65), 3.4 * k * r_tuck, Color(0.82, 0.92, 1.0, 0.55 * r_tuck))
 
 		var uh: float = 45.0 * k
 		var uw: float = uh * _aspect(upper_tex, 0.84)
-		var sway_rot: float = clampf(mv.x * 0.075, -0.08, 0.08) - l_wave * 0.03
+		var sway_rot: float = clampf(mv.x * 0.08, -0.09, 0.09) - l_wave * 0.125
 		var waist_pivot := Vector2(feet.x, hip_y + 4.5 * k)
 		_draw_part(c, upper_tex, waist_pivot, sway_rot, Rect2(Vector2(-uw * 0.50, -uh * 0.90), Vector2(uw, uh)), false, Color.WHITE)
 
-	# Solo sulla schiena: reattori dorsali discreti quando scatta
+	# Reattori dorsali vibranti quando scatta verso Nord
 	if pose == "back" and move_ratio > 0.1:
 		var back_p := Vector2(feet.x, hip_y - 16.5 * k)
-		var jet_r: float = (2.2 + sin(anim_t * 24.0) * 0.6) * k
-		c.draw_circle(back_p + Vector2(-4.5 * k, 0), jet_r, Color(aura.r, aura.g, aura.b, 0.65))
-		c.draw_circle(back_p + Vector2(4.5 * k, 0), jet_r, Color(aura.r, aura.g, aura.b, 0.65))
+		var jet_r: float = (3.4 + sin(anim_t * 28.0) * 1.1) * k
+		c.draw_circle(back_p + Vector2(-5.0 * k, 0), jet_r * 1.6, Color(aura.r, aura.g, aura.b, 0.28))
+		c.draw_circle(back_p + Vector2(5.0 * k, 0), jet_r * 1.6, Color(aura.r, aura.g, aura_b_safe(aura), 0.28))
+		c.draw_circle(back_p + Vector2(-5.0 * k, 0), jet_r, Color(0.85, 0.98, 1.0, 0.90))
+		c.draw_circle(back_p + Vector2(5.0 * k, 0), jet_r, Color(0.85, 0.98, 1.0, 0.90))
+
+
+static func aura_b_safe(c: Color) -> float:
+	return c.b
 
 
 static func _draw_arm_limb(c: CanvasItem, shoulder: Vector2, elbow: Vector2, hand: Vector2, k: float, is_rear: bool) -> void:
@@ -410,13 +438,17 @@ static func _draw_hero_weapon_and_arms(
 	bob: float,
 	k: float,
 	aura: Color,
-	parade_mode: bool = false
+	parade_mode: bool = false,
+	stride_phase: float = 0.0,
+	move_ratio: float = 0.0
 ) -> void:
 	var is_melee: bool = (weapon_id == "katana" or weapon_id == "scythe")
 	var is_one_handed: bool = (weapon_id == "pistol_base")
 	var hip_y: float = feet.y - 29.2 * k + bob
 	var shoulder_y: float = hip_y - 17.5 * k
 	var face_sign: float = -1.0 if face_left else 1.0
+	var is_sprinting: bool = (move_ratio > 0.10 and not is_shooting and not parade_mode)
+	var arm_swing: float = sin(stride_phase) * move_ratio if is_sprinting else 0.0
 
 	var eff_angle: float = aim_angle
 	var push_back: float = recoil_kick * 4.2 * k
@@ -426,6 +458,15 @@ static func _draw_hero_weapon_and_arms(
 		face_sign = 1.0
 		eff_angle = (-0.58 if is_melee else -0.26) + sin(anim_t * 2.2) * 0.03
 		push_back = 0.0
+	elif is_sprinting:
+		# Durante la corsa: oscillazione atletica di braccia e arma al ritmo dei passi!
+		if pose == "side":
+			var run_base: float = (PI + 0.22) if face_left else -0.22
+			if is_melee:
+				run_base = (PI + 0.55) if face_left else -0.55
+			eff_angle = run_base + arm_swing * 0.30 * face_sign
+		else:
+			eff_angle = (-0.42 if pose == "back" else 0.48) + arm_swing * 0.24
 	elif is_melee:
 		if is_shooting:
 			var slash_wave: float = sin(anim_t * 16.0)
@@ -435,18 +476,21 @@ static func _draw_hero_weapon_and_arms(
 			eff_angle = aim_angle - 0.54 * face_sign + sin(anim_t * 3.0) * 0.04
 
 	var w_dir := Vector2.from_angle(eff_angle)
-	var flip_wep_y: bool = (not parade_mode) and face_left
+	var flip_wep_y: bool = (not parade_mode) and (cos(eff_angle) < -0.05)
 
 	var front_shoulder := Vector2(feet.x - face_sign * 4.8 * k, shoulder_y)
 	var rear_shoulder := Vector2(feet.x + face_sign * 5.8 * k, shoulder_y - 0.5 * k)
 	if pose == "front" or pose == "back":
 		var s_sign: float = 1.0 if cos(eff_angle) >= 0.0 else -1.0
-		front_shoulder = Vector2(feet.x - s_sign * 9.8 * k, shoulder_y)
-		rear_shoulder = Vector2(feet.x + s_sign * 9.8 * k, shoulder_y)
+		front_shoulder = Vector2(feet.x - s_sign * 9.8 * k, shoulder_y - arm_swing * 1.8 * k)
+		rear_shoulder = Vector2(feet.x + s_sign * 9.8 * k, shoulder_y + arm_swing * 1.8 * k)
 
 	var grip_pos: Vector2
 	if parade_mode:
 		grip_pos = Vector2(feet.x - 4.5 * k, hip_y - 6.5 * k)
+	elif is_sprinting:
+		var pump_off := Vector2(arm_swing * 4.6 * face_sign * k, -absf(arm_swing) * 3.2 * k)
+		grip_pos = Vector2(feet.x + face_sign * 2.5 * k, hip_y - 9.5 * k) + w_dir * (5.5 * k) + pump_off
 	else:
 		var grip_dist: float = (8.8 if is_one_handed else (7.5 if is_melee else 5.8)) * k
 		grip_pos = Vector2(feet.x + face_sign * 2.8 * k, hip_y - 10.5 * k) + w_dir * (grip_dist - push_back)
@@ -458,13 +502,13 @@ static func _draw_hero_weapon_and_arms(
 	var rear_elbow: Vector2 = rear_shoulder.lerp(foregrip_pos, 0.52) + gravity_down * (6.0 * k)
 	var front_elbow: Vector2 = front_shoulder.lerp(grip_pos, 0.50) + gravity_down * (7.2 * k) - Vector2(face_sign * 2.2 * k, 0.0)
 
-	# 1. Braccia corazzate 3D disegnate sotto/dietro l'arma
+	# 1. Braccia corazzate 3D disegnate sotto/dietro l'arma (con oscillazione del braccio libero in corsa!)
 	if not is_one_handed:
 		_draw_arm_limb(c, rear_shoulder, rear_elbow, foregrip_pos, k, true)
-	elif pose == "front" or pose == "back":
-		var off_side: float = 1.0 if cos(eff_angle) >= 0.0 else -1.0
-		var off_hand := rear_shoulder + Vector2(off_side * 3.2 * k, 11.5 * k)
-		var off_elbow := rear_shoulder.lerp(off_hand, 0.5) + Vector2(off_side * 2.0 * k, 2.0 * k)
+	elif is_sprinting or pose == "front" or pose == "back":
+		var off_side: float = (1.0 if cos(eff_angle) >= 0.0 else -1.0) if pose != "side" else -face_sign
+		var off_hand := rear_shoulder + Vector2(off_side * (3.2 - arm_swing * 4.5) * k, (11.0 - arm_swing * 6.5) * k)
+		var off_elbow := rear_shoulder.lerp(off_hand, 0.5) + Vector2(off_side * 2.5 * k, 3.0 * k)
 		_draw_arm_limb(c, rear_shoulder, off_elbow, off_hand, k, true)
 
 	_draw_arm_limb(c, front_shoulder, front_elbow, grip_pos, k, false)
