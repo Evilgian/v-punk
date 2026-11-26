@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
-@export var speed: float = 50.0
+@export var speed: float = 52.0
 @export var hp: int = 70
 var max_hp: int = 70
-@export var damage: int = 25
+@export var damage: int = 24
 @export var drop_scene: PackedScene = preload("res://scenes/Drop.tscn")
 @export var enemy_projectile_scene: PackedScene = preload("res://scenes/EnemyProjectile.tscn")
 
@@ -16,6 +16,7 @@ var anim_t: float = 0.0
 var aim_angle: float = 0.0
 var world_id: String = "world_1"
 var is_elite: bool = false
+var spawn_warmup: float = 0.45
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -31,13 +32,23 @@ func _ready() -> void:
 	if not players.is_empty():
 		player = players[0] as Node2D
 
+func apply_knockback(impulse: Vector2) -> void:
+	global_position += impulse * 0.32
+	global_position.x = clampf(global_position.x, 60.0, 660.0)
+	global_position.y = clampf(global_position.y, 135.0, 1225.0)
+
 func _physics_process(delta: float) -> void:
 	anim_t += delta
 	if damage_cooldown > 0.0:
 		damage_cooldown -= delta
 
+	if spawn_warmup > 0.0:
+		spawn_warmup -= delta
+		queue_redraw()
+		return
+
 	bomb_timer += delta
-	if bomb_timer >= 3.5:
+	if bomb_timer >= 3.6:
 		bomb_timer = 0.0
 		_launch_parabolic_bomb()
 
@@ -55,13 +66,16 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	var dist := global_position.distance_to(player.global_position)
-	if dist <= 50.0 and damage_cooldown <= 0.0:
+	if dist <= 48.0 and damage_cooldown <= 0.0:
 		if player.has_method("take_damage"):
 			player.take_damage(damage)
 			damage_cooldown = 1.0
 
 func _draw() -> void:
-	var charge_ratio := clampf(bomb_timer / 3.5, 0.0, 1.0)
+	if spawn_warmup > 0.0:
+		CyberModels.draw_spawn_telegraph(self, Vector2(0, 20), 30.0, Color(1.0, 0.55, 0.15), 1.0 - spawn_warmup / 0.45)
+
+	var charge_ratio := clampf(bomb_timer / 3.6, 0.0, 1.0)
 	CyberModels.draw_heavy_enemy(self, anim_t, charge_ratio, aim_angle, world_id, is_elite)
 
 	if max_hp > 0:
@@ -85,7 +99,6 @@ func _launch_parabolic_bomb() -> void:
 	indicator.script = load("res://scripts/bomb_indicator.gd") if ResourceLoader.exists("res://scripts/bomb_indicator.gd") else null
 	scene.add_child(indicator)
 
-	# Bomba al plasma procedurale con animazione d'arco parabolico
 	var bomb_node := Node2D.new()
 	bomb_node.global_position = global_position
 	bomb_node.z_index = 12
@@ -98,7 +111,7 @@ func _launch_parabolic_bomb() -> void:
 	)
 	scene.add_child(bomb_node)
 
-	var flight_dur := 0.75
+	var flight_dur := 0.82
 	var tw := scene.create_tween().set_parallel(true)
 	tw.tween_property(bomb_node, "global_position", target_pos, flight_dur)
 
@@ -119,19 +132,19 @@ func _launch_parabolic_bomb() -> void:
 		var p_nodes := scene.get_tree().get_nodes_in_group("player")
 		if not p_nodes.is_empty() and p_nodes[0] is Node2D:
 			var p := p_nodes[0] as Node2D
-			if p.global_position.distance_to(target_pos) <= 40.0 and p.has_method("take_damage"):
+			if p.global_position.distance_to(target_pos) <= 42.0 and p.has_method("take_damage"):
 				p.take_damage(bomb_dmg)
 	)
 
 func take_damage(amount: int) -> void:
 	if max_hp < hp: max_hp = hp
 	hp -= amount
-	var is_crit: bool = (randf() <= 0.2)
-	var final_damage: int = amount * (2 if is_crit else 1)
+	var is_crit: bool = bool(get_meta("last_hit_crit", false))
+	set_meta("last_hit_crit", false)
 
 	var vfx: Node = get_node_or_null("/root/VFXManager")
 	if vfx:
-		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, final_damage, is_crit)
+		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, amount, is_crit)
 		if vfx.has_method("flash_hit"): vfx.flash_hit(self)
 
 	queue_redraw()
@@ -139,7 +152,7 @@ func take_damage(amount: int) -> void:
 		die()
 
 func die() -> void:
-	Global.total_credits += 25
+	Global.total_credits += 4
 	Global.quest_kills += 1
 	SoundFX.play_explosion()
 
@@ -147,8 +160,8 @@ func die() -> void:
 	if col: col.set_deferred("disabled", true)
 
 	if enemy_projectile_scene:
-		for i in range(8):
-			var angle := deg_to_rad(i * 45.0)
+		for i in range(6):
+			var angle := deg_to_rad(i * 60.0)
 			var proj := enemy_projectile_scene.instantiate() as Area2D
 			if proj:
 				proj.global_position = global_position

@@ -1,22 +1,20 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud_script"]
 [ext_resource type="Texture2D" path="res://assets/ui/PNG/Yellow/Default/button_square_header_small_square.png" id="2_pause_tex"]
-[ext_resource type="Texture2D" path="res://assets/ui/PNG/Blue/Default/button_square_header_large_rectangle.png" id="3_btn_blue"]
-[ext_resource type="Texture2D" path="res://assets/ui/PNG/Red/Default/button_square_header_large_rectangle.png" id="4_btn_red"]
 [ext_resource type="Script" path="res://scripts/virtual_joystick.gd" id="5_joystick_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
-bg_color = Color(0.15, 0.85, 0.35, 1)
+bg_color = Color(0.12, 0.92, 0.48, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exp_fill"]
-bg_color = Color(0, 0.8, 1, 1)
+bg_color = Color(0, 0.86, 1, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_fill"]
-bg_color = Color(0.95, 0.1, 0.35, 1)
+bg_color = Color(0.96, 0.14, 0.42, 1)
 
 [sub_resource type="Gradient" id="Gradient_vignette"]
-colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.65)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.55)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_vignette"]
 gradient = SubResource("Gradient_vignette")
@@ -53,75 +51,66 @@ script = ExtResource("5_joystick_script")
 layout_mode = 3
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 100.0
+offset_bottom = 118.0
 grow_horizontal = 2
+mouse_filter = 2
 
 [node name="HPBar" type="ProgressBar" parent="TopContainer"]
 layout_mode = 0
-offset_left = 18.0
-offset_top = 16.0
-offset_right = 338.0
-offset_bottom = 46.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 310.0
+offset_bottom = 42.0
 theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
 value = 100.0
-show_percentage = true
+show_percentage = false
 
 [node name="HPLabel" type="Label" parent="TopContainer/HPBar"]
 layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 8.0
-offset_top = -12.0
-offset_right = 80.0
-offset_bottom = 12.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 16
-text = "SALUTE"
+theme_override_font_sizes/font_size = 15
+text = "HP  100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="EXPBar" type="ProgressBar" parent="TopContainer"]
 layout_mode = 0
-offset_left = 18.0
-offset_top = 50.0
-offset_right = 338.0
-offset_bottom = 76.0
+offset_left = 16.0
+offset_top = 46.0
+offset_right = 310.0
+offset_bottom = 72.0
 theme_override_styles/fill = SubResource("StyleBoxFlat_exp_fill")
 show_percentage = false
 
 [node name="LevelLabel" type="Label" parent="TopContainer/EXPBar"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -70.0
-offset_top = -12.0
-offset_right = 70.0
-offset_bottom = 12.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 16
-text = "Lv. 1"
+theme_override_font_sizes/font_size = 14
+text = "NEURAL LV. 1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="RoomLabel" type="Label" parent="TopContainer"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -220.0
-offset_top = 80.0
-offset_right = 220.0
-offset_bottom = 106.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 18
-text = "Stage 1/5 | Nemici: 4/4"
+layout_mode = 0
+offset_left = 320.0
+offset_top = 12.0
+offset_right = 620.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(1, 0.86, 0.12, 1)
+theme_override_font_sizes/font_size = 16
+text = "STAGE 1/10 • OSTILI: 3/3"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BossContainer" type="Control" parent="TopContainer"]
 visible = false
@@ -129,11 +118,12 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -220.0
-offset_top = 15.0
-offset_right = 220.0
-offset_bottom = 65.0
+offset_left = -312.0
+offset_top = 78.0
+offset_right = 312.0
+offset_bottom = 110.0
 grow_horizontal = 2
+mouse_filter = 2
 
 [node name="BossHPBar" type="ProgressBar" parent="TopContainer/BossContainer"]
 layout_mode = 1
@@ -154,8 +144,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 14
-text = "⚠️ BOSS: ROBO-TITAN ⚠️"
+theme_override_font_sizes/font_size = 15
+text = "★ BOSS: GOLEM SILVANO MK-I"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -164,10 +154,10 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -110.0
-offset_top = 15.0
-offset_right = -20.0
-offset_bottom = 75.0
+offset_left = -90.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 72.0
 grow_horizontal = 0
 texture_normal = ExtResource("2_pause_tex")
 ignore_texture_size = true
@@ -182,7 +172,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 14
-text = "PAUSA"
+text = ""
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -198,12 +188,12 @@ grow_vertical = 2
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 350.0
-offset_bottom = 420.0
+offset_top = 330.0
+offset_bottom = 400.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 32
-text = "GIOCO IN PAUSA"
+theme_override_font_sizes/font_size = 30
+text = "// PARTITA IN PAUSA //"
 horizontal_alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PauseOverlay"]
@@ -213,22 +203,22 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -60.0
-offset_right = 180.0
-offset_bottom = 160.0
+offset_left = -195.0
+offset_top = -70.0
+offset_right = 195.0
+offset_bottom = 180.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 18
 
 [node name="BtnResume" type="Button" parent="PauseOverlay/VBoxContainer"]
-custom_minimum_size = Vector2(0, 65)
+custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "RIPRENDI"
+theme_override_font_sizes/font_size = 20
+text = "▶ RIPRENDI PARTITA"
 
 [node name="BtnMainMenu" type="Button" parent="PauseOverlay/VBoxContainer"]
-custom_minimum_size = Vector2(0, 65)
+custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 text = "TORNA AL MENU"

@@ -3,8 +3,9 @@ extends CharacterBody2D
 @export var hp: int = 25
 var max_hp: int = 25
 @export var speed: float = 105.0
-@export var attack_range: float = 340.0
+@export var attack_range: float = 350.0
 @export var fire_rate: float = 2.0
+@export var damage: int = 10
 @export var drop_scene: PackedScene = preload("res://scenes/Drop.tscn")
 @export var enemy_projectile_scene: PackedScene = preload("res://scenes/EnemyProjectile.tscn")
 
@@ -16,6 +17,7 @@ var anim_t: float = 0.0
 var accent_col: Color = Color(0.85, 0.30, 1.0, 1.0)
 var world_id: String = "world_1"
 var is_elite: bool = false
+var spawn_warmup: float = 0.45
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -34,8 +36,18 @@ func _ready() -> void:
 	shoot_timer.timeout.connect(_on_shoot_timer_timeout)
 	add_child(shoot_timer)
 
+func apply_knockback(impulse: Vector2) -> void:
+	global_position += impulse * (0.60 if is_elite else 1.0)
+	global_position.x = clampf(global_position.x, 58.0, 662.0)
+	global_position.y = clampf(global_position.y, 132.0, 1225.0)
+
 func _physics_process(delta: float) -> void:
 	anim_t += delta
+	if spawn_warmup > 0.0:
+		spawn_warmup -= delta
+		queue_redraw()
+		return
+
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty() or not (players[0] is Node2D):
 		return
@@ -59,9 +71,12 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var is_charging := (is_shooting and shoot_timer != null and shoot_timer.time_left <= 0.45)
+	if spawn_warmup > 0.0:
+		CyberModels.draw_spawn_telegraph(self, Vector2(0, 16), 24.0, accent_col, 1.0 - spawn_warmup / 0.45)
+
+	var is_charging := (spawn_warmup <= 0.0 and is_shooting and shoot_timer != null and shoot_timer.time_left <= 0.45)
 	if is_charging:
-		draw_line(Vector2.ZERO, aim_dir * 180.0, Color(1.0, 0.15, 0.25, 0.50), 1.5)
+		draw_line(Vector2(0, -10), aim_dir * 185.0, Color(1.0, 0.18, 0.28, 0.55), 1.8)
 
 	CyberModels.draw_ranged_enemy(self, anim_t, accent_col, aim_dir.angle(), is_charging, world_id, is_elite)
 
@@ -73,7 +88,7 @@ func _draw() -> void:
 		draw_rect(Rect2(Vector2(-18, -52), Vector2(36.0 * ratio, 4)), bar_col, true)
 
 func _on_shoot_timer_timeout() -> void:
-	if not is_shooting:
+	if spawn_warmup > 0.0 or not is_shooting:
 		return
 
 	var players := get_tree().get_nodes_in_group("player")
@@ -88,7 +103,7 @@ func _on_shoot_timer_timeout() -> void:
 			"world_3", "world_4":
 				angles = [-0.12, 0.12] if not is_elite else [-0.18, 0.0, 0.18]
 			"world_5", "world_6", "world_7", "world_8":
-				angles = [-0.18, 0.0, 0.18]
+				angles = [-0.16, 0.0, 0.16]
 			_:
 				if is_elite:
 					angles = [-0.13, 0.13]
@@ -99,17 +114,19 @@ func _on_shoot_timer_timeout() -> void:
 				var dir := base_dir.rotated(a_off)
 				projectile.direction = dir
 				projectile.rotation = dir.angle()
+				if "damage" in projectile:
+					projectile.damage = maxi(5, damage)
 				get_tree().current_scene.add_child.call_deferred(projectile)
 
 func take_damage(amount: int) -> void:
 	if max_hp < hp: max_hp = hp
 	hp -= amount
-	var is_crit: bool = (randf() <= 0.2)
-	var final_damage: int = amount * (2 if is_crit else 1)
+	var is_crit: bool = bool(get_meta("last_hit_crit", false))
+	set_meta("last_hit_crit", false)
 
 	var vfx: Node = get_node_or_null("/root/VFXManager")
 	if vfx:
-		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, final_damage, is_crit)
+		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, amount, is_crit)
 		if vfx.has_method("flash_hit"): vfx.flash_hit(self)
 
 	queue_redraw()
@@ -117,7 +134,7 @@ func take_damage(amount: int) -> void:
 		_die()
 
 func _die() -> void:
-	Global.total_credits += 10
+	Global.total_credits += 2
 	Global.quest_kills += 1
 	SoundFX.play_explosion()
 

@@ -25,6 +25,7 @@ var aim_angle: float = PI * 0.5
 var world_id: String = "world_1"
 var boss_col: Color = Color(1.0, 0.25, 0.55, 1.0)
 var contact_cooldown: float = 0.0
+var telegraph_t: float = 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -46,16 +47,26 @@ func _ready() -> void:
 
 	call_deferred("_connect_to_hud")
 
+func _get_arena_hud() -> Node:
+	if get_parent():
+		var local_hud := get_parent().get_node_or_null("HUD")
+		if local_hud and not local_hud.is_queued_for_deletion():
+			return local_hud
+	var huds := get_tree().get_nodes_in_group("hud")
+	for i in range(huds.size() - 1, -1, -1):
+		var h: Node = huds[i]
+		if is_instance_valid(h) and not h.is_queued_for_deletion():
+			return h
+	return null
+
 func _connect_to_hud() -> void:
 	max_hp = max(max_hp, hp)
 	var world: WorldData = WorldDB.get_selected_world()
 	var b_name: String = world.boss_name if world else "ROBO-TITAN"
-	var prefix: String = "⚠️ BOSS FINALE: " if is_final_boss else "⚠️ GUARDIANO DI SETTORE: "
-	var huds := get_tree().get_nodes_in_group("hud")
-	if not huds.is_empty():
-		var hud := huds[0]
-		if hud.has_method("show_boss_bar"):
-			hud.show_boss_bar(prefix + b_name.to_upper() + " ⚠️", max_hp)
+	var prefix: String = "★ BOSS FINALE: " if is_final_boss else "◆ GUARDIANO SETTORE: "
+	var hud := _get_arena_hud()
+	if hud and hud.has_method("show_boss_bar"):
+		hud.show_boss_bar(prefix + b_name.to_upper(), max_hp)
 
 func _physics_process(delta: float) -> void:
 	anim_t += delta
@@ -67,6 +78,8 @@ func _physics_process(delta: float) -> void:
 
 	if contact_cooldown > 0.0:
 		contact_cooldown -= delta
+	if telegraph_t > 0.0:
+		telegraph_t = maxf(0.0, telegraph_t - delta)
 	queue_redraw()
 
 	if is_attacking:
@@ -109,7 +122,8 @@ func _draw() -> void:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
 
-	CyberModels.draw_boss(self, world_id, anim_t, boss_col, in_phase_2, aim_angle)
+	var tel_prog: float = clampf(1.0 - telegraph_t / 0.38, 0.0, 1.0) if telegraph_t > 0.0 else 0.0
+	CyberModels.draw_boss(self, world_id, anim_t, boss_col, in_phase_2, aim_angle, tel_prog)
 
 var spiral_step: float = 0.0
 var burst_counter: int = 0
@@ -118,10 +132,14 @@ func _on_attack_timer_timeout() -> void:
 	if is_dying:
 		return
 	is_attacking = true
+	telegraph_t = 0.38
+	await get_tree().create_timer(0.38).timeout
+	if is_dying or not is_inside_tree():
+		return
 	burst_counter += 1
 	_execute_world_boss_pattern()
 
-	await get_tree().create_timer(0.55).timeout
+	await get_tree().create_timer(0.42).timeout
 	if is_dying:
 		return
 	is_attacking = false
@@ -237,12 +255,12 @@ func take_damage(amount: int) -> void:
 		return
 	if max_hp < hp: max_hp = hp
 	hp -= amount
-	var is_crit: bool = (randf() <= 0.2)
-	var final_damage: int = amount * (2 if is_crit else 1)
+	var is_crit: bool = bool(get_meta("last_hit_crit", false))
+	set_meta("last_hit_crit", false)
 
 	var vfx: Node = get_node_or_null("/root/VFXManager")
 	if vfx:
-		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, final_damage, is_crit)
+		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, amount, is_crit)
 		if vfx.has_method("flash_hit"): vfx.flash_hit(self)
 
 	var huds := get_tree().get_nodes_in_group("hud")
@@ -323,7 +341,7 @@ func _die() -> void:
 		if ss_mid and ss_mid.has_method("save_game"): ss_mid.save_game()
 
 		if vfx and vfx.has_method("spawn_floating_text"):
-			vfx.spawn_floating_text(global_position + Vector2(0, -64), "⚠️ GUARDIANO IN SOVRACCARICO!", CyberTheme.COL_YELLOW)
+			vfx.spawn_floating_text(global_position + Vector2(0, -64), "⚡ GUARDIANO IN SOVRACCARICO!", CyberTheme.COL_YELLOW)
 
 		for step_i in range(5):
 			if not is_inside_tree():
@@ -343,7 +361,7 @@ func _die() -> void:
 		if vfx and vfx.has_method("spawn_explosion"):
 			vfx.spawn_explosion(global_position, CyberTheme.COL_YELLOW)
 		if vfx and vfx.has_method("spawn_floating_text"):
-			vfx.spawn_floating_text(global_position, "🏆 GUARDIANO SCONFITTO! +BOTTINO BOSS!", CyberTheme.COL_YELLOW)
+			vfx.spawn_floating_text(global_position, "★ GUARDIANO SCONFITTO! +BOTTINO BOSS!", CyberTheme.COL_YELLOW)
 
 		for h in get_tree().get_nodes_in_group("hud"):
 			if h.has_method("hide_boss_bar"):
@@ -404,7 +422,7 @@ func _die() -> void:
 	# FASE A: Impatto fatale in Slow-Motion Cinematografico (0.35s reali)
 	SoundFX.play_explosion()
 	if vfx and vfx.has_method("spawn_floating_text"):
-		vfx.spawn_floating_text(global_position + Vector2(0, -72), "💥 COLLASSO NUCLEO BOSS! 💥", CyberTheme.COL_YELLOW)
+		vfx.spawn_floating_text(global_position + Vector2(0, -72), "⚡ COLLASSO NUCLEO BOSS! ⚡", CyberTheme.COL_YELLOW)
 	Engine.time_scale = 0.42
 	await get_tree().create_timer(0.35, true, false, true).timeout
 	Engine.time_scale = 1.0
@@ -441,14 +459,14 @@ func _die() -> void:
 		if h.has_method("hide_boss_bar"):
 			h.hide_boss_bar()
 		if "room_label" in h and h.room_label:
-			h.room_label.text = "🏆 " + (w.display_name.to_upper() if w else "SETTORE") + " COMPLETATO! 🏆"
+			h.room_label.text = "★ " + (w.display_name.to_upper() if w else "SETTORE") + " COMPLETATO! ★"
 
 	if vfx and vfx.has_method("spawn_explosion"):
 		vfx.spawn_explosion(global_position, CyberTheme.COL_YELLOW)
 		vfx.spawn_explosion(global_position + Vector2(-38, -20), CyberTheme.COL_CYAN)
 		vfx.spawn_explosion(global_position + Vector2(38, -20), CyberTheme.COL_MAGENTA)
 	if vfx and vfx.has_method("spawn_floating_text"):
-		vfx.spawn_floating_text(global_position + Vector2(0, -30), "🏆 SETTORE LIBERATO — VITTORIA! 🏆", CyberTheme.COL_YELLOW)
+		vfx.spawn_floating_text(global_position + Vector2(0, -30), "★ SETTORE LIBERATO — VITTORIA! ★", CyberTheme.COL_YELLOW)
 
 	await get_tree().create_timer(1.20, true, false, true).timeout
 	Engine.time_scale = 1.0

@@ -194,4 +194,4 @@ func upgrade_talent(talent_id: String) -> Dictionary:
 		if ss and ss.has_method("save_game"): ss.save_game()
 		return {"success": true, "message": str(TALENT_DEFS[talent_id]["name"]) + " potenziato!"}
 	else:
-		return {"success": false, "message": "Monete insufficienti! (Servono " + str(cost) + " 🪙)"}
+		return {"success": false, "message": "Oro insufficiente! (Servono " + str(cost) + " Crediti Oro)"}

@@ -91,17 +91,18 @@ func _collect(body: Node2D) -> void:
 
 	if drop_type == "heal":
 		if "current_hp" in body and "max_hp" in body:
-			var heal_amt := int(max(25.0, float(body.max_hp) * 0.20))
+			var heal_amt := int(max(25.0, float(body.max_hp) * 0.22))
 			body.current_hp = min(body.max_hp, body.current_hp + heal_amt)
 			if body.has_signal("hp_changed"): body.hp_changed.emit(body.current_hp, body.max_hp)
 			if vfx and vfx.has_method("spawn_floating_text"):
-				vfx.spawn_floating_text(global_position, "💚 +" + str(heal_amt) + " HP", Color(0.25, 1.0, 0.55, 1.0))
+				vfx.spawn_floating_text(global_position, "✦ +" + str(heal_amt) + " HP", Color(0.25, 1.0, 0.55, 1.0))
 	elif drop_type == "upgrade_scroll":
 		Global.upgrade_scrolls += 1
+		Global.run_scrolls += 1
 		if body.has_method("add_exp"):
 			body.add_exp(1)
 		if vfx and vfx.has_method("spawn_floating_text"):
-			vfx.spawn_floating_text(global_position, "⚙️ +1 NUCLEO POTENZIAMENTO!", Color(0.95, 0.45, 1.0, 1.0))
+			vfx.spawn_floating_text(global_position, "▲ +1 NUCLEO!", Color(0.95, 0.45, 1.0, 1.0))
 		var ss: Node = get_node_or_null("/root/SaveSystem")
 		if ss and ss.has_method("save_game"): ss.save_game()
 	elif drop_type == "gear_drop":
@@ -115,7 +116,7 @@ func _collect(body: Node2D) -> void:
 			var d_col: Color = CyberTheme.get_rarity_color(d_rar)
 			var d_lbl: String = CyberTheme.get_rarity_label_it(d_rar)
 			if vfx and vfx.has_method("spawn_floating_text"):
-				vfx.spawn_floating_text(global_position, "🎁 DROP: " + d_name.to_upper() + " [" + d_lbl + "]!", d_col)
+				vfx.spawn_floating_text(global_position, "★ DROP: " + d_name.to_upper() + " [" + d_lbl + "]!", d_col)
 	else:
 		if body.has_method("add_exp"):
 			body.add_exp(1)
@@ -127,6 +128,7 @@ func _collect(body: Node2D) -> void:
 		var gold_pct: float = tm.get_bonus_value("gold") if (tm and tm.has_method("get_bonus_value")) else 0.0
 		var final_coins: int = int(float(base_coins) * (1.0 + (gold_pct / 100.0)))
 		Global.total_coins += final_coins
+		Global.run_coins += final_coins
 
 	SoundFX.play_pickup()
 	queue_free()

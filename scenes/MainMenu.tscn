@@ -405,7 +405,7 @@ alignment = 1
 
 [node name="HeroGrid" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="LeftSlots" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid"]
@@ -413,7 +413,7 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="SlotWeapon" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots"]
-custom_minimum_size = Vector2(204, 92)
+custom_minimum_size = Vector2(218, 94)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
@@ -425,7 +425,7 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotRing1" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots"]
-custom_minimum_size = Vector2(204, 92)
+custom_minimum_size = Vector2(218, 94)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
@@ -437,7 +437,7 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotPet1" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/LeftSlots"]
-custom_minimum_size = Vector2(204, 92)
+custom_minimum_size = Vector2(218, 94)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
@@ -449,13 +449,13 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="HeroPodium" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid"]
-custom_minimum_size = Vector2(198, 252)
+custom_minimum_size = Vector2(188, 256)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_styles/panel = SubResource("StyleBoxFlat_podium")
 
 [node name="HeroCenter" type="TextureRect" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/HeroPodium"]
-custom_minimum_size = Vector2(180, 215)
+custom_minimum_size = Vector2(172, 220)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -468,7 +468,7 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="SlotArmor" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots"]
-custom_minimum_size = Vector2(204, 92)
+custom_minimum_size = Vector2(218, 94)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
@@ -480,7 +480,7 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotRing2" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots"]
-custom_minimum_size = Vector2(204, 92)
+custom_minimum_size = Vector2(218, 94)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
@@ -492,7 +492,7 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="SlotPet2" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/HeroSection/VBox/HeroGrid/RightSlots"]
-custom_minimum_size = Vector2(204, 92)
+custom_minimum_size = Vector2(218, 94)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_slot")
 
@@ -686,16 +686,16 @@ theme_override_constants/separation = 18
 alignment = 1
 
 [node name="BtnBuyNormalCrate" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox/HBox"]
-custom_minimum_size = Vector2(290, 235)
+custom_minimum_size = Vector2(302, 242)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "\n\n\n\n\nCASSA MILITECH\nArmi & Corazze Rare\n[ 100 GEMME ]"
+text = "\n\n\n\n\nCASSA MILITECH\n70% Raro • 30% Comune\n[ ◆ 100 GEMME ]"
 
 [node name="BtnBuyEpicCrate" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox/HBox"]
-custom_minimum_size = Vector2(290, 235)
+custom_minimum_size = Vector2(302, 242)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "\n\n\n\n\nCASSA ARASAKA OVERLORD\nKatana / Falce / Plasma\n[ 300 GEMME ]"
+text = "\n\n\n\n\nCASSA ARASAKA OVERLORD\n65% Epico • 35% Leggendario\n[ ◆ 300 GEMME ]"
 
 [node name="FreeAdsSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 custom_minimum_size = Vector2(0, 175)

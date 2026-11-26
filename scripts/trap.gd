@@ -124,22 +124,21 @@ func _apply_active_visuals() -> void:
 func _check_damage_bodies() -> void:
 	for body in get_overlapping_bodies():
 		if body.is_in_group("player"):
-			if (trap_type == "CRYO" or trap_type == "VOID") and "speed_modifier" in body:
-				body.speed_modifier = 0.65
+			if (trap_type == "CRYO" or trap_type == "VOID") and body.has_method("apply_env_slow"):
+				body.apply_env_slow(0.65, 1.2)
 			if body.has_method("take_damage"):
 				body.take_damage(int(damage))
 
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
-		if trap_type == "SANDPIT" and "speed_modifier" in body:
-			body.speed_modifier = 0.6
+		if trap_type == "SANDPIT" and body.has_method("apply_env_slow"):
+			body.apply_env_slow(0.62, 0.8)
 		elif current_state == TrapState.ACTIVE:
-			if (trap_type == "CRYO" or trap_type == "VOID") and "speed_modifier" in body:
-				body.speed_modifier = 0.65
+			if (trap_type == "CRYO" or trap_type == "VOID") and body.has_method("apply_env_slow"):
+				body.apply_env_slow(0.65, 1.2)
 			if body.has_method("take_damage"):
 				body.take_damage(int(damage))
 
 func _on_body_exited(body: Node2D) -> void:
-	if body.is_in_group("player"):
-		if "speed_modifier" in body:
-			body.speed_modifier = 1.0
+	if body.is_in_group("player") and trap_type == "SANDPIT" and body.has_method("clear_env_slow"):
+		body.clear_env_slow()

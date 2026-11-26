@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 signal exp_changed(current: int, max_val: int)
 signal hp_changed(current: int, max_val: int)
+signal shield_changed(charges: int, max_charges: int)
 signal leveled_up(new_level: int)
 
 @export var max_hp: int = 100
@@ -26,6 +27,8 @@ var has_spread_shot: bool = false
 var has_piercing: bool = false
 var extra_projectiles: int = 0
 var speed_modifier: float = 1.0
+var env_slow_mult: float = 1.0
+var env_slow_timer: float = 0.0
 
 var has_pet_laser: bool = false
 var has_pet_shield: bool = false
@@ -123,35 +126,41 @@ func _ready() -> void:
 	if im:
 		has_pet_laser = (im.equipped_pet1_id == "drone_laser" or im.equipped_pet2_id == "drone_laser")
 		has_pet_shield = (im.equipped_pet1_id == "drone_shield" or im.equipped_pet2_id == "drone_shield")
-		if im.has_method("get_item_level"):
-			var wep_lvl: int = im.get_item_level(im.equipped_weapon_id)
-			weapon_base_damage += (wep_lvl - 1) * 3
-			if not im.equipped_armor_id.is_empty():
-				var arm_lvl: int = im.get_item_level(im.equipped_armor_id)
-				max_hp += (arm_lvl - 1) * 18
-			if has_pet_laser:
-				pet_laser_lvl = im.get_item_level("drone_laser")
+		if im.has_method("get_equipped_item_in_slot") and im.has_method("get_item_primary_stat"):
+			var wep_d: Dictionary = im.get_equipped_item_in_slot("ARMA")
+			if not wep_d.is_empty():
+				var w_st: Dictionary = im.get_item_primary_stat(str(wep_d.get("id", "pistol_base")), "ARMA", str(wep_d.get("rarity", "COMMON")))
+				weapon_base_damage = int(w_st.get("value", weapon_base_damage))
+			var arm_d: Dictionary = im.get_equipped_item_in_slot("CORAZZA")
+			if not arm_d.is_empty() and not str(arm_d.get("id", "")).is_empty():
+				var a_st: Dictionary = im.get_item_primary_stat(str(arm_d["id"]), "CORAZZA", str(arm_d.get("rarity", "COMMON")))
+				max_hp += int(a_st.get("value", 0))
+			for r_slot in ["ANELLO 1", "ANELLO 2"]:
+				var rd: Dictionary = im.get_equipped_item_in_slot(r_slot)
+				if not rd.is_empty() and not str(rd.get("id", "")).is_empty():
+					var rst: Dictionary = im.get_item_primary_stat(str(rd["id"]), r_slot, str(rd.get("rarity", "COMMON")))
+					if str(rd["id"]) == "ring_speed":
+						speed += float(rst.get("value", 25))
+					else:
+						bonus_damage += int(rst.get("value", 6))
 			if has_pet_shield:
-				pet_shield_lvl = im.get_item_level("drone_shield")
-		if im.equipped_ring1_id == "ring_speed" or im.equipped_ring2_id == "ring_speed":
-			var r_spd_lvl: int = im.get_item_level("ring_speed") if im.has_method("get_item_level") else 1
-			speed += 25.0 + float(r_spd_lvl - 1) * 6.0
-		if im.equipped_ring1_id == "ring_crit" or im.equipped_ring2_id == "ring_crit":
-			var r_crt_lvl: int = im.get_item_level("ring_crit") if im.has_method("get_item_level") else 1
-			bonus_damage += 4 + (r_crt_lvl - 1) * 2
+				var pd: Dictionary = im.get_equipped_item_in_slot("PET 2")
+				var pst: Dictionary = im.get_item_primary_stat("drone_shield", "PET 2", str(pd.get("rarity", "COMMON")))
+				max_hp += int(pst.get("value", 35))
+		if im.has_method("get_item_level") and has_pet_laser:
+			pet_laser_lvl = im.get_item_level("drone_laser")
 
-	# Bonus Archetipo / Classe Scelta dal Giocatore
 	match Global.player_class.to_upper():
 		"VANGUARD":
 			max_hp += 40
 		"NETRUNNER":
-			bonus_damage += 4
+			bonus_damage += 5
 		_: # RONIN
 			speed += 30.0
-			bonus_damage += 1
+			bonus_damage += 2
 
 	speed += WeaponDB.get_equipped_boots_speed_bonus() + speed_talent
-	max_hp += (Global.upgrade_hp_lvl * 20) + WeaponDB.get_equipped_armor_hp_bonus() + hp_talent + ((25 + (pet_shield_lvl - 1) * 12) if has_pet_shield else 0)
+	max_hp += (Global.upgrade_hp_lvl * 20) + hp_talent
 	bonus_damage += (Global.upgrade_dmg_lvl * 2) + atk_talent
 	current_hp = max_hp
 
@@ -172,6 +181,15 @@ func _ready() -> void:
 
 	exp_changed.emit(current_exp, exp_to_next_level)
 	hp_changed.emit(current_hp, max_hp)
+	shield_changed.emit(shield_charges, shield_max)
+
+func apply_env_slow(mult: float, duration: float = 1.0) -> void:
+	env_slow_mult = clampf(mult, 0.35, 1.0)
+	env_slow_timer = maxf(env_slow_timer, duration)
+
+func clear_env_slow() -> void:
+	env_slow_mult = 1.0
+	env_slow_timer = 0.0
 
 func add_extra_projectiles(amt: int = 1) -> void:
 	extra_projectiles += amt
@@ -223,6 +241,7 @@ func apply_perk(perk_id: String) -> void:
 		"energy_shield":
 			shield_max += 1
 			shield_charges = shield_max
+			shield_changed.emit(shield_charges, shield_max)
 		"vampire": vampire_stacks += 1
 		"dodge": dodge_chance = minf(0.60, dodge_chance + 0.12)
 		"regen": regen_stacks += 1
@@ -357,7 +376,7 @@ func _physics_process(delta: float) -> void:
 			if joy_vec != Vector2.ZERO:
 				move_dir = joy_vec
 
-	velocity = move_dir * speed * speed_modifier
+	velocity = move_dir * speed * speed_modifier * env_slow_mult
 	move_and_slide()
 
 	# Clamp Eroe tassativo dentro i confini 3D del ponte (con accesso alla nicchia Stargate in alto)
@@ -385,6 +404,10 @@ func _process(delta: float) -> void:
 
 	if invulnerable_time > 0.0:
 		invulnerable_time -= delta
+	if env_slow_timer > 0.0:
+		env_slow_timer -= delta
+		if env_slow_timer <= 0.0:
+			env_slow_mult = 1.0
 
 	# Gestione Scudo Energetico (ricarica ogni 7s se sotto il massimo)
 	if shield_max > 0 and shield_charges < shield_max:
@@ -392,9 +415,10 @@ func _process(delta: float) -> void:
 		if shield_recharge_t >= 7.0:
 			shield_recharge_t = 0.0
 			shield_charges += 1
+			shield_changed.emit(shield_charges, shield_max)
 			var vfx: Node = get_node_or_null("/root/VFXManager")
 			if vfx and vfx.has_method("spawn_floating_text"):
-				vfx.spawn_floating_text(global_position + Vector2(60, -40), "🛡️ SCUDO PRONTO", Color(0.1, 0.9, 1.0, 1.0))
+				vfx.spawn_floating_text(global_position + Vector2(0, -40), "◆ SCUDO PRONTO", Color(0.15, 0.92, 1.0, 1.0))
 
 	# Gestione Rigenerazione passiva HP
 	if regen_stacks > 0 and current_hp > 0 and current_hp < max_hp:
@@ -546,17 +570,18 @@ func take_damage(amount: int) -> void:
 		invulnerable_time = 0.20
 		var vfx: Node = get_node_or_null("/root/VFXManager")
 		if vfx and vfx.has_method("spawn_floating_text"):
-			vfx.spawn_floating_text(global_position + Vector2(40, -30), "💨 SCHIVATO!", Color(0.3, 0.95, 1.0, 1.0))
+			vfx.spawn_floating_text(global_position + Vector2(0, -34), "✦ SCHIVATO!", Color(0.3, 0.95, 1.0, 1.0))
 		return
 
 	# Scudo Energetico Assorbe il Colpo
 	if shield_charges > 0:
 		shield_charges -= 1
+		shield_changed.emit(shield_charges, shield_max)
 		invulnerable_time = 0.40
 		SoundFX.play_hit()
 		var vfx: Node = get_node_or_null("/root/VFXManager")
 		if vfx and vfx.has_method("spawn_floating_text"):
-			vfx.spawn_floating_text(global_position + Vector2(40, -30), "🛡️ ASSORBITO!", Color(0.2, 0.85, 1.0, 1.0))
+			vfx.spawn_floating_text(global_position + Vector2(0, -34), "◆ SCUDO ASSORBITO!", Color(0.2, 0.88, 1.0, 1.0))
 		return
 
 	invulnerable_time = 0.25
@@ -663,6 +688,9 @@ func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0
 		projectile.rotation = dir.angle()
 
 		var eq_w: String = WeaponDB.equipped_weapon_id
+		var eff_dir: Vector2 = dir.rotated(randf_range(-0.045, 0.045)) if (eq_w == "smg" and dmg_mult >= 1.0) else dir
+		projectile.direction = eff_dir
+		projectile.rotation = eff_dir.angle()
 		if "weapon_type" in projectile:
 			projectile.weapon_type = eq_w
 
@@ -670,9 +698,10 @@ func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0
 			projectile.is_homing = true
 		elif eq_w == "katana" and "is_melee_slash" in projectile and dmg_mult >= 1.0:
 			projectile.is_melee_slash = true
+			projectile.global_position = origin + eff_dir * 26.0
 		elif eq_w == "scythe" and "is_piercing" in projectile:
 			projectile.is_piercing = true
-			if "speed" in projectile: projectile.speed = 480.0
+			if "speed" in projectile: projectile.speed = 520.0
 
 		if "speed" in projectile and proj_speed_mult != 1.0:
 			projectile.speed = float(projectile.speed) * proj_speed_mult
@@ -694,14 +723,15 @@ func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0
 
 		if "damage" in projectile:
 			var base_dmg: int = weapon_base_damage + bonus_damage
-			var raw_dmg: float = (base_dmg * 1.5 if eq_w == "katana" else float(base_dmg)) * dmg_mult
+			var raw_dmg: float = (base_dmg * 1.35 if eq_w == "katana" else float(base_dmg)) * dmg_mult
 			if berserker_stacks > 0 and max_hp > 0:
 				var missing_ratio: float = clampf(1.0 - float(current_hp) / float(max_hp), 0.0, 0.85)
 				raw_dmg *= (1.0 + missing_ratio * 0.35 * float(berserker_stacks))
-			var is_crit: bool = (randf() <= (0.15 + crit_chance))
-			if is_crit: raw_dmg *= crit_dmg_mult
+			var rolled_crit: bool = (randf() <= (0.15 + crit_chance))
+			if rolled_crit: raw_dmg *= crit_dmg_mult
 			projectile.damage = maxi(1, int(raw_dmg))
-			if projectile.has_meta("is_crit"): projectile.set_meta("is_crit", is_crit)
+			if "is_crit" in projectile:
+				projectile.is_crit = rolled_crit
 
 		if projectile.has_signal("body_entered"):
 			projectile.body_entered.connect(func(hit_b):

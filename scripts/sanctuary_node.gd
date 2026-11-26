@@ -72,7 +72,7 @@ func _draw() -> void:
 	# Scritta olografica sopra la Valchiria
 	var font := ThemeDB.fallback_font
 	if font:
-		var prompt_txt := "👼 AVVICINATI ALLA VALCHIRIA" if not blessing_claimed else "✨ BENEDIZIONE ATTIVA ✨"
+		var prompt_txt := "✦ AVVICINATI ALLA VALCHIRIA" if not blessing_claimed else "✓ BENEDIZIONE ATTIVA"
 		var prompt_col := CyberTheme.COL_YELLOW if not blessing_claimed else CyberTheme.COL_EQUIPPED
 		draw_string(font, Vector2(-115, -96 + bob * 0.5), prompt_txt, HORIZONTAL_ALIGNMENT_CENTER, 230, 14, prompt_col)
 
@@ -121,7 +121,7 @@ func _open_sanctuary_modal() -> void:
 	panel.add_child(vbox)
 
 	var lbl_hdr := Label.new()
-	lbl_hdr.text = "// 👼 SANTUARIO CYBER-VALCHIRIA //"
+	lbl_hdr.text = "// ✦ SANTUARIO CYBER-VALCHIRIA //"
 	lbl_hdr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_hdr.add_theme_font_size_override("font_size", 22)
 	CyberTheme.style_label(lbl_hdr, CyberTheme.COL_YELLOW, 4)
@@ -130,11 +130,10 @@ func _open_sanctuary_modal() -> void:
 	var lbl_sub := Label.new()
 	lbl_sub.text = "Tregua Tattica: Scegli una Riparazione Nanobot oppure un Potenziamento Minore"
 	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_sub.add_theme_font_size_override("font_size", 14)
+	lbl_sub.add_theme_font_size_override("font_size", 15)
 	CyberTheme.style_label(lbl_sub, CyberTheme.COL_CYAN, 2)
 	vbox.add_child(lbl_sub)
 
-	# Icona 3D Valchiria al centro del modal
 	var holo_ctrl := Control.new()
 	holo_ctrl.custom_minimum_size = Vector2(0, 130)
 	holo_ctrl.draw.connect(func():
@@ -144,11 +143,10 @@ func _open_sanctuary_modal() -> void:
 	)
 	vbox.add_child(holo_ctrl)
 
-	# Estrai un potere minore casuale
 	var minor_powers := [
-		{"id": "minor_dmg", "title": "⚔️ OVERCLOCK OFFENSIVO", "desc": "+6 Danno d'Attacco Base\nper tutta la partita", "col": CyberTheme.COL_YELLOW},
+		{"id": "minor_dmg", "title": "★ OVERCLOCK OFFENSIVO", "desc": "+8 Danno d'Attacco Base\nper tutta la partita", "col": CyberTheme.COL_YELLOW},
 		{"id": "minor_spd", "title": "⚡ REATTORE CINETICO", "desc": "+12% Velocità di Fuoco\ne +20 Velocità Movimento", "col": CyberTheme.COL_CYAN},
-		{"id": "minor_maxhp", "title": "🛡️ CORAZZA BIO-TITANIO", "desc": "+35 HP Massimi Istantanei\n+ Riparazione +35 HP", "col": CyberTheme.COL_MAGENTA}
+		{"id": "minor_maxhp", "title": "◆ CORAZZA BIO-TITANIO", "desc": "+40 HP Massimi Istantanei\n+ Riparazione +40 HP", "col": CyberTheme.COL_MAGENTA}
 	]
 	var chosen_power: Dictionary = minor_powers[randi() % minor_powers.size()]
 
@@ -157,13 +155,12 @@ func _open_sanctuary_modal() -> void:
 	hbox.add_theme_constant_override("separation", 18)
 	vbox.add_child(hbox)
 
-	# Scelta 1: Cura HP (Stile Archero)
 	var heal_amt: int = int(max(40.0, float(player.max_hp) * 0.45)) if "max_hp" in player else 50
 	var btn_heal := Button.new()
-	btn_heal.custom_minimum_size = Vector2(270, 170)
-	btn_heal.text = "💚 CURA NANOBOT\n\nRipristina subito\n+" + str(heal_amt) + " HP (45% Max HP)\n[HP Attuali: " + str(player.current_hp) + "/" + str(player.max_hp) + "]"
+	btn_heal.custom_minimum_size = Vector2(276, 174)
+	btn_heal.text = "✦ CURA NANOBOT\n\nRipristina subito\n+" + str(heal_amt) + " HP (45% Max HP)\n[HP Attuali: " + str(player.current_hp) + "/" + str(player.max_hp) + "]"
 	btn_heal.add_theme_font_size_override("font_size", 15)
-	CyberTheme.style_button(btn_heal, CyberTheme.COL_GREEN, true)
+	CyberTheme.style_button(btn_heal, CyberTheme.COL_GREEN, false)
 	btn_heal.pressed.connect(func():
 		blessing_claimed = true
 		if is_instance_valid(player) and "current_hp" in player and "max_hp" in player:
@@ -172,7 +169,7 @@ func _open_sanctuary_modal() -> void:
 				player.hp_changed.emit(player.current_hp, player.max_hp)
 			var vfx: Node = get_node_or_null("/root/VFXManager")
 			if vfx and vfx.has_method("spawn_floating_text"):
-				vfx.spawn_floating_text(player.global_position, "💚 +" + str(heal_amt) + " HP RIPRISTINATI!", CyberTheme.COL_GREEN)
+				vfx.spawn_floating_text(player.global_position, "✦ +" + str(heal_amt) + " HP RIPRISTINATI!", CyberTheme.COL_GREEN)
 		SoundFX.play_win()
 		get_tree().paused = false
 		_notify_spawner_completed()

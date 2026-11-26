@@ -1,6 +1,6 @@
 extends Node
 
-const GAME_VERSION: String = "v1.5.1"
+const GAME_VERSION: String = "v1.6.0"
 
 # Flag di sessione: mostra la schermata d'entrata cinematografica solo all'apertura dell'app
 var boot_entrance_shown: bool = false
@@ -21,9 +21,13 @@ var google_account_name: String = ""
 # Economia & Progressione (Partenza pulita da zero)
 var total_credits: int = 0
 var total_coins: int = 0
-var upgrade_scrolls: int = 0 # Nuclei Cyber-Upgrade ⚙️ per potenziare il livello di Armi, Corazze, Anelli e Droni
-var max_unlocked_world: int = 1 # Sblocco sequenziale Mondi (1 -> 8)
-var last_run_rewards: Dictionary = {} # Riepilogo premi fine mondo
+var upgrade_scrolls: int = 0
+var max_unlocked_world: int = 1
+var last_run_rewards: Dictionary = {}
+
+# Contatori live della partita in corso (mostrati nell'HUD in alto a destra)
+var run_coins: int = 0
+var run_scrolls: int = 0
 
 var upgrade_dmg_lvl: int = 0
 var upgrade_hp_lvl: int = 0
@@ -42,10 +46,10 @@ const HP_COST: int = 50
 
 func get_player_accent_color() -> Color:
 	match player_color_id.to_upper():
-		"MAGENTA": return Color(1.0, 0.12, 0.52, 1.0)
-		"GOLD": return Color(1.0, 0.86, 0.08, 1.0)
-		"GREEN": return Color(0.12, 1.0, 0.52, 1.0)
-		_: return Color(0.0, 0.95, 1.0, 1.0)
+		"MAGENTA": return Color(1.0, 0.14, 0.54, 1.0)
+		"GOLD": return Color(1.0, 0.86, 0.10, 1.0)
+		"GREEN": return Color(0.12, 1.0, 0.54, 1.0)
+		_: return Color(0.0, 0.94, 1.0, 1.0)
 
 func get_class_display_name() -> String:
 	match player_class.to_upper():

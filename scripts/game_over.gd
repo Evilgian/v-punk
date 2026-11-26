@@ -10,7 +10,8 @@ func _ready() -> void:
 	SoundFX.play_gameover()
 
 	if panel:
-		panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(18, 16, Color(1.18, 0.85, 0.96, 1.0)))
+		panel.custom_minimum_size = Vector2(540, 440)
+		panel.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(20, 18, Color(1.12, 0.86, 0.96, 1.0)))
 	CyberTheme.apply_recursive_cyber_style(self)
 
 	Global.quest_runs += 1
@@ -23,14 +24,19 @@ func _ready() -> void:
 		if not spawners.is_empty() and "current_room" in spawners[0]:
 			current_room = spawners[0].current_room
 
-		stats_label.text = "// SYSTEM FAILURE: FLATLINED //\n\nSettore Raggiunto: Stage " + str(current_room) + "\nCrediti Totali: 🪙 " + str(Global.total_coins) + "\nCyber-Gemme: 💎 " + str(Global.total_credits)
-		stats_label.add_theme_font_size_override("font_size", 20)
+		stats_label.text = "// CONNESSIONE INTERROTTA //\n\nSettore Raggiunto: Stage " + str(current_room) + "\nOro Guadagnato nella Run: +" + str(Global.run_coins) + "\nNuclei Raccolti nella Run: +" + str(Global.run_scrolls) + "\n\nTotale: " + str(Global.total_coins) + " Oro  •  " + str(Global.total_credits) + " Gemme"
+		stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		stats_label.add_theme_font_size_override("font_size", 19)
 		CyberTheme.style_label(stats_label, CyberTheme.COL_CYAN, 3)
 
 	if btn_retry:
+		btn_retry.custom_minimum_size = Vector2(0, 60)
+		btn_retry.text = "⚡ RIPROVA SETTORE"
 		CyberTheme.style_button(btn_retry, CyberTheme.COL_YELLOW, true)
 		btn_retry.pressed.connect(_on_btn_retry_pressed)
 	if btn_menu:
+		btn_menu.custom_minimum_size = Vector2(0, 56)
+		btn_menu.text = "TORNA AL MENU (POTENZIA)"
 		CyberTheme.style_button(btn_menu, CyberTheme.COL_CYAN, false)
 		btn_menu.pressed.connect(_on_btn_menu_pressed)
 

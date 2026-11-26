@@ -3,18 +3,19 @@ extends Control
 signal joystick_vector_changed(vector: Vector2)
 
 @export var max_distance: float = 80.0
-@export var dead_zone: float = 0.15
-@export var base_color: Color = Color(0.0, 0.85, 1.0, 0.22)
+@export var dead_zone: float = 0.14
+@export var base_color: Color = Color(0.0, 0.86, 1.0, 0.20)
 @export var border_color: Color = Color(0.0, 0.94, 1.0, 0.85)
-@export var knob_color: Color = Color(0.0, 0.7, 1.0, 0.65)
-@export var knob_border_color: Color = Color(0.6, 0.95, 1.0, 0.95)
-@export var knob_radius: float = 30.0
+@export var knob_color: Color = Color(0.0, 0.74, 1.0, 0.68)
+@export var knob_border_color: Color = Color(0.65, 0.96, 1.0, 0.96)
+@export var knob_radius: float = 28.0
 
 var output_vector: Vector2 = Vector2.ZERO
 var is_pressed: bool = false
 var touch_index: int = -1
 var joystick_center: Vector2 = Vector2.ZERO
 var knob_position: Vector2 = Vector2.ZERO
+var has_moved_once: bool = false
 
 func _ready() -> void:
 	add_to_group("virtual_joystick")
@@ -24,21 +25,27 @@ func get_output() -> Vector2:
 	return output_vector
 
 func _draw() -> void:
-	if not is_pressed: return
+	if not is_pressed:
+		# Indicatore touch discreto finché il giocatore non effettua il primo movimento
+		if not has_moved_once:
+			var hint_c := Vector2(360.0, 1140.0)
+			draw_circle(hint_c, 42.0, Color(0.0, 0.88, 1.0, 0.08))
+			draw_arc(hint_c, 42.0, 0.0, TAU, 40, Color(0.0, 0.92, 1.0, 0.28), 2.0)
+			draw_circle(hint_c, 14.0, Color(0.0, 0.92, 1.0, 0.22))
+		return
 
-	# Draw Holographic Base Circle & Glow Rings
 	draw_circle(joystick_center, max_distance, base_color)
 	draw_arc(joystick_center, max_distance, 0, TAU, 64, border_color, 3.0)
-	draw_arc(joystick_center, max_distance * 0.6, 0, TAU, 32, Color(0, 0.94, 1, 0.3), 1.5)
+	draw_arc(joystick_center, max_distance * 0.58, 0, TAU, 32, Color(0, 0.94, 1, 0.28), 1.5)
 
-	# Draw Holographic Knob Circle
 	var knob_center := joystick_center + knob_position
+	draw_line(joystick_center, knob_center, Color(0.0, 0.94, 1.0, 0.35), 3.0)
 	draw_circle(knob_center, knob_radius, knob_color)
 	draw_arc(knob_center, knob_radius, 0, TAU, 32, knob_border_color, 2.5)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
-		if event.pressed and event.position.y > (get_viewport_rect().size.y * 0.35):
+		if event.pressed and event.position.y > (get_viewport_rect().size.y * 0.28):
 			_start_touch(event.position, event.index)
 		elif not event.pressed and event.index == touch_index:
 			_end_touch()
@@ -46,7 +53,7 @@ func _input(event: InputEvent) -> void:
 		_update_touch(event.position)
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed and event.position.y > (get_viewport_rect().size.y * 0.35):
+			if event.pressed and event.position.y > (get_viewport_rect().size.y * 0.28):
 				_start_touch(event.position, -1)
 			elif not event.pressed:
 				_end_touch()
@@ -55,6 +62,7 @@ func _input(event: InputEvent) -> void:
 
 func _start_touch(event_pos: Vector2, index: int) -> void:
 	is_pressed = true
+	has_moved_once = true
 	touch_index = index
 	joystick_center = event_pos
 	knob_position = Vector2.ZERO

@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
-@export var speed: float = 90.0
+@export var speed: float = 92.0
 @export var hp: int = 30
 var max_hp: int = 30
-@export var damage: int = 15
+@export var damage: int = 14
 @export var drop_scene: PackedScene = preload("res://scenes/Drop.tscn")
 
 @onready var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
@@ -15,7 +15,9 @@ var aim_angle: float = 0.0
 var world_id: String = "world_1"
 var unit_tint: Color = Color(1.0, 0.35, 0.35, 1.0)
 var is_elite: bool = false
-var lunge_cd: float = 2.0
+var spawn_warmup: float = 0.45
+var lunge_cd: float = 2.2
+var lunge_warn_t: float = 0.0
 var lunge_t: float = 0.0
 
 func _ready() -> void:
@@ -34,12 +36,21 @@ func _ready() -> void:
 	if not players.is_empty():
 		player = players[0] as Node2D
 
+func apply_knockback(impulse: Vector2) -> void:
+	global_position += impulse * (0.55 if is_elite else 0.90)
+	global_position.x = clampf(global_position.x, 58.0, 662.0)
+	global_position.y = clampf(global_position.y, 132.0, 1225.0)
+
 func _physics_process(delta: float) -> void:
 	anim_t += delta
 	queue_redraw()
 
 	if damage_cooldown > 0.0:
 		damage_cooldown -= delta
+
+	if spawn_warmup > 0.0:
+		spawn_warmup -= delta
+		return
 
 	if not is_instance_valid(player):
 		var players := get_tree().get_nodes_in_group("player")
@@ -54,29 +65,37 @@ func _physics_process(delta: float) -> void:
 	var move_dir := dir
 	if world_id == "world_3" or world_id == "world_4" or world_id == "world_7":
 		var perp := Vector2(-dir.y, dir.x)
-		move_dir = (dir + perp * sin(anim_t * 5.2) * 0.36).normalized()
+		move_dir = (dir + perp * sin(anim_t * 5.0) * 0.32).normalized()
 
 	var spd_mult: float = 1.0
 	if is_elite or world_id == "world_2" or world_id == "world_5" or world_id == "world_8":
 		if lunge_t > 0.0:
 			lunge_t -= delta
-			spd_mult = 2.05
+			spd_mult = 2.15
+		elif lunge_warn_t > 0.0:
+			lunge_warn_t -= delta
+			spd_mult = 0.25
+			if lunge_warn_t <= 0.0:
+				lunge_t = 0.26
 		else:
 			lunge_cd -= delta
-			if lunge_cd <= 0.0 and dist < 195.0:
-				lunge_t = 0.26
-				lunge_cd = randf_range(2.2, 3.2)
+			if lunge_cd <= 0.0 and dist < 190.0:
+				lunge_warn_t = 0.34
+				lunge_cd = randf_range(2.4, 3.4)
 
 	velocity = move_dir * speed * spd_mult
 	move_and_slide()
 
-	if dist <= 42.0 and damage_cooldown <= 0.0:
+	if dist <= 40.0 and damage_cooldown <= 0.0:
 		if player.has_method("take_damage"):
 			player.take_damage(damage)
 			damage_cooldown = 1.0
 
 func _draw() -> void:
-	CyberModels.draw_melee_enemy(self, world_id, anim_t, unit_tint, aim_angle, is_elite)
+	if spawn_warmup > 0.0:
+		CyberModels.draw_spawn_telegraph(self, Vector2(0, 14), 24.0, unit_tint, 1.0 - spawn_warmup / 0.45)
+	var l_ratio: float = 1.0 if lunge_t > 0.0 else (clampf(1.0 - lunge_warn_t / 0.34, 0.0, 1.0) if lunge_warn_t > 0.0 else 0.0)
+	CyberModels.draw_melee_enemy(self, world_id, anim_t, unit_tint, aim_angle, is_elite, l_ratio)
 
 	if max_hp > 0:
 		var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
@@ -88,12 +107,12 @@ func _draw() -> void:
 func take_damage(amount: int) -> void:
 	if max_hp < hp: max_hp = hp
 	hp -= amount
-	var is_crit: bool = (randf() <= 0.2)
-	var final_damage: int = amount * (2 if is_crit else 1)
+	var is_crit: bool = bool(get_meta("last_hit_crit", false))
+	set_meta("last_hit_crit", false)
 
 	var vfx: Node = get_node_or_null("/root/VFXManager")
 	if vfx:
-		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, final_damage, is_crit)
+		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, amount, is_crit)
 		if vfx.has_method("flash_hit"): vfx.flash_hit(self)
 
 	queue_redraw()
@@ -117,11 +136,11 @@ func die() -> void:
 			drop.global_position = global_position
 			if "drop_type" in drop:
 				var r := randf()
-				if r < 0.05:
-					drop.drop_type = "gear_drop" # 5% Drop Armatura / Anello / Pet / Arma
-				elif r < 0.20:
-					drop.drop_type = "upgrade_scroll" # 15% Nucleo Potenziamento ⚙️
-				elif r < 0.28:
+				if r < 0.055:
+					drop.drop_type = "gear_drop"
+				elif r < 0.21:
+					drop.drop_type = "upgrade_scroll"
+				elif r < 0.29:
 					drop.drop_type = "heal"
 			get_tree().current_scene.add_child.call_deferred(drop)
 	queue_free()
