@@ -7,193 +7,158 @@ var selected_world_id: String = "world_1"
 func _ready() -> void:
 	_init_database()
 
+func _make_world(
+	id_str: String,
+	name_str: String,
+	rooms: int,
+	hp_m: float,
+	dmg_m: float,
+	rew_m: float,
+	desc_str: String,
+	biome_c: Color,
+	acc_c: Color,
+	trap_str: String,
+	boss_n: String,
+	boss_c: Color
+) -> void:
+	var w := WorldData.new()
+	w.id = id_str
+	w.display_name = name_str
+	w.total_rooms = rooms
+	w.enemy_hp_multiplier = hp_m
+	w.enemy_dmg_multiplier = dmg_m
+	w.reward_multiplier = rew_m
+	w.description = desc_str
+	w.biome_color = biome_c
+	w.accent_color = acc_c
+	w.trap_type = trap_str
+	w.boss_name = boss_n
+	w.boss_color = boss_c
+	w.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_01.png"
+	w.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Environment/scifiEnvironment_01.png"
+	w.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_05.png"
+	w.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_09.png"
+	w.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_10.png"
+	w.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_12.png"
+	worlds[w.id] = w
+	world_order.append(w.id)
+
 func _init_database() -> void:
 	worlds.clear()
 	world_order.clear()
 
-	# Mondo 1 - Settore Tutorial Guidato: Foresta Bio-Cibernetica (10 Livelli: Guida Interattiva, Santuario al 5, Boss al 10)
-	var w1 := WorldData.new()
-	w1.id = "world_1"
-	w1.display_name = "Mondo 1: Foresta Bio-Cyber [Tutorial]"
-	w1.total_rooms = 10
-	w1.enemy_hp_multiplier = 0.90
-	w1.enemy_dmg_multiplier = 0.80
-	w1.reward_multiplier = 1.2
-	w1.description = "SETTORE ADDESTRAMENTO (10 Livelli): Impara movimento, fuoco automatico, coperture 3D, Torrette Spitter, Santuario (Lv.5) e Golem Boss (Lv.10)!"
-	w1.biome_color = Color(0.04, 0.14, 0.08, 1.0)
-	w1.accent_color = Color(0.2, 1.0, 0.55, 1.0)
-	w1.trap_type = "SPIKES"
-	w1.boss_name = "Golem Silvano MK-I"
-	w1.boss_color = Color(0.3, 1.0, 0.45, 1.0)
-	w1.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_01.png"
-	w1.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Environment/scifiEnvironment_01.png"
-	w1.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_05.png"
-	w1.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_09.png"
-	w1.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_10.png"
-	w1.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_12.png"
-	_register_world(w1)
+	_make_world("world_1", "SERRA BIO-SYNTH", 10, 0.90, 0.80, 1.2,
+		"Zona di quarantena botanica della megatorre Biotechnica.",
+		Color(0.04, 0.12, 0.08, 1.0), Color(0.12, 0.98, 0.56, 1.0), "SPIKES", "BIO-GOLEM MK-I", Color(0.25, 1.0, 0.50, 1.0))
 
-	# Mondo 2 - Deserto delle Rovine (30 Livelli)
-	var w2 := WorldData.new()
-	w2.id = "world_2"
-	w2.display_name = "Mondo 2: Deserto delle Rovine"
-	w2.total_rooms = 30
-	w2.enemy_hp_multiplier = 1.55
-	w2.enemy_dmg_multiplier = 1.35
-	w2.reward_multiplier = 1.6
-	w2.description = "Settore 02 (30 Livelli): Dune radioattive presidiate da Ragni Kamikaze esplosivi, Torrette Spitter e dallo Scorpione Imperiale."
-	w2.biome_color = Color(0.18, 0.13, 0.05, 1.0)
-	w2.accent_color = Color(1.0, 0.78, 0.2, 1.0)
-	w2.trap_type = "SANDPIT"
-	w2.boss_name = "Scorpione Meccanico"
-	w2.boss_color = Color(1.0, 0.65, 0.15, 1.0)
-	w2.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_05.png"
-	w2.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Environment/scifiEnvironment_04.png"
-	w2.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_13.png"
-	w2.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_15.png"
-	w2.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_16.png"
-	w2.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_18.png"
-	_register_world(w2)
+	_make_world("world_2", "AUTOSTRADA BADLANDS", 15, 1.35, 1.18, 1.5,
+		"Arteria desertica abbandonata tra convogli in fiamme e tempeste tossiche.",
+		Color(0.16, 0.11, 0.05, 1.0), Color(1.0, 0.72, 0.14, 1.0), "SANDPIT", "SCORPIO IMPERIALE", Color(1.0, 0.65, 0.15, 1.0))
 
-	# Mondo 3 - Stazione Cyberpunk (30 Livelli)
-	var w3 := WorldData.new()
-	w3.id = "world_3"
-	w3.display_name = "Mondo 3: Stazione Cyberpunk"
-	w3.total_rooms = 30
-	w3.enemy_hp_multiplier = 2.25
-	w3.enemy_dmg_multiplier = 1.75
-	w3.reward_multiplier = 2.4
-	w3.description = "Settore 03 (30 Livelli): Grattacielo Arasaka difeso da Scudieri Aegis, Assassini Cyber-Wraith e dal Mega Dron-Core."
-	w3.biome_color = Color(0.10, 0.04, 0.20, 1.0)
-	w3.accent_color = Color(0.0, 0.94, 1.0, 1.0)
-	w3.trap_type = "LASER"
-	w3.boss_name = "Mega Dron-Core 3000"
-	w3.boss_color = Color(0.0, 0.95, 1.0, 1.0)
-	w3.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_11.png"
-	w3.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Structure/scifiStructure_03.png"
-	w3.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_19.png"
-	w3.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_21.png"
-	w3.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_22.png"
-	w3.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_24.png"
-	_register_world(w3)
+	_make_world("world_3", "ELIPORTO ARASAKA", 20, 1.85, 1.48, 2.0,
+		"Attico blindato sotto pioggia acida nel cuore finanziario di Night City.",
+		Color(0.07, 0.05, 0.15, 1.0), Color(0.0, 0.94, 1.0, 1.0), "LASER", "DRON-CORE 3000", Color(0.0, 0.95, 1.0, 1.0))
 
-	# Mondo 4 - Laboratorio Criogenico (30 Livelli)
-	var w4 := WorldData.new()
-	w4.id = "world_4"
-	w4.display_name = "Mondo 4: Lab Criogenico"
-	w4.total_rooms = 30
-	w4.enemy_hp_multiplier = 3.1
-	w4.enemy_dmg_multiplier = 2.2
-	w4.reward_multiplier = 3.4
-	w4.description = "Settore 04 (30 Livelli): Reattore sub-zero con trappole criogeniche e Cryo-Valkyrie Zero."
-	w4.biome_color = Color(0.03, 0.13, 0.22, 1.0)
-	w4.accent_color = Color(0.45, 0.90, 1.0, 1.0)
-	w4.trap_type = "CRYO"
-	w4.boss_name = "Cryo-Valkyrie Zero"
-	w4.boss_color = Color(0.4, 0.85, 1.0, 1.0)
-	w4.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_14.png"
-	w4.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Structure/scifiStructure_05.png"
-	w4.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_25.png"
-	w4.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_27.png"
-	w4.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_28.png"
-	w4.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_30.png"
-	_register_world(w4)
+	_make_world("world_4", "CRIPTA CRIOGENICA", 20, 2.40, 1.80, 2.6,
+		"Archivio neurale sub-zero immerso in vapori d'azoto liquido.",
+		Color(0.03, 0.11, 0.18, 1.0), Color(0.38, 0.88, 1.0, 1.0), "CRYO", "VALKYRIE ZERO", Color(0.42, 0.88, 1.0, 1.0))
 
-	# Mondo 5 - Fonderia Magmatica (40 Livelli)
-	var w5 := WorldData.new()
-	w5.id = "world_5"
-	w5.display_name = "Mondo 5: Fonderia Magmatica"
-	w5.total_rooms = 40
-	w5.enemy_hp_multiplier = 3.6
-	w5.enemy_dmg_multiplier = 2.6
-	w5.reward_multiplier = 4.6
-	w5.description = "Settore 05 (40 Livelli): Fornace geotermica con Droidi Kamikaze instabili, Goliath Mech e Vulcan Overlord."
-	w5.biome_color = Color(0.20, 0.05, 0.03, 1.0)
-	w5.accent_color = Color(1.0, 0.38, 0.1, 1.0)
-	w5.trap_type = "MAGMA"
-	w5.boss_name = "Vulcan Overlord"
-	w5.boss_color = Color(1.0, 0.3, 0.05, 1.0)
-	w5.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_21.png"
-	w5.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Structure/scifiStructure_08.png"
-	w5.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_31.png"
-	w5.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_33.png"
-	w5.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_34.png"
-	w5.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_36.png"
-	_register_world(w5)
+	_make_world("world_5", "FONDERIA MAGMATICA", 25, 3.05, 2.15, 3.4,
+		"Impianto siderurgico automatizzato sospeso su colate di metallo fuso.",
+		Color(0.18, 0.05, 0.03, 1.0), Color(1.0, 0.36, 0.08, 1.0), "MAGMA", "VULCAN OVERLORD", Color(1.0, 0.32, 0.06, 1.0))
 
-	# Mondo 6 - Raffineria Bio-Tossica (40 Livelli)
-	var w6 := WorldData.new()
-	w6.id = "world_6"
-	w6.display_name = "Mondo 6: Raffineria Bio-Tossica"
-	w6.total_rooms = 40
-	w6.enemy_hp_multiplier = 4.6
-	w6.enemy_dmg_multiplier = 3.1
-	w6.reward_multiplier = 6.2
-	w6.description = "Settore 06 (40 Livelli): Impianto chimico infestato da Spitter Bio-Acidi, Assassini Wraith e Hydra Chimera X a 3 Teste."
-	w6.biome_color = Color(0.06, 0.16, 0.04, 1.0)
-	w6.accent_color = Color(0.65, 1.0, 0.15, 1.0)
-	w6.trap_type = "ACID"
-	w6.boss_name = "Hydra Chimera X"
-	w6.boss_color = Color(0.6, 1.0, 0.1, 1.0)
-	w6.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_27.png"
-	w6.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Environment/scifiEnvironment_09.png"
-	w6.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_37.png"
-	w6.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_39.png"
-	w6.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_40.png"
-	w6.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_42.png"
-	_register_world(w6)
+	_make_world("world_6", "CONDOTTI CHIMICI", 25, 3.75, 2.50, 4.3,
+		"Sottosuolo industriale saturo di reagenti mutageni luminescenti.",
+		Color(0.05, 0.14, 0.04, 1.0), Color(0.62, 1.0, 0.14, 1.0), "ACID", "HYDRA CHIMERA X", Color(0.58, 1.0, 0.12, 1.0))
 
-	# Mondo 7 - Cittadella Astrale (50 Livelli)
-	var w7 := WorldData.new()
-	w7.id = "world_7"
-	w7.display_name = "Mondo 7: Cittadella Astrale"
-	w7.total_rooms = 50
-	w7.enemy_hp_multiplier = 5.8
-	w7.enemy_dmg_multiplier = 3.7
-	w7.reward_multiplier = 8.5
-	w7.description = "Settore 07 (50 Livelli): Santuario orbitale a plasma solare difeso da Scudieri Aegis e da Archon Seraphim."
-	w7.biome_color = Color(0.07, 0.09, 0.22, 1.0)
-	w7.accent_color = Color(1.0, 0.86, 0.30, 1.0)
-	w7.trap_type = "TESLA"
-	w7.boss_name = "Archon Seraphim"
-	w7.boss_color = Color(1.0, 0.88, 0.25, 1.0)
-	w7.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_33.png"
-	w7.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Structure/scifiStructure_12.png"
-	w7.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_43.png"
-	w7.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_45.png"
-	w7.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_46.png"
-	w7.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_47.png"
-	_register_world(w7)
+	_make_world("world_7", "HANGAR ORBITALE", 30, 4.55, 2.90, 5.5,
+		"Scalo aerospaziale in orbita bassa sopra l'emisfero notturno.",
+		Color(0.05, 0.08, 0.18, 1.0), Color(0.98, 0.88, 0.20, 1.0), "TESLA", "ARCHON SERAPHIM", Color(1.0, 0.86, 0.25, 1.0))
 
-	# Mondo 8 - Singolarità del Vuoto (50 Livelli)
-	var w8 := WorldData.new()
-	w8.id = "world_8"
-	w8.display_name = "Mondo 8: Nexus della Singolarità"
-	w8.total_rooms = 50
-	w8.enemy_hp_multiplier = 7.2
-	w8.enemy_dmg_multiplier = 4.4
-	w8.reward_multiplier = 12.0
-	w8.description = "Settore 08 (50 Livelli): Orizzonte degli eventi con tutti i 7 Archetipi Élite e l'IA Suprema OMEGA PROTOCOL."
-	w8.biome_color = Color(0.05, 0.02, 0.10, 1.0)
-	w8.accent_color = Color(1.0, 0.15, 0.75, 1.0)
-	w8.trap_type = "VOID"
-	w8.boss_name = "Omega Protocol: A.R.G.O.N."
-	w8.boss_color = Color(1.0, 0.15, 0.80, 1.0)
-	w8.floor_tile_path = "res://assets/sprites/PNG/Retina/Tile/scifiTile_39.png"
-	w8.obstacle_texture_path = "res://assets/sprites/PNG/Retina/Structure/scifiStructure_15.png"
-	w8.melee_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_44.png"
-	w8.ranged_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_45.png"
-	w8.heavy_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_46.png"
-	w8.boss_unit_texture = "res://assets/sprites/PNG/Retina/Unit/scifiUnit_48.png"
-	_register_world(w8)
+	_make_world("world_8", "VICOLO KABUKI", 30, 5.45, 3.30, 6.8,
+		"Dedalo clandestino del mercato nero immerso tra insegne cremisi.",
+		Color(0.14, 0.03, 0.08, 1.0), Color(1.0, 0.05, 0.38, 1.0), "LASER", "KURO-SHINOBI X", Color(1.0, 0.12, 0.42, 1.0))
 
-	print("WorldDB: ", worlds.size(), " Mondi caricati con successo!")
+	_make_world("world_9", "BASTIONE MILITECH", 35, 6.45, 3.75, 8.4,
+		"Piazzaforte corazzata ad alta sicurezza presidiata da artiglieria pesante.",
+		Color(0.14, 0.04, 0.05, 1.0), Color(1.0, 0.18, 0.22, 1.0), "SPIKES", "ARES DREADNOUGHT", Color(1.0, 0.22, 0.18, 1.0))
 
-func _register_world(w: WorldData) -> void:
-	worlds[w.id] = w
-	world_order.append(w.id)
+	_make_world("world_10", "REATTORE ABISSALE", 40, 7.60, 4.20, 10.2,
+		"Centrale geotermica sottomarina ancorata nella fossa oceanica.",
+		Color(0.02, 0.10, 0.16, 1.0), Color(0.0, 0.90, 0.78, 1.0), "CRYO", "LEVIATHAN CRYO", Color(0.10, 0.95, 0.82, 1.0))
+
+	_make_world("world_11", "CUPOLA SELENE", 45, 8.90, 4.70, 12.5,
+		"Avamposto cibernetico sulla superficie lunare a gravità ridotta.",
+		Color(0.06, 0.08, 0.14, 1.0), Color(0.72, 0.88, 1.0, 1.0), "TESLA", "CELESTIAL VALKYRIE", Color(0.82, 0.92, 1.0, 1.0))
+
+	_make_world("world_12", "NUCLEO A.R.G.O.N.", 50, 10.40, 5.30, 16.0,
+		"Cattedrale digitale dell'IA ribelle oltre l'orizzonte degli eventi.",
+		Color(0.07, 0.02, 0.08, 1.0), Color(1.0, 0.0, 0.32, 1.0), "VOID", "OMEGA A.R.G.O.N.", Color(1.0, 0.08, 0.40, 1.0))
+
+	print("WorldDB: ", worlds.size(), " Settori Cyberpunk caricati!")
 
 func get_selected_world() -> WorldData:
 	if worlds.has(selected_world_id):
 		return worlds[selected_world_id] as WorldData
 	return worlds["world_1"] as WorldData
+
+## Restituisce i 3 Traguardi Intermedi di avanzamento per un dato Settore (30%, 60%, 100%)
+func get_world_milestones(world_id: String) -> Array[Dictionary]:
+	if not worlds.has(world_id):
+		return []
+	var w: WorldData = worlds[world_id]
+	var w_idx: int = maxi(1, world_order.find(world_id) + 1)
+	var tot: int = maxi(5, w.total_rooms)
+	var r1: int = maxi(2, int(round(float(tot) * 0.30)))
+	var r2: int = maxi(r1 + 2, int(round(float(tot) * 0.65)))
+	var r3: int = tot
+
+	return [
+		{
+			"key": world_id + "_m1",
+			"tier": 1,
+			"target_room": r1,
+			"title": "ZONA " + str(r1),
+			"coins": 180 * w_idx,
+			"gems": 0,
+			"scrolls": 2 + int(w_idx / 2),
+			"gear_rarity": "",
+			"summary": "+" + str(180 * w_idx) + " Crediti  •  +" + str(2 + int(w_idx / 2)) + " Nuclei"
+		},
+		{
+			"key": world_id + "_m2",
+			"tier": 2,
+			"target_room": r2,
+			"title": "ZONA " + str(r2),
+			"coins": 320 * w_idx,
+			"gems": 25 + w_idx * 5,
+			"scrolls": 0,
+			"gear_rarity": "",
+			"summary": "+" + str(25 + w_idx * 5) + " Gemme  •  +" + str(320 * w_idx) + " Crediti"
+		},
+		{
+			"key": world_id + "_m3",
+			"tier": 3,
+			"target_room": r3,
+			"title": "BOSS ZONA " + str(r3),
+			"coins": 0,
+			"gems": 50 + w_idx * 10,
+			"scrolls": 3 + w_idx,
+			"gear_rarity": "EPIC" if w_idx >= 3 else "RARE",
+			"summary": "+" + str(50 + w_idx * 10) + " Gemme  •  Cromo " + ("Epico" if w_idx >= 3 else "Raro")
+		}
+	]
+
+func count_claimable_milestones(filter_world_id: String = "") -> int:
+	var g: Node = get_node_or_null("/root/Global")
+	if not g:
+		return 0
+	var cnt: int = 0
+	var ids: Array = [filter_world_id] if not filter_world_id.is_empty() else world_order
+	for wid in ids:
+		var best_r: int = g.get_world_best_room(str(wid))
+		for m in get_world_milestones(str(wid)):
+			var mk: String = str(m["key"])
+			if best_r >= int(m["target_room"]) and not bool(g.world_milestones_claimed.get(mk, false)):
+				cnt += 1
+	return cnt

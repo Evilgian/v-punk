@@ -65,7 +65,7 @@ func setup_item(item_data: Dictionary) -> void:
 			btn_upg.icon = CyberTheme.get_ui_icon("core")
 			btn_upg.expand_icon = true
 			btn_upg.add_theme_font_size_override("font_size", 16)
-			btn_upg.text = "▲ POTENZIA A LV." + str(cur_lvl + 1) + "  (" + str(coin_cost) + " Oro + " + str(scroll_cost) + " Nuclei)"
+			btn_upg.text = "▲ CALIBRA A LV." + str(cur_lvl + 1) + "  (" + str(coin_cost) + "¢ + " + str(scroll_cost) + " Nuclei)"
 			CyberTheme.style_button(btn_upg, CyberTheme.COL_GREEN if can_afford else CyberTheme.COL_CYAN, can_afford)
 			btn_upg.pressed.connect(func():
 				if im and im.has_method("upgrade_item_level"):
@@ -91,8 +91,8 @@ func setup_item(item_data: Dictionary) -> void:
 		item_title.add_theme_font_size_override("font_size", 22)
 		CyberTheme.style_label(item_title, rar_col.lightened(0.15), 4)
 	if item_info:
-		var eq_tag := "  •  ✓ INDOSSATO" if is_eq else ""
-		item_info.text = "SLOT: " + islot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nDisponibili: " + str(Global.total_coins) + " Oro   |   " + str(Global.upgrade_scrolls) + " Nuclei"
+		var eq_tag := "  •  ✓ INNESTATO" if is_eq else ""
+		item_info.text = "SLOT: " + islot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nDisponibili: " + str(Global.total_coins) + " Crediti   |   " + str(Global.upgrade_scrolls) + " Nuclei"
 		item_info.add_theme_font_size_override("font_size", 16)
 		CyberTheme.style_label(item_info, CyberTheme.COL_EQUIPPED if is_eq else rar_col, 3)
 	if item_desc:
@@ -107,12 +107,12 @@ func setup_item(item_data: Dictionary) -> void:
 		for conn in btn_action.pressed.get_connections():
 			btn_action.pressed.disconnect(conn["callable"])
 		if is_eq:
-			btn_action.text = "✓ GIÀ EQUIPAGGIATO" if islot.to_upper() == "ARMA" else "✓ IN USO  (TOCCA PER RIMUOVERE)"
+			btn_action.text = "✓ ARMA PRIMARIA ATTIVA" if islot.to_upper() == "ARMA" else "✓ INNESTATO  (DISINNESTA)"
 			btn_action.disabled = (islot.to_upper() == "ARMA")
 			CyberTheme.style_button(btn_action, CyberTheme.COL_EQUIPPED, false)
 		else:
 			btn_action.disabled = false
-			btn_action.text = "⚡ EQUIPAGGIA ORA"
+			btn_action.text = "INNESTA CROMO »"
 			CyberTheme.style_button(btn_action, CyberTheme.COL_YELLOW, true)
 
 		btn_action.pressed.connect(func():

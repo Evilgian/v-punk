@@ -24,19 +24,19 @@ func _ready() -> void:
 		if not spawners.is_empty() and "current_room" in spawners[0]:
 			current_room = spawners[0].current_room
 
-		stats_label.text = "// CONNESSIONE INTERROTTA //\n\nSettore Raggiunto: Stage " + str(current_room) + "\nOro Guadagnato nella Run: +" + str(Global.run_coins) + "\nNuclei Raccolti nella Run: +" + str(Global.run_scrolls) + "\n\nTotale: " + str(Global.total_coins) + " Oro  •  " + str(Global.total_credits) + " Gemme"
+		stats_label.text = "// NEURAL-LINK INTERROTTO //\n\nZona Raggiunta: " + str(current_room) + "\nCrediti Recuperati: +" + str(Global.run_coins) + "\nNuclei Estratti: +" + str(Global.run_scrolls) + "\n\nSaldo: " + str(Global.total_coins) + "¢  •  " + str(Global.total_credits) + "◆"
 		stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		stats_label.add_theme_font_size_override("font_size", 19)
 		CyberTheme.style_label(stats_label, CyberTheme.COL_CYAN, 3)
 
 	if btn_retry:
 		btn_retry.custom_minimum_size = Vector2(0, 60)
-		btn_retry.text = "⚡ RIPROVA SETTORE"
+		btn_retry.text = "RIAVVIA INCURSIONE »"
 		CyberTheme.style_button(btn_retry, CyberTheme.COL_YELLOW, true)
 		btn_retry.pressed.connect(_on_btn_retry_pressed)
 	if btn_menu:
 		btn_menu.custom_minimum_size = Vector2(0, 56)
-		btn_menu.text = "TORNA AL MENU (POTENZIA)"
+		btn_menu.text = "RIENTRA ALLA BASE"
 		CyberTheme.style_button(btn_menu, CyberTheme.COL_CYAN, false)
 		btn_menu.pressed.connect(_on_btn_menu_pressed)
 

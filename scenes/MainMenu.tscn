@@ -220,7 +220,7 @@ custom_minimum_size = Vector2(146, 64)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 17
-text = "PREMI"
+text = "DROP"
 
 [node name="BtnSettingsTop" type="Button" parent="MarginContainer/MainVBox/TopHeaderBox/TopBar"]
 custom_minimum_size = Vector2(66, 64)
@@ -321,18 +321,18 @@ alignment = 1
 [node name="PreviewHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="BtnPrevWorld" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(64, 92)
+custom_minimum_size = Vector2(52, 108)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 28
-text = "◀"
+text = "‹"
 
 [node name="PreviewIcon" type="TextureButton" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(496, 224)
+custom_minimum_size = Vector2(516, 248)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -341,33 +341,35 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="BtnNextWorld" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox/PreviewHBox"]
-custom_minimum_size = Vector2(64, 92)
+custom_minimum_size = Vector2(52, 108)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 28
-text = "▶"
+text = "›"
 
 [node name="WorldName" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
-theme_override_font_sizes/font_size = 27
-text = "Cyber-Sector 01"
+theme_override_font_sizes/font_size = 25
+text = "SERRA BIO-SYNTH"
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="WorldInfo" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
-theme_override_font_sizes/font_size = 19
-text = "Stanze: 10 | HP Nemici: x1.0"
+theme_override_font_sizes/font_size = 17
+text = ""
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="WorldDesc" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView/WorldCard/VBox"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 17
-text = "Settore industriale sotto controllo droni."
+theme_override_font_sizes/font_size = 16
+text = ""
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -385,15 +387,15 @@ horizontal_alignment = 1
 vertical_alignment = 0
 
 [node name="BtnPlayHome" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/HomeView"]
-custom_minimum_size = Vector2(640, 88)
+custom_minimum_size = Vector2(640, 84)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 25
 theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
-text = "⚡ GIOCA CAPITOLO ▶"
+text = "AVVIA INCURSIONE »"
 
 [node name="InventoryView" type="VBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox"]
 visible = false
@@ -554,14 +556,14 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
 theme_override_font_sizes/font_size = 20
-text = "▲ FUCINA RIPPERDOC: FUSIONE 3-IN-1"
+text = "RIPPERDOC // SINTESI 3-IN-1"
 horizontal_alignment = 1
 
 [node name="MergeStatusLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView/ForgeSection/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.92, 0.95, 1, 1)
 theme_override_font_sizes/font_size = 17
-text = "Possiedi 3 oggetti identici per fondere."
+text = "Sintetizza 3 moduli identici nel grado superiore."
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -574,13 +576,13 @@ theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_play_btn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_play_btn_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_play_btn")
-text = "⚡ FONDI TUTTI 3-IN-1 ⚡"
+text = "SINTETIZZA TUTTI »"
 
 [node name="InventoryTitle" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 18
-text = "★ DOTAZIONE POSSEDUTA (1 TOCCO PER EQUIPAGGIARE)"
+text = "ARCHIVIO CYBERWARE // MODULI DISPONIBILI"
 horizontal_alignment = 1
 
 [node name="InventoryGrid" type="GridContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/InventoryView"]
@@ -685,7 +687,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 20
-text = "★ FORZIERI CYBER-ARMERIA"
+text = "FORNITURE CONTRABBANDO // CASSE ARMERIA"
 horizontal_alignment = 1
 
 [node name="HBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox"]
@@ -697,13 +699,13 @@ alignment = 1
 custom_minimum_size = Vector2(302, 242)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "\n\n\n\n\nCASSA MILITECH\n70% Raro • 30% Comune\n[ ◆ 100 GEMME ]"
+text = "\n\n\n\n\nCASSA MILITECH\n70% MK.II • 30% MK.I\n[ 100 GEMME ]"
 
 [node name="BtnBuyEpicCrate" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/CratesSection/VBox/HBox"]
 custom_minimum_size = Vector2(302, 242)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "\n\n\n\n\nCASSA ARASAKA OVERLORD\n65% Epico • 35% Leggendario\n[ ◆ 300 GEMME ]"
+text = "\n\n\n\n\nCASSA ARASAKA BLACK-OPS\n65% MK.III • 35% MK.IV\n[ 300 GEMME ]"
 
 [node name="FreeAdsSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 custom_minimum_size = Vector2(0, 175)
@@ -719,7 +721,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
 theme_override_font_sizes/font_size = 19
-text = "▶ TRASMISSIONE NETRUNNER: GEMME GRATIS"
+text = "INTERCETTAZIONE RETE // GEMME DI SUPPORTO"
 horizontal_alignment = 1
 
 [node name="AdHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox"]
@@ -730,13 +732,13 @@ alignment = 1
 [node name="AdCountLabel" type="Label" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox/AdHBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
-text = "Rimasti oggi: 3 / 3"
+text = "Slot attivi: 3 / 3"
 
 [node name="BtnWatchAd" type="Button" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/FreeAdsSection/VBox/AdHBox"]
 custom_minimum_size = Vector2(284, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "▶ SINCRONIZZA (+20 GEMME)"
+text = "DECIFRA (+20 GEMME) »"
 
 [node name="IapSection" type="PanelContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView"]
 custom_minimum_size = Vector2(0, 250)
@@ -752,7 +754,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0.94, 1, 1)
 theme_override_font_sizes/font_size = 19
-text = "◆ BANCA CORPORATIVA: CREDITI GEMME"
+text = "TERMINALE CREDITI // FONDI CORPORATIVI"
 horizontal_alignment = 1
 
 [node name="IapHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/CentralContainer/ScrollContainer/ContentVBox/ShopView/IapSection/VBox"]

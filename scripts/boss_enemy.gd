@@ -399,9 +399,11 @@ func _die() -> void:
 		dropped_items.append(im.roll_random_in_run_gear_drop(world_num))
 		dropped_items.append(im.roll_random_in_run_gear_drop(world_num))
 
-	# Sblocco Sequenziale del Mondo Successivo
+	# Sblocco Sequenziale del Mondo Successivo (fino al Settore 12!)
+	if Global.has_method("record_world_progress"):
+		Global.record_world_progress(world_id, w.total_rooms if w else 10)
 	var newly_unlocked_world: int = 0
-	if world_num >= Global.max_unlocked_world and world_num < 8:
+	if world_num >= Global.max_unlocked_world and world_num < WorldDB.world_order.size():
 		Global.max_unlocked_world = world_num + 1
 		newly_unlocked_world = Global.max_unlocked_world
 		WorldDB.selected_world_id = "world_" + str(Global.max_unlocked_world)

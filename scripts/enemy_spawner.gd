@@ -87,12 +87,32 @@ func _pick_world_enemy_spec(room: int, idx: int) -> Dictionary:
 			elif roll < 0.56: return {"scene": special_enemy_scene, "arch": "KAMIKAZE"}
 			elif roll < 0.78: return {"scene": special_enemy_scene, "arch": "ASSASSIN"}
 			else: return {"scene": enemy_scene, "arch": ""}
-		"world_7": # Cittadella Astrale: Assassini Wraith + Scudieri Aegis + Droni + Goliath
+		"world_7": # Hangar Orbitale: Assassini Wraith + Scudieri Aegis + Droni + Goliath
 			if roll < 0.30: return {"scene": special_enemy_scene, "arch": "ASSASSIN"}
 			elif roll < 0.56: return {"scene": special_enemy_scene, "arch": "SHIELDER"}
 			elif roll < 0.78: return {"scene": ranged_enemy_scene, "arch": ""}
 			else: return {"scene": heavy_enemy_scene, "arch": ""}
-		_: # Mondo 8 Nexus: Tutti i 7 archetipi al completo!
+		"world_8": # Vicolo Kabuki: Sicari Cyber-Wraith + Kamikaze + Lame Mantis
+			if roll < 0.36: return {"scene": special_enemy_scene, "arch": "ASSASSIN"}
+			elif roll < 0.60: return {"scene": special_enemy_scene, "arch": "KAMIKAZE"}
+			elif roll < 0.80: return {"scene": ranged_enemy_scene, "arch": ""}
+			else: return {"scene": enemy_scene, "arch": ""}
+		"world_9": # Bastione Militech: Falangi Aegis + Mech Goliath + Tiratori Scelti
+			if roll < 0.32: return {"scene": special_enemy_scene, "arch": "SHIELDER"}
+			elif roll < 0.60: return {"scene": heavy_enemy_scene, "arch": ""}
+			elif roll < 0.84: return {"scene": ranged_enemy_scene, "arch": ""}
+			else: return {"scene": special_enemy_scene, "arch": "KAMIKAZE"}
+		"world_10": # Reattore Abissale: Torrette Crio-Spitter + Aegis + Goliath
+			if roll < 0.34: return {"scene": special_enemy_scene, "arch": "SPITTER"}
+			elif roll < 0.58: return {"scene": special_enemy_scene, "arch": "SHIELDER"}
+			elif roll < 0.80: return {"scene": heavy_enemy_scene, "arch": ""}
+			else: return {"scene": ranged_enemy_scene, "arch": ""}
+		"world_11": # Cupola Selene: Wraith Lunari + Droni Orbitali + Aegis
+			if roll < 0.34: return {"scene": special_enemy_scene, "arch": "ASSASSIN"}
+			elif roll < 0.60: return {"scene": ranged_enemy_scene, "arch": ""}
+			elif roll < 0.82: return {"scene": special_enemy_scene, "arch": "SHIELDER"}
+			else: return {"scene": special_enemy_scene, "arch": "SPITTER"}
+		_: # Mondo 12 Nucleo A.R.G.O.N.: Tutti i 7 archetipi d'élite al completo!
 			if roll < 0.18: return {"scene": special_enemy_scene, "arch": "SHIELDER"}
 			elif roll < 0.36: return {"scene": special_enemy_scene, "arch": "ASSASSIN"}
 			elif roll < 0.52: return {"scene": special_enemy_scene, "arch": "KAMIKAZE"}
@@ -105,6 +125,11 @@ func start_room() -> void:
 	room_cleared = false
 	sanctuary_pending = false
 	spawn_grace_frames = 2
+	if current_world and Global.has_method("record_world_progress"):
+		# Ogni stanza superata registra il progresso per i Premi Intermedi a Soglie!
+		var cleared_so_far: int = maxi(0, current_room - 1)
+		if cleared_so_far > 0:
+			Global.record_world_progress(current_world.id, cleared_so_far)
 	print("Avvio Stanza ", current_room, "/", current_world.total_rooms, " in ", current_world.display_name)
 
 	# 1. Stanza del Boss (Ogni 10 Livelli e all'Ultimo Livello del Mondo)

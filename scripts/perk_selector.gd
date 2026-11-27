@@ -38,10 +38,10 @@ func _populate_perks() -> void:
 	for child in container.get_children():
 		if child is Label:
 			var hdr := child as Label
-			hdr.text = "⚡ LIVELLO SUPERIORE — SCEGLI CYBERWARE ⚡"
+			hdr.text = "SINAPSI // SELEZIONA INNESTO"
 			hdr.add_theme_font_size_override("font_size", 22)
 			hdr.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			CyberTheme.style_label(hdr, CyberTheme.COL_YELLOW, 4)
+			CyberTheme.style_label(hdr, CyberTheme.COL_YELLOW, 3)
 		else:
 			child.queue_free()
 
@@ -72,6 +72,9 @@ func _populate_perks() -> void:
 		var sb_h := CyberTheme.make_rarity_card_box(perk.rarity, 16, 12)
 		if sb_h is StyleBoxTexture:
 			(sb_h as StyleBoxTexture).modulate_color = Color(1.12, 1.12, 1.16, 1.0)
+		var f_bold := CyberTheme.get_cyber_font(true)
+		if f_bold:
+			btn.add_theme_font_override("font", f_bold)
 		btn.add_theme_stylebox_override("normal", sb)
 		btn.add_theme_stylebox_override("hover", sb_h)
 		btn.add_theme_stylebox_override("pressed", sb_h)

@@ -38,7 +38,9 @@ func save_game() -> void:
 		},
 		"world": {
 			"selected_world_id": wdb.selected_world_id if (wdb and "selected_world_id" in wdb) else "world_1",
-			"max_unlocked_world": Global.max_unlocked_world
+			"max_unlocked_world": Global.max_unlocked_world,
+			"world_best_room": Global.world_best_room,
+			"world_milestones_claimed": Global.world_milestones_claimed
 		},
 		"inventory": {
 			"equipped_weapon_id": im.equipped_weapon_id if (im and "equipped_weapon_id" in im) else "pistol_base",
@@ -116,12 +118,17 @@ func load_game() -> void:
 		Global.checkin_day = int(eco.get("checkin_day", 1))
 		Global.checkin_claimed = bool(eco.get("checkin_claimed", false))
 
-	# Restore World
+	# Restore World & Milestone Progress
 	if data.has("world") and data["world"] is Dictionary:
-		Global.max_unlocked_world = max(1, int(data["world"].get("max_unlocked_world", 1)))
+		var wd_d: Dictionary = data["world"]
+		Global.max_unlocked_world = max(1, int(wd_d.get("max_unlocked_world", 1)))
+		if wd_d.get("world_best_room") is Dictionary:
+			Global.world_best_room = wd_d["world_best_room"]
+		if wd_d.get("world_milestones_claimed") is Dictionary:
+			Global.world_milestones_claimed = wd_d["world_milestones_claimed"]
 		var wdb: Node = get_node_or_null("/root/WorldDB")
 		if wdb and "selected_world_id" in wdb:
-			wdb.selected_world_id = str(data["world"].get("selected_world_id", "world_1"))
+			wdb.selected_world_id = str(wd_d.get("selected_world_id", "world_1"))
 
 	# Restore Inventory & 6 Slots
 	if data.has("inventory") and data["inventory"] is Dictionary:
@@ -171,6 +178,8 @@ func reset_save() -> void:
 	Global.total_credits = 0
 	Global.upgrade_scrolls = 3 # 3 Nuclei iniziali di benvenuto per provare il potenziamento
 	Global.max_unlocked_world = 1
+	Global.world_best_room = {}
+	Global.world_milestones_claimed = {}
 	Global.daily_ads_watched = 0
 	Global.checkin_day = 1
 	Global.checkin_claimed = false

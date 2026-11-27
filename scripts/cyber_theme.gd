@@ -1,24 +1,52 @@
 class_name CyberTheme
 extends RefCounted
 
-# Palette Iconica Cyberpunk High-Contrast Moderna
-const COL_BG_DEEP := Color(0.035, 0.055, 0.115, 1.0)
-const COL_PANEL := Color(0.06, 0.095, 0.185, 0.96)
-const COL_CYAN := Color(0.0, 0.92, 1.0, 1.0)
-const COL_MAGENTA := Color(1.0, 0.16, 0.56, 1.0)
-const COL_YELLOW := Color(1.0, 0.86, 0.12, 1.0)
-const COL_GREEN := Color(0.12, 0.96, 0.58, 1.0)
+# Palette Autentica Cyberpunk 2077 / Ghostrunner (Ossidiana, Giallo Acido #FCEE0A, Cremisi #FF003C, Ciano Ghiaccio #00F0FF)
+const COL_BG_DEEP := Color(0.035, 0.045, 0.075, 1.0)
+const COL_PANEL := Color(0.055, 0.075, 0.125, 0.96)
+const COL_CYAN := Color(0.0, 0.941, 1.0, 1.0)
+const COL_MAGENTA := Color(1.0, 0.0, 0.235, 1.0)
+const COL_YELLOW := Color(0.988, 0.933, 0.039, 1.0)
+const COL_GREEN := Color(0.0, 0.96, 0.55, 1.0)
 
-# Palette Rarità Equipaggiamento — Universale e Inconfondibile
-const COL_RARITY_COMMON := Color(0.74, 0.81, 0.90, 1.0)
-const COL_RARITY_RARE := Color(0.18, 0.68, 1.0, 1.0)
-const COL_RARITY_EPIC := Color(0.78, 0.28, 1.0, 1.0)
-const COL_RARITY_LEGENDARY := Color(1.0, 0.80, 0.10, 1.0)
+# Palette Rarità Equipaggiamento — Tecnica e Coerente
+const COL_RARITY_COMMON := Color(0.68, 0.75, 0.85, 1.0)
+const COL_RARITY_RARE := Color(0.0, 0.74, 1.0, 1.0)
+const COL_RARITY_EPIC := Color(0.76, 0.22, 1.0, 1.0)
+const COL_RARITY_LEGENDARY := Color(0.988, 0.933, 0.039, 1.0)
 
-# Colore dedicato ESCLUSIVAMENTE allo stato "INDOSSATO / ATTIVO" (Verde Smeraldo)
-const COL_EQUIPPED := Color(0.12, 0.96, 0.58, 1.0)
+# Colore dedicato ESCLUSIVAMENTE allo stato "ATTIVO / INNESTATO" (Verde Bio-Smeraldo)
+const COL_EQUIPPED := Color(0.0, 0.96, 0.55, 1.0)
 
 static var _tex_cache: Dictionary = {}
+static var _font_bold: Font = null
+static var _font_semi: Font = null
+
+static func get_cyber_font(bold: bool = true) -> Font:
+	if bold and _font_bold != null:
+		return _font_bold
+	if not bold and _font_semi != null:
+		return _font_semi
+	var path := "res://assets/fonts/ChakraPetch-Bold.ttf" if bold else "res://assets/fonts/ChakraPetch-SemiBold.ttf"
+	var ff: FontFile = null
+	if ResourceLoader.exists(path):
+		ff = load(path) as FontFile
+	if ff == null and FileAccess.file_exists(path):
+		var f2 := FontFile.new()
+		var bytes := FileAccess.get_file_as_bytes(path)
+		if not bytes.is_empty():
+			f2.data = bytes
+			ff = f2
+	if ff != null:
+		var fb := ThemeDB.fallback_font
+		if fb != null and not ff.fallbacks.has(fb):
+			ff.fallbacks = [fb]
+		if bold:
+			_font_bold = ff
+		else:
+			_font_semi = ff
+		return ff
+	return ThemeDB.fallback_font
 
 static func get_model_texture(res_path: String) -> Texture2D:
 	if _tex_cache.has(res_path):
@@ -75,15 +103,15 @@ static func get_rarity_label_it(rarity_str: String) -> String:
 static func get_rarity_badge_text(rarity_str: String) -> String:
 	match rarity_str.to_upper():
 		"COMMON", "0", "COMUNE":
-			return "★ COMUNE"
+			return "MK.I COMUNE"
 		"RARE", "1", "BLUE", "GREEN", "RARO":
-			return "★★ RARO"
+			return "MK.II RARO"
 		"EPIC", "2", "PURPLE", "EPICO":
-			return "★★★ EPICO"
+			return "MK.III EPICO"
 		"LEGENDARY", "3", "GOLD", "LEGGENDARIO":
-			return "★★★★ LEGGENDARIO"
+			return "MK.IV LEGGENDARIO"
 		_:
-			return "★ COMUNE"
+			return "MK.I COMUNE"
 
 static func get_item_model_texture(item_id: String, slot_name: String = "") -> Texture2D:
 	var id_low := item_id.to_lower()
@@ -142,11 +170,11 @@ static func _make_9slice_box(tex_path: String, margin_xy: int, pad_l: int, pad_r
 		return sbt
 	return make_cyber_box(COL_PANEL, COL_CYAN, 0.0, 2, 4, 8)
 
-## Pannello 3D High-DPI Vetro Scuro + Titanio Smussato (256x256, 9-slice margin=32)
+## Pannello Cyberpunk 2077 Ossidiana Opaca + Taglio Chirurgico 45° (256x256, 9-slice margin=26)
 static func make_3d_panel_box(pad_h: int = 16, pad_v: int = 14, tint: Color = Color.WHITE) -> StyleBox:
-	return _make_9slice_box("res://assets/cyber_models/ui_panel_cyber_3d.png", 32, pad_h, pad_h, pad_v, pad_v + 4, tint)
+	return _make_9slice_box("res://assets/cyber_models/ui_panel_cyber_3d.png", 26, pad_h, pad_h, pad_v, pad_v + 2, tint)
 
-## Cornice Card 3D High-DPI specifica per ogni Rarità (Argento / Blu / Viola / Oro)
+## Cornice Card Asimmetrica Cyberpunk 2077 per ogni Rarità (MK.I..MK.IV)
 static func make_rarity_card_box(rarity_str: String, pad_h: int = 12, pad_v: int = 10) -> StyleBox:
 	var file_name := "ui_card_common_3d.png"
 	match rarity_str.to_upper():
@@ -158,74 +186,77 @@ static func make_rarity_card_box(rarity_str: String, pad_h: int = 12, pad_v: int
 			file_name = "ui_card_legendary_3d.png"
 		_:
 			file_name = "ui_card_common_3d.png"
-	return _make_9slice_box("res://assets/cyber_models/" + file_name, 28, pad_h, pad_h, pad_v, pad_v + 4)
+	return _make_9slice_box("res://assets/cyber_models/" + file_name, 22, pad_h, pad_h, pad_v, pad_v + 2)
 
-## Contatore Risorse / Barra Segmentata Cyber-Glass (pulita, moderna, non "bottone sottile")
+## Contatore Telemetrico HUD Ossidiana + Barra Laterale Neon
 static func make_glass_counter_box(accent: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.045, 0.075, 0.155, 0.94)
-	sb.border_color = Color(accent.r, accent.g, accent.b, 0.72)
+	sb.bg_color = Color(0.035, 0.045, 0.075, 0.95)
+	sb.border_color = Color(accent.r, accent.g, accent.b, 0.82)
 	sb.border_width_left = 4
 	sb.border_width_top = 1
 	sb.border_width_right = 1
-	sb.border_width_bottom = 2
-	sb.corner_radius_top_left = 10
-	sb.corner_radius_top_right = 10
-	sb.corner_radius_bottom_left = 10
-	sb.corner_radius_bottom_right = 10
+	sb.border_width_bottom = 1
+	sb.corner_radius_top_left = 2
+	sb.corner_radius_top_right = 2
+	sb.corner_radius_bottom_left = 2
+	sb.corner_radius_bottom_right = 6
 	sb.content_margin_left = 10
 	sb.content_margin_right = 10
 	sb.content_margin_top = 6
 	sb.content_margin_bottom = 6
 	return sb
 
-## Stile Tab per Selettore Segmentato Unificato (ARSENALE | OFFICINA | FUSIONE, ecc.)
+## Stile Tab per Selettore Tattico Segmentato (DOTAZIONE | CALIBRA | SINTESI, ecc.)
 static func style_segmented_tab(btn: Button, is_active: bool, accent: Color = COL_CYAN) -> void:
 	if not btn:
 		return
+	var f_bold := get_cyber_font(true)
+	if f_bold:
+		btn.add_theme_font_override("font", f_bold)
 	var sb := StyleBoxFlat.new()
 	if is_active:
-		sb.bg_color = Color(accent.r * 0.28 + 0.06, accent.g * 0.28 + 0.09, accent.b * 0.28 + 0.16, 0.98)
+		sb.bg_color = Color(accent.r * 0.22 + 0.05, accent.g * 0.22 + 0.06, accent.b * 0.22 + 0.10, 0.98)
 		sb.border_color = accent
-		sb.border_width_left = 2
-		sb.border_width_top = 2
-		sb.border_width_right = 2
-		sb.border_width_bottom = 4
+		sb.border_width_left = 4
+		sb.border_width_top = 1
+		sb.border_width_right = 1
+		sb.border_width_bottom = 3
 	else:
-		sb.bg_color = Color(0.035, 0.055, 0.115, 0.75)
-		sb.border_color = Color(0.20, 0.30, 0.46, 0.45)
+		sb.bg_color = Color(0.03, 0.04, 0.07, 0.82)
+		sb.border_color = Color(0.18, 0.24, 0.34, 0.55)
 		sb.border_width_bottom = 2
-	sb.corner_radius_top_left = 10
-	sb.corner_radius_top_right = 10
-	sb.corner_radius_bottom_left = 10
-	sb.corner_radius_bottom_right = 10
+	sb.corner_radius_top_left = 2
+	sb.corner_radius_top_right = 2
+	sb.corner_radius_bottom_left = 2
+	sb.corner_radius_bottom_right = 6
 	sb.content_margin_left = 10
 	sb.content_margin_right = 10
 	sb.content_margin_top = 8
-	sb.content_margin_bottom = 9
+	sb.content_margin_bottom = 8
 	btn.add_theme_stylebox_override("normal", sb)
 	btn.add_theme_stylebox_override("hover", sb)
 	btn.add_theme_stylebox_override("pressed", sb)
-	btn.add_theme_color_override("font_color", Color.WHITE if is_active else Color(0.68, 0.78, 0.92, 0.92))
+	btn.add_theme_color_override("font_color", Color.WHITE if is_active else Color(0.66, 0.74, 0.86, 0.92))
 	btn.add_theme_color_override("font_hover_color", Color.WHITE)
 	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
-	btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
-	btn.add_theme_constant_override("outline_size", 4 if is_active else 3)
+	btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06, 0.96))
+	btn.add_theme_constant_override("outline_size", 3 if is_active else 2)
 
 static func make_equipped_badge_box() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.04, 0.36, 0.22, 0.98)
+	sb.bg_color = Color(0.02, 0.26, 0.16, 0.98)
 	sb.border_color = COL_EQUIPPED
-	sb.border_width_left = 2
+	sb.border_width_left = 3
 	sb.border_width_top = 1
-	sb.border_width_right = 2
-	sb.border_width_bottom = 3
-	sb.corner_radius_top_left = 8
-	sb.corner_radius_top_right = 8
-	sb.corner_radius_bottom_left = 8
-	sb.corner_radius_bottom_right = 8
-	sb.content_margin_left = 8
-	sb.content_margin_right = 8
+	sb.border_width_right = 1
+	sb.border_width_bottom = 1
+	sb.corner_radius_top_left = 2
+	sb.corner_radius_top_right = 2
+	sb.corner_radius_bottom_left = 2
+	sb.corner_radius_bottom_right = 5
+	sb.content_margin_left = 7
+	sb.content_margin_right = 7
 	sb.content_margin_top = 2
 	sb.content_margin_bottom = 2
 	return sb
@@ -233,18 +264,18 @@ static func make_equipped_badge_box() -> StyleBoxFlat:
 static func make_rarity_pill_box(rarity_str: String) -> StyleBoxFlat:
 	var rc := get_rarity_color(rarity_str)
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(rc.r * 0.20, rc.g * 0.20, rc.b * 0.28, 0.96)
+	sb.bg_color = Color(rc.r * 0.16 + 0.02, rc.g * 0.16 + 0.03, rc.b * 0.18 + 0.05, 0.96)
 	sb.border_color = rc
-	sb.border_width_left = 2
+	sb.border_width_left = 3
 	sb.border_width_top = 1
-	sb.border_width_right = 2
-	sb.border_width_bottom = 3
-	sb.corner_radius_top_left = 7
-	sb.corner_radius_top_right = 7
-	sb.corner_radius_bottom_left = 7
-	sb.corner_radius_bottom_right = 7
-	sb.content_margin_left = 8
-	sb.content_margin_right = 8
+	sb.border_width_right = 1
+	sb.border_width_bottom = 1
+	sb.corner_radius_top_left = 2
+	sb.corner_radius_top_right = 2
+	sb.corner_radius_bottom_left = 2
+	sb.corner_radius_bottom_right = 5
+	sb.content_margin_left = 7
+	sb.content_margin_right = 7
 	sb.content_margin_top = 2
 	sb.content_margin_bottom = 2
 	return sb
@@ -253,63 +284,67 @@ static func make_cyber_box(
 	bg: Color = COL_PANEL,
 	border: Color = COL_CYAN,
 	_skew_x: float = 0.0,
-	border_w: int = 2,
-	left_accent_w: int = 3,
-	glow_size: int = 6
+	border_w: int = 1,
+	left_accent_w: int = 4,
+	glow_size: int = 4
 ) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg.lightened(0.04)
+	sb.bg_color = bg
 	sb.skew = Vector2.ZERO
 	sb.border_width_left = maxi(border_w, left_accent_w)
 	sb.border_width_top = border_w
 	sb.border_width_right = border_w
-	sb.border_width_bottom = border_w + 3
+	sb.border_width_bottom = border_w + 1
 	sb.border_color = border
-	sb.corner_radius_top_left = 12
-	sb.corner_radius_top_right = 12
-	sb.corner_radius_bottom_left = 12
-	sb.corner_radius_bottom_right = 12
+	sb.corner_radius_top_left = 2
+	sb.corner_radius_top_right = 2
+	sb.corner_radius_bottom_left = 2
+	sb.corner_radius_bottom_right = 8
 	sb.content_margin_left = 12
 	sb.content_margin_right = 12
 	sb.content_margin_top = 8
-	sb.content_margin_bottom = 9
+	sb.content_margin_bottom = 8
 	if glow_size > 0:
-		sb.shadow_color = Color(0.0, 0.02, 0.07, 0.52)
-		sb.shadow_size = maxi(4, glow_size)
+		sb.shadow_color = Color(0.0, 0.01, 0.04, 0.55)
+		sb.shadow_size = maxi(3, glow_size)
 		sb.shadow_offset = Vector2(0, 3)
 	return sb
 
-## Pulsante 3D High-DPI Tattile Moderno (320x128 4x-supersampled)
+## Placca Pulsante Asimmetrica Cyberpunk 2077 (384x144: Angoli 90° + Taglio 45° Basso-Destra)
 static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yellow: bool = false) -> void:
 	if not btn:
 		return
+
+	var f_bold := get_cyber_font(true)
+	if f_bold:
+		btn.add_theme_font_override("font", f_bold)
 
 	if not btn.has_theme_font_size_override("font_size"):
 		btn.add_theme_font_size_override("font_size", 18)
 
 	if btn.custom_minimum_size.y > 0 and btn.custom_minimum_size.y < 36:
-		var mini_norm := make_cyber_box(Color(0.08, 0.14, 0.25, 0.96), accent, 0.0, 2, 2, 3)
+		var mini_norm := make_cyber_box(Color(0.05, 0.08, 0.14, 0.96), accent, 0.0, 1, 3, 2)
 		mini_norm.content_margin_top = 2
-		mini_norm.content_margin_bottom = 3
+		mini_norm.content_margin_bottom = 2
 		mini_norm.content_margin_left = 8
 		mini_norm.content_margin_right = 8
 		btn.add_theme_stylebox_override("normal", mini_norm)
 		btn.add_theme_stylebox_override("hover", mini_norm)
 		btn.add_theme_stylebox_override("pressed", mini_norm)
 		btn.add_theme_color_override("font_color", Color.WHITE)
-		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
-		btn.add_theme_constant_override("outline_size", 3)
+		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06, 0.96))
+		btn.add_theme_constant_override("outline_size", 2)
 		return
 
-	if btn.custom_minimum_size.y >= 36 and btn.custom_minimum_size.y < 60:
-		btn.custom_minimum_size.y = 60
+	if btn.custom_minimum_size.y >= 36 and btn.custom_minimum_size.y < 56:
+		btn.custom_minimum_size.y = 56
 
 	var base_name := "ui_btn_cyan_3d"
 	if is_primary_yellow:
 		base_name = "ui_btn_gold_3d"
 	elif accent.g > 0.80 and accent.r < 0.45:
 		base_name = "ui_btn_green_3d"
-	elif accent.r > 0.78 and accent.b > 0.30:
+	elif accent.r > 0.78 and (accent.b > 0.18 or accent.g < 0.35):
 		base_name = "ui_btn_magenta_3d"
 
 	var tex_norm := get_model_texture("res://assets/cyber_models/" + base_name + ".png")
@@ -321,54 +356,58 @@ static func style_button(btn: Button, accent: Color = COL_CYAN, is_primary_yello
 	if tex_norm and tex_prs and tex_dis:
 		var sb_n := StyleBoxTexture.new()
 		sb_n.texture = tex_norm
-		sb_n.texture_margin_left = 34; sb_n.texture_margin_right = 34
-		sb_n.texture_margin_top = 24; sb_n.texture_margin_bottom = 32
-		sb_n.content_margin_left = 14; sb_n.content_margin_right = 14
-		sb_n.content_margin_top = 8; sb_n.content_margin_bottom = 14
+		sb_n.texture_margin_left = 18; sb_n.texture_margin_right = 28
+		sb_n.texture_margin_top = 14; sb_n.texture_margin_bottom = 26
+		sb_n.content_margin_left = 16; sb_n.content_margin_right = 18
+		sb_n.content_margin_top = 9; sb_n.content_margin_bottom = 10
 
 		var sb_h := sb_n.duplicate() as StyleBoxTexture
-		sb_h.modulate_color = Color(1.08, 1.08, 1.12, 1.0)
+		sb_h.modulate_color = Color(1.06, 1.06, 1.10, 1.0)
 
 		var sb_p := StyleBoxTexture.new()
 		sb_p.texture = tex_prs
-		sb_p.texture_margin_left = 34; sb_p.texture_margin_right = 34
-		sb_p.texture_margin_top = 28; sb_p.texture_margin_bottom = 20
-		sb_p.content_margin_left = 14; sb_p.content_margin_right = 14
-		sb_p.content_margin_top = 12; sb_p.content_margin_bottom = 8
+		sb_p.texture_margin_left = 18; sb_p.texture_margin_right = 28
+		sb_p.texture_margin_top = 16; sb_p.texture_margin_bottom = 24
+		sb_p.content_margin_left = 16; sb_p.content_margin_right = 18
+		sb_p.content_margin_top = 11; sb_p.content_margin_bottom = 8
 
 		var sb_d := StyleBoxTexture.new()
 		sb_d.texture = tex_dis
-		sb_d.texture_margin_left = 34; sb_d.texture_margin_right = 34
-		sb_d.texture_margin_top = 24; sb_d.texture_margin_bottom = 32
-		sb_d.content_margin_left = 14; sb_d.content_margin_right = 14
-		sb_d.content_margin_top = 8; sb_d.content_margin_bottom = 14
+		sb_d.texture_margin_left = 18; sb_d.texture_margin_right = 28
+		sb_d.texture_margin_top = 14; sb_d.texture_margin_bottom = 26
+		sb_d.content_margin_left = 16; sb_d.content_margin_right = 18
+		sb_d.content_margin_top = 9; sb_d.content_margin_bottom = 10
 
 		btn.add_theme_stylebox_override("normal", sb_n)
 		btn.add_theme_stylebox_override("hover", sb_h)
 		btn.add_theme_stylebox_override("pressed", sb_p)
 		btn.add_theme_stylebox_override("disabled", sb_d)
 	else:
-		btn.add_theme_stylebox_override("normal", make_cyber_box(COL_YELLOW if is_primary_yellow else COL_PANEL, accent, 0.0, 2, 4, 8))
+		btn.add_theme_stylebox_override("normal", make_cyber_box(COL_YELLOW if is_primary_yellow else COL_PANEL, accent, 0.0, 1, 4, 6))
 
 	if is_primary_yellow:
-		btn.add_theme_color_override("font_color", Color(1.0, 0.99, 0.92, 1.0))
-		btn.add_theme_color_override("font_hover_color", Color.WHITE)
-		btn.add_theme_color_override("font_pressed_color", Color(1.0, 0.92, 0.60, 1.0))
-		btn.add_theme_color_override("font_disabled_color", Color(0.58, 0.62, 0.70, 0.80))
-		btn.add_theme_color_override("font_outline_color", Color(0.10, 0.05, 0.01, 0.98))
-		btn.add_theme_constant_override("outline_size", 4)
+		# Stile Iconico Cyberpunk 2077: Placca Giallo Acido #FCEE0A + Testo Nero Ossidiana Nitidissimo!
+		btn.add_theme_color_override("font_color", Color(0.04, 0.05, 0.08, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color(0.0, 0.0, 0.0, 1.0))
+		btn.add_theme_color_override("font_pressed_color", Color(0.08, 0.09, 0.12, 1.0))
+		btn.add_theme_color_override("font_disabled_color", Color(0.52, 0.56, 0.64, 0.80))
+		btn.add_theme_color_override("font_outline_color", Color(1.0, 0.98, 0.55, 0.25))
+		btn.add_theme_constant_override("outline_size", 0)
 	else:
-		btn.add_theme_color_override("font_color", Color(0.98, 0.99, 1.0, 1.0))
+		btn.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0, 1.0))
 		btn.add_theme_color_override("font_hover_color", Color.WHITE)
-		btn.add_theme_color_override("font_pressed_color", accent.lightened(0.45))
-		btn.add_theme_color_override("font_disabled_color", Color(0.55, 0.60, 0.68, 0.80))
-		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.09, 0.98))
-		btn.add_theme_constant_override("outline_size", 4)
+		btn.add_theme_color_override("font_pressed_color", accent.lightened(0.35))
+		btn.add_theme_color_override("font_disabled_color", Color(0.48, 0.54, 0.64, 0.78))
+		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.96))
+		btn.add_theme_constant_override("outline_size", 3)
 
-static func style_label(lbl: Label, col: Color = Color.WHITE, outline_size: int = 4) -> void:
+static func style_label(lbl: Label, col: Color = Color.WHITE, outline_size: int = 3) -> void:
 	if not lbl: return
+	var f_bold := get_cyber_font(true)
+	if f_bold:
+		lbl.add_theme_font_override("font", f_bold)
 	lbl.add_theme_color_override("font_color", col)
-	lbl.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.96))
+	lbl.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.96))
 	lbl.add_theme_constant_override("outline_size", outline_size)
 	if not lbl.has_theme_font_size_override("font_size"):
 		lbl.add_theme_font_size_override("font_size", 18)
@@ -378,14 +417,17 @@ static func apply_recursive_cyber_style(root: Node) -> void:
 	if root is Button:
 		var b := root as Button
 		var txt := b.text.to_upper()
-		var is_yellow := ("START" in txt or "GIOCA" in txt or "RIPRENDI" in txt or "RISCATTA" in txt)
-		var col := COL_MAGENTA if ("EPIC" in txt or "FUSIONE" in txt or "MENU" in txt) else COL_CYAN
+		var is_yellow := ("START" in txt or "INCURSIONE" in txt or "GIOCA" in txt or "RIPRENDI" in txt or "RISCATTA" in txt or "ACQUISISCI" in txt)
+		var col := COL_MAGENTA if ("EPIC" in txt or "ARASAKA" in txt or "SINTESI" in txt or "FUSIONE" in txt or "MENU" in txt) else COL_CYAN
 		style_button(b, col, is_yellow)
 	elif root is Label:
 		var l := root as Label
-		l.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.95))
+		var f_bold := get_cyber_font(true)
+		if f_bold:
+			l.add_theme_font_override("font", f_bold)
+		l.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.96))
 		if not l.has_theme_constant_override("outline_size"):
-			l.add_theme_constant_override("outline_size", 4)
+			l.add_theme_constant_override("outline_size", 3)
 		if not l.has_theme_font_size_override("font_size"):
 			l.add_theme_font_size_override("font_size", 18)
 
@@ -417,71 +459,31 @@ static func attach_cyber_bloom(parent: Node, in_game: bool = false) -> void:
 	parent.add_child(we)
 
 static func draw_cyberpunk_backdrop(c: CanvasItem, size: Vector2, t: float, accent: Color = COL_CYAN) -> void:
-	var horizon_y := size.y * 0.55
-	c.draw_polygon(
-		PackedVector2Array([Vector2(0, 0), Vector2(size.x, 0), Vector2(size.x, horizon_y), Vector2(0, horizon_y)]),
-		PackedColorArray([
-			Color(0.025, 0.04, 0.10, 1.0),
-			Color(0.035, 0.05, 0.13, 1.0),
-			Color(0.08, 0.12, 0.25, 1.0),
-			Color(0.07, 0.10, 0.22, 1.0)
-		])
-	)
-	for b_i in range(3):
-		var bx := size.x * (0.20 + float(b_i) * 0.30) + sin(t * 0.4 + float(b_i)) * 28.0
-		c.draw_colored_polygon(PackedVector2Array([
-			Vector2(bx - 35, 0), Vector2(bx + 35, 0),
-			Vector2(bx + 120, horizon_y), Vector2(bx - 120, horizon_y)
-		]), Color(accent.r, accent.g, accent.b, 0.04))
+	# Vero Sfondo HD Dark-Cyberpunk Night City (ZERO griglie wireframe anni '80!)
+	var bg_tex := get_model_texture("res://assets/cyber_models/ui_menu_bg_hd.png")
+	if bg_tex:
+		var tw: float = float(bg_tex.get_width())
+		var th: float = float(bg_tex.get_height())
+		var sc: float = maxf(size.x / maxf(1.0, tw), size.y / maxf(1.0, th))
+		var sw: float = size.x / sc
+		var sh: float = size.y / sc
+		c.draw_texture_rect_region(bg_tex, Rect2(Vector2.ZERO, size), Rect2(Vector2((tw - sw) * 0.5, (th - sh) * 0.5), Vector2(sw, sh)), Color.WHITE)
+	else:
+		c.draw_rect(Rect2(Vector2.ZERO, size), Color(0.035, 0.045, 0.075, 1.0), true)
 
-	var sun_center := Vector2(size.x * 0.5, horizon_y - 54.0)
-	c.draw_circle(sun_center, 114.0, Color(accent.r, accent.g, accent.b, 0.11))
-	c.draw_circle(sun_center, 82.0, Color(1.0, 0.18, 0.58, 0.14))
-	c.draw_arc(sun_center, 92.0, PI, TAU, 42, Color(accent.r, accent.g, accent.b, 0.50), 2.5)
+	# Leggero alone atmosferico del Settore attivo + pioggia obliqua sottile
+	c.draw_circle(Vector2(size.x * 0.5, size.y * 0.36), size.x * 0.55, Color(accent.r, accent.g, accent.b, 0.055 + 0.015 * sin(t * 1.6)))
+	for i in range(18):
+		var rx: float = fmod(float(i) * 97.0 + t * 28.0, size.x + 60.0) - 30.0
+		var ry: float = fmod(float(i) * 151.0 + t * (310.0 + float(i % 3) * 55.0), size.y + 80.0) - 40.0
+		c.draw_line(Vector2(rx, ry), Vector2(rx - 7.0, ry + 34.0), Color(0.55, 0.85, 1.0, 0.08), 1.2)
 
-	var bld_widths := [68.0, 86.0, 58.0, 96.0, 72.0, 92.0, 62.0, 82.0, 76.0, 68.0]
-	var bld_heights := [200.0, 285.0, 170.0, 320.0, 230.0, 300.0, 190.0, 270.0, 225.0, 195.0]
-	var cur_x := -8.0
-	for i in range(bld_widths.size()):
-		var bw: float = bld_widths[i]
-		var bh: float = bld_heights[i]
-		var by: float = horizon_y - bh
-		c.draw_colored_polygon(PackedVector2Array([
-			Vector2(cur_x + bw, by), Vector2(cur_x + bw + 12, by + 10),
-			Vector2(cur_x + bw + 12, horizon_y), Vector2(cur_x + bw, horizon_y)
-		]), Color(0.025, 0.04, 0.09, 0.96))
-		var b_rect := Rect2(Vector2(cur_x, by), Vector2(bw, bh))
-		c.draw_rect(b_rect, Color(0.05, 0.08, 0.15, 0.96), true)
-		var edge_col := accent if (i % 2 == 0) else COL_MAGENTA
-		c.draw_line(Vector2(cur_x, by), Vector2(cur_x + bw, by), Color(edge_col.r, edge_col.g, edge_col.b, 0.65), 2.0)
-		for wy in range(int(by + 16), int(horizon_y - 16), 24):
-			if ((wy + i * 7) % 3) != 0:
-				var win_col := Color(edge_col.r, edge_col.g, edge_col.b, 0.22 + sin(t * 2.0 + float(i + wy)) * 0.07)
-				c.draw_rect(Rect2(Vector2(cur_x + 10, wy), Vector2(bw - 20, 4)), win_col, true)
-		cur_x += bw + 2.0
-
-	c.draw_polygon(
-		PackedVector2Array([Vector2(0, horizon_y), Vector2(size.x, horizon_y), Vector2(size.x, size.y), Vector2(0, size.y)]),
-		PackedColorArray([
-			Color(0.06, 0.09, 0.18, 0.98),
-			Color(0.06, 0.09, 0.18, 0.98),
-			Color(0.025, 0.04, 0.09, 1.0),
-			Color(0.025, 0.04, 0.09, 1.0)
-		])
-	)
-	c.draw_line(Vector2(0, horizon_y), Vector2(size.x, horizon_y), Color(accent.r, accent.g, accent.b, 0.75), 2.4)
-
-	var vanish := Vector2(size.x * 0.5, horizon_y)
-	for i in range(-8, 9):
-		var bottom_x := size.x * 0.5 + float(i) * 95.0
-		c.draw_line(vanish, Vector2(bottom_x, size.y), Color(accent.r, accent.g, accent.b, 0.18), 1.3)
-
-	var scroll := fmod(t * 0.55, 1.0)
-	for j in range(1, 10):
-		var norm := (float(j) + scroll) / 10.0
-		var y_pos := horizon_y + pow(norm, 2.1) * (size.y - horizon_y)
-		if y_pos <= size.y:
-			c.draw_line(Vector2(0, y_pos), Vector2(size.x, y_pos), Color(accent.r, accent.g, accent.b, 0.12 + norm * 0.20), 1.4)
+	# Mirini telemetrici chirurgici agli angoli (estetica HUD Cyberpunk 2077)
+	var hud_c := Color(accent.r, accent.g, accent.b, 0.22)
+	c.draw_line(Vector2(8, 8), Vector2(36, 8), hud_c, 1.5)
+	c.draw_line(Vector2(8, 8), Vector2(8, 36), hud_c, 1.5)
+	c.draw_line(Vector2(size.x - 36, size.y - 8), Vector2(size.x - 8, size.y - 8), hud_c, 1.5)
+	c.draw_line(Vector2(size.x - 8, size.y - 36), Vector2(size.x - 8, size.y - 8), hud_c, 1.5)
 
 ## Disegna il modello 3D su Piedistallo Olografico ad Alto Contrasto (anche per armi lunghe/sottili!)
 static func draw_item_icon(c: CanvasItem, center: Vector2, item_id: String, slot_name: String, col: Color, icon_size: float = 74.0, is_equipped: bool = false) -> void:

@@ -23,13 +23,13 @@ func _ready() -> void:
 	var unl_w: int = int(rew.get("unlocked_world", 0))
 	var items: Array = rew.get("items", []) as Array
 
-	var txt := "★ " + w_name.to_upper() + " COMPLETATO! ★\n\n"
-	txt += "RICOMPENSE DI VITTORIA:\n"
-	txt += "★ +" + str(c_amt) + " Crediti Oro   •   ◆ +" + str(g_amt) + " Gemme\n"
-	txt += "▲ +" + str(s_amt) + " Nuclei di Potenziamento\n"
+	var txt := "// " + w_name.to_upper() + " PACIFICATO //\n\n"
+	txt += "BOTTINO ESTRATTO:\n"
+	txt += "★ +" + str(c_amt) + " Crediti   •   ◆ +" + str(g_amt) + " Gemme\n"
+	txt += "▲ +" + str(s_amt) + " Nuclei Cyberware\n"
 
 	if unl_w > 0:
-		txt += "\n⚡ NUOVO SETTORE SBLOCCATO: MONDO 0" + str(unl_w) + "! ⚡"
+		txt += "\nNUOVO SETTORE SBLOCCATO: SETTORE " + ("%02d" % unl_w)
 
 	if reward_label:
 		reward_label.text = txt
@@ -102,12 +102,12 @@ func _ready() -> void:
 
 	if btn_retry:
 		btn_retry.custom_minimum_size = Vector2(0, 62)
-		btn_retry.text = "▶ AVVIA PROSSIMO MONDO" if unl_w > 0 else "▶ RIGIOCA SETTORE"
+		btn_retry.text = "PROSSIMO SETTORE »" if unl_w > 0 else "NUOVA INCURSIONE »"
 		CyberTheme.style_button(btn_retry, CyberTheme.COL_YELLOW, true)
 		btn_retry.pressed.connect(_on_btn_retry_pressed)
 	if btn_menu:
 		btn_menu.custom_minimum_size = Vector2(0, 56)
-		btn_menu.text = "TORNA AL MENU"
+		btn_menu.text = "RIENTRA ALLA BASE"
 		CyberTheme.style_button(btn_menu, CyberTheme.COL_CYAN, false)
 		btn_menu.pressed.connect(_on_btn_menu_pressed)
 

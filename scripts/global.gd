@@ -23,6 +23,8 @@ var total_credits: int = 0
 var total_coins: int = 0
 var upgrade_scrolls: int = 0
 var max_unlocked_world: int = 1
+var world_best_room: Dictionary = {}
+var world_milestones_claimed: Dictionary = {}
 var last_run_rewards: Dictionary = {}
 
 # Contatori live della partita in corso (mostrati nell'HUD in alto a destra)
@@ -56,6 +58,21 @@ func get_class_display_name() -> String:
 		"VANGUARD": return "VANGUARD"
 		"NETRUNNER": return "NETRUNNER"
 		_: return "RONIN"
+
+func get_world_best_room(world_id: String) -> int:
+	var rec: int = int(world_best_room.get(world_id, 0))
+	var wdb: Node = get_node_or_null("/root/WorldDB")
+	if wdb and "world_order" in wdb and "worlds" in wdb:
+		var idx: int = wdb.world_order.find(world_id) + 1
+		if idx > 0 and idx < max_unlocked_world and wdb.worlds.has(world_id):
+			rec = maxi(rec, int(wdb.worlds[world_id].total_rooms))
+	return rec
+
+func record_world_progress(world_id: String, room_reached: int) -> void:
+	var prev: int = int(world_best_room.get(world_id, 0))
+	if room_reached > prev:
+		world_best_room[world_id] = room_reached
+		save_data()
 
 func save_data() -> void:
 	var ss: Node = get_node_or_null("/root/SaveSystem")

@@ -8,16 +8,19 @@ func spawn_floating_damage(global_pos: Vector2, amount: int, is_crit: bool = fal
 	lbl.text = ("★ " + str(amount) + "!") if is_crit else str(amount)
 	lbl.global_position = global_pos + Vector2(randf_range(-18, 18), randf_range(-20, -8))
 	lbl.z_index = 20
+	var f_bold := CyberTheme.get_cyber_font(true)
+	if f_bold:
+		lbl.add_theme_font_override("font", f_bold)
 
 	if is_crit:
-		lbl.add_theme_font_size_override("font_size", 22)
-		lbl.add_theme_color_override("font_color", Color(1.0, 0.86, 0.18, 1.0))
-		lbl.add_theme_color_override("font_outline_color", Color(0.28, 0.02, 0.08, 0.98))
-		lbl.add_theme_constant_override("outline_size", 5)
+		lbl.add_theme_font_size_override("font_size", 23)
+		lbl.add_theme_color_override("font_color", CyberTheme.COL_YELLOW)
+		lbl.add_theme_color_override("font_outline_color", Color(0.22, 0.02, 0.06, 0.98))
+		lbl.add_theme_constant_override("outline_size", 4)
 	else:
-		lbl.add_theme_font_size_override("font_size", 16)
+		lbl.add_theme_font_size_override("font_size", 17)
 		lbl.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0, 1.0))
-		lbl.add_theme_color_override("font_outline_color", Color(0.05, 0.08, 0.16, 0.96))
+		lbl.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.96))
 		lbl.add_theme_constant_override("outline_size", 3)
 
 	scene.add_child(lbl)
@@ -36,6 +39,9 @@ func spawn_floating_text(global_pos: Vector2, text_str: String, col: Color = Col
 
 	var lbl := Label.new()
 	lbl.text = text_str
+	var f_bold := CyberTheme.get_cyber_font(true)
+	if f_bold:
+		lbl.add_theme_font_override("font", f_bold)
 	var clamped_x: float = clampf(global_pos.x - 110.0, 24.0, 480.0)
 	lbl.global_position = Vector2(clamped_x, maxf(90.0, global_pos.y - 28.0))
 	lbl.custom_minimum_size = Vector2(220, 0)

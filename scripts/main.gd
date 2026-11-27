@@ -20,11 +20,11 @@ func _ready() -> void:
 	var current_world: WorldData = WorldDB.get_selected_world()
 	if current_world:
 		arena_accent = current_world.accent_color
-		# Ponte ben illuminato (acciaio satinato misto al colore del bioma, mai buio!)
-		floor_base = current_world.biome_color.lightened(0.28).lerp(Color(0.22, 0.29, 0.42, 1.0), 0.55)
+		# Ponte Dark-Gunmetal Cyberpunk 2077 (acciaio brunito ad alto contrasto che esalta i modelli 3D HD e i neon!)
+		floor_base = current_world.biome_color.lerp(Color(0.07, 0.09, 0.14, 1.0), 0.65)
 		world_title = current_world.display_name.to_upper()
 		if dark_bg:
-			dark_bg.color = floor_base.darkened(0.18)
+			dark_bg.color = Color(0.025, 0.032, 0.055, 1.0)
 
 	if hud and player and hud.has_method("setup"):
 		hud.setup(player)
@@ -66,45 +66,42 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	# 1. Superstruttura Esterna Full-Bleed (copre anche schermi 20:9 e 21:9 fino a y=-400..1680 senza bande nere!)
-	draw_rect(Rect2(Vector2(-180, -420), Vector2(1080, 2140)), Color(0.05, 0.08, 0.15, 1.0), true)
+	# 1. Superstruttura Esterna Full-Bleed Ossidiana (copre schermi 20:9 e 21:9 senza bande nere!)
+	draw_rect(Rect2(Vector2(-180, -420), Vector2(1080, 2140)), Color(0.025, 0.032, 0.055, 1.0), true)
 	for ext_y in [-320, -240, -160, -80, 1310, 1390, 1470, 1550]:
-		draw_rect(Rect2(Vector2(-120, ext_y), Vector2(960, 44)), Color(0.08, 0.12, 0.22, 0.95), true)
-		draw_line(Vector2(-120, ext_y), Vector2(840, ext_y), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.24), 2.0)
+		draw_rect(Rect2(Vector2(-120, ext_y), Vector2(960, 44)), Color(0.045, 0.06, 0.10, 0.96), true)
+		draw_line(Vector2(-120, ext_y), Vector2(840, ext_y), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.22), 1.5)
 	for ext_x in [90, 220, 360, 500, 630]:
-		draw_line(Vector2(ext_x, -400), Vector2(ext_x, 0), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.22), 4.0)
-		draw_line(Vector2(ext_x, 1280), Vector2(ext_x, 1680), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.22), 4.0)
+		draw_line(Vector2(ext_x, -400), Vector2(ext_x, 0), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.18), 2.5)
+		draw_line(Vector2(ext_x, 1280), Vector2(ext_x, 1680), Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.18), 2.5)
 
-	# 2. Ponte Arena 3D luminoso e ben leggibile
+	# 2. Ponte Arena Gunmetal Dark-Cyberpunk (zero effetto griglia anni '80!)
 	var deck_rect := Rect2(Vector2(42, 112), Vector2(636, 1134))
 	draw_rect(deck_rect, floor_base, true)
-	# Riflettore zenitale morbido sull'intera arena per garantire visibilità cristallina di eroe e nemici
-	draw_circle(Vector2(360, 660), 540.0, Color(0.65, 0.82, 1.0, 0.08))
-	draw_circle(Vector2(360, 660), 340.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.06))
 
-	# Canalizzazioni Energetiche Sub-Pavimento (Fiumi di Plasma Sottostanti visibili tra le piastre 3D)
-	var trench_glow := Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.34 + 0.10 * sin(pulse_t * 3.0))
+	# Canalizzazioni al Plasma Incassate Sottili tra le Piastre Industriali
+	var trench_glow := Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.18 + 0.06 * sin(pulse_t * 3.0))
 	for gx in [148, 254, 360, 466, 572]:
-		draw_line(Vector2(gx, 112), Vector2(gx, 1246), trench_glow, 6.0)
+		draw_line(Vector2(gx, 112), Vector2(gx, 1246), trench_glow, 2.5)
 		var pulse_y: float = fmod(pulse_t * 175.0 + float(gx) * 1.7, 1134.0) + 112.0
 		draw_line(
-			Vector2(gx, maxf(112.0, pulse_y - 46.0)),
-			Vector2(gx, minf(1246.0, pulse_y + 46.0)),
-			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.90),
-			4.0
+			Vector2(gx, maxf(112.0, pulse_y - 42.0)),
+			Vector2(gx, minf(1246.0, pulse_y + 42.0)),
+			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.68),
+			2.2
 		)
 
 	for gy in [215, 318, 421, 524, 627, 730, 833, 936, 1039, 1142]:
-		draw_line(Vector2(42, gy), Vector2(678, gy), trench_glow, 6.0)
+		draw_line(Vector2(42, gy), Vector2(678, gy), trench_glow, 2.5)
 		var pulse_x: float = fmod(pulse_t * 155.0 + float(gy) * 1.3, 636.0) + 42.0
 		draw_line(
-			Vector2(maxf(42.0, pulse_x - 42.0), gy),
-			Vector2(minf(678.0, pulse_x + 42.0), gy),
-			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.90),
-			4.0
+			Vector2(maxf(42.0, pulse_x - 38.0), gy),
+			Vector2(minf(678.0, pulse_x + 38.0), gy),
+			Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.68),
+			2.2
 		)
 
-	# 3. Piastre Metalliche 3D PBR chiare e ben illuminate (Nord -> Sud)
+	# 3. Piastre Industriali PBR Acciaio Brunito (Nord -> Sud)
 	var floor_tex := CyberTheme.get_model_texture("res://assets/cyber_models/arena_floor_tile.png")
 	var tile_w: int = 106
 	var tile_h: int = 103
@@ -112,22 +109,22 @@ func _draw() -> void:
 		var tx: int = 42 + col_i * tile_w
 		for row_i in range(11):
 			var ty: int = 112 + row_i * tile_h
-			# Pavimento a luminosità media (mai sovraesposto): eroe e nemici con contorno scuro ne risaltano nettamente
-			var depth_f: float = 0.94 + 0.12 * (float(row_i) / 10.0)
+			var depth_f: float = 0.88 + 0.14 * (float(row_i) / 10.0)
+			var checker: float = 0.96 if ((col_i + row_i) % 2 == 0) else 1.03
 			var tile_mod := Color(
-				clampf((floor_base.r * 1.6 + 0.62) * depth_f, 0.78, 1.02),
-				clampf((floor_base.g * 1.6 + 0.64) * depth_f, 0.80, 1.04),
-				clampf((floor_base.b * 1.6 + 0.70) * depth_f, 0.84, 1.08),
+				clampf((0.76 + floor_base.r * 1.15) * depth_f * checker, 0.68, 1.02),
+				clampf((0.78 + floor_base.g * 1.15) * depth_f * checker, 0.70, 1.04),
+				clampf((0.82 + floor_base.b * 1.15) * depth_f * checker, 0.74, 1.08),
 				1.0
 			)
-			var tr := Rect2(Vector2(tx + 2, ty + 2), Vector2(tile_w - 4, tile_h - 4))
+			var tr := Rect2(Vector2(tx + 1, ty + 1), Vector2(tile_w - 2, tile_h - 2))
 			if floor_tex:
 				draw_texture_rect(floor_tex, tr, false, tile_mod)
 			else:
-				draw_rect(tr, Color(floor_base.r + 0.08, floor_base.g + 0.09, floor_base.b + 0.12, 0.96), true)
-			# Micro-LED angolari incastonati nelle piastre
-			draw_circle(Vector2(tx + 10, ty + 10), 1.7, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.42 * depth_f))
-			draw_circle(Vector2(tx + tile_w - 10, ty + tile_h - 10), 1.7, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.42 * depth_f))
+				draw_rect(tr, Color(floor_base.r + 0.04, floor_base.g + 0.05, floor_base.b + 0.08, 0.96), true)
+			# Riflesso ambientale bagnato soffuso sul metallo scuro
+			if (col_i + row_i * 3) % 5 == 0:
+				draw_circle(Vector2(tx + tile_w * 0.5, ty + tile_h * 0.5), 34.0, Color(arena_accent.r, arena_accent.g, arena_accent.b, 0.035))
 
 	# 4. Reattore Centrale Incassato in Prospettiva 2.5D Ellittica con Identità Unica per ciascuno degli 8 Mondi!
 	var center := Vector2(360, 665)
@@ -179,11 +176,11 @@ func _draw() -> void:
 		draw_circle(mp, mr, Color(1.0, 0.98, 0.9, ma * 0.85))
 
 func _draw_3d_arena_architecture() -> void:
-	var roof_top := Color(0.24, 0.30, 0.44, 1.0)
-	var roof_edge := Color(0.42, 0.52, 0.70, 1.0)
-	var wall_upper := Color(0.18, 0.24, 0.38, 1.0)
-	var wall_lower := Color(0.11, 0.15, 0.26, 1.0)
-	var wall_side_face := Color(0.15, 0.20, 0.32, 1.0)
+	var roof_top := Color(0.11, 0.14, 0.21, 1.0)
+	var roof_edge := Color(0.25, 0.32, 0.44, 1.0)
+	var wall_upper := Color(0.09, 0.12, 0.19, 1.0)
+	var wall_lower := Color(0.05, 0.07, 0.12, 1.0)
+	var wall_side_face := Color(0.08, 0.10, 0.16, 1.0)
 
 	# --- OMBRE AMBIENT OCCLUSION MORBIDE SUL PAVIMENTO DALLE PARETI 3D ---
 	draw_rect(Rect2(Vector2(42, 112), Vector2(636, 26)), Color(0, 0, 0, 0.22), true)
@@ -379,9 +376,31 @@ func _draw_world_biome_emblem(ring_alpha: float) -> void:
 				star.append(Vector2(cos(a), sin(a)) * r)
 			draw_polyline(star, col, 2.8)
 		"world_8":
-			# Nexus della Singolarità: Orizzonte degli Eventi del Buco Nero
+			# Vicolo Kabuki: Sigillo Shuriken Cremisi a 4 Lame
+			for i in range(4):
+				var a: float = float(i) * PI * 0.5 + pulse_t * 0.65
+				draw_line(Vector2(cos(a), sin(a)) * 28.0, Vector2(cos(a + 0.25), sin(a + 0.25)) * 136.0, col, 3.8)
+			draw_arc(Vector2.ZERO, 52.0, 0.0, TAU, 36, col, 2.8)
+		"world_9":
+			# Bastione Militech: Mirino Balistico Pesante a Croce Tattica
+			for i in range(4):
+				var a: float = float(i) * PI * 0.5
+				draw_line(Vector2(cos(a), sin(a)) * 42.0, Vector2(cos(a), sin(a)) * 146.0, col, 4.5)
+			draw_arc(Vector2.ZERO, 96.0, 0.0, TAU, 40, col, 2.6)
+		"world_10":
+			# Reattore Abissale: Vortice Idro-Termico Turchese
+			for i in range(5):
+				var a: float = float(i) * TAU / 5.0 - pulse_t * 0.55
+				draw_arc(Vector2.ZERO, 54.0 + float(i) * 18.0, a, a + 1.4, 24, col, 3.0)
+		"world_11":
+			# Cupola Selene: Orbita Lunare Concentrica
+			draw_arc(Vector2.ZERO, 118.0, 0.0, TAU, 48, col, 2.4)
+			var moon_p := Vector2(cos(pulse_t * 0.7), sin(pulse_t * 0.7)) * 118.0
+			draw_circle(moon_p, 14.0, col)
+		_:
+			# Mondo 12 Nucleo A.R.G.O.N.: Orizzonte degli Eventi Singolarità
 			draw_circle(Vector2.ZERO, 54.0, Color(0.02, 0.0, 0.05, 0.88))
-			draw_arc(Vector2.ZERO, 56.0, 0.0, TAU, 48, Color(1.0, 0.15, 0.50, 0.85), 3.6)
+			draw_arc(Vector2.ZERO, 56.0, 0.0, TAU, 48, Color(1.0, 0.05, 0.35, 0.90), 3.6)
 			for i in range(4):
 				var a: float = float(i) * PI * 0.5 + pulse_t * 0.9
-				draw_arc(Vector2.ZERO, 96.0, a, a + 0.9, 20, Color(0.65, 0.20, 1.0, ring_alpha * 1.5), 3.5)
+				draw_arc(Vector2.ZERO, 96.0, a, a + 0.9, 20, col, 3.5)

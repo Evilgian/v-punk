@@ -184,7 +184,8 @@ func _ready() -> void:
 
 	if btn_prev_world: btn_prev_world.pressed.connect(func(): _cycle_world(-1))
 	if btn_next_world: btn_next_world.pressed.connect(func(): _cycle_world(1))
-	if preview_icon: preview_icon.pressed.connect(func(): _cycle_world(1))
+	if preview_icon:
+		preview_icon.gui_input.connect(_on_world_preview_gui_input)
 
 	var prof_card_ctrl: Control = find_child("ProfileCard", true, false) as Control
 	if prof_card_ctrl:
@@ -412,13 +413,17 @@ func _setup_top_bar_and_footer_3d_icons() -> void:
 		btn_watch_ad.icon = CyberTheme.get_ui_icon("gem")
 		btn_watch_ad.expand_icon = true
 
-	_setup_footer_tab_3d_icon(btn_nav_shop, "nav_shop", "NEGOZIO")
-	_setup_footer_tab_3d_icon(btn_nav_equip, "nav_equip", "EQUIP")
-	_setup_footer_tab_3d_icon(btn_nav_home, "nav_play", "GIOCA")
-	_setup_footer_tab_3d_icon(btn_upgrades, "nav_talents", "TALENTI")
-	_setup_footer_tab_3d_icon(btn_nav_quests, "nav_quests", "MISSIONI")
+	_setup_footer_tab_3d_icon(btn_nav_shop, "nav_shop", "MERCATO")
+	_setup_footer_tab_3d_icon(btn_nav_equip, "nav_equip", "CROMO")
+	_setup_footer_tab_3d_icon(btn_nav_home, "nav_play", "INCURSIONE")
+	_setup_footer_tab_3d_icon(btn_upgrades, "nav_talents", "SINAPSI")
+	_setup_footer_tab_3d_icon(btn_nav_quests, "nav_quests", "CONTRATTI")
 
 var menu_anim_t: float = 0.0
+var world_intel_open: bool = false
+var world_swipe_active: bool = false
+var world_swipe_start: Vector2 = Vector2.ZERO
+var world_swipe_handled: bool = false
 var cyber_bg_canvas: Control = null
 var boss_holo_node: Node2D = null
 var boss_actor_node: Node2D = null
@@ -453,49 +458,80 @@ func _process(delta: float) -> void:
 func _setup_procedural_menu_models() -> void:
 	if preview_icon:
 		preview_icon.texture_normal = null
+		preview_icon.clip_contents = true
 		boss_holo_node = Node2D.new()
 		boss_holo_node.position = Vector2.ZERO
 		boss_holo_node.scale = Vector2(1.0, 1.0)
 		boss_holo_node.draw.connect(func():
 			var p_sz: Vector2 = preview_icon.size
 			if p_sz.x < 40.0 or p_sz.y < 40.0:
-				p_sz = Vector2(496, 236)
+				p_sz = Vector2(516, 248)
 			var w: WorldData = WorldDB.get_selected_world()
 			var wid: String = w.id if w else "world_1"
-			var acc: Color = w.accent_color if w else Color(0, 0.94, 1, 1)
+			var w_idx: int = maxi(1, WorldDB.world_order.find(wid) + 1)
+			var tot_worlds: int = maxi(12, WorldDB.world_order.size())
+			var is_locked: bool = (w_idx > Global.max_unlocked_world)
+			var acc: Color = Color(1.0, 0.05, 0.28, 1.0) if is_locked else (w.accent_color if w else CyberTheme.COL_CYAN)
 			var banner_tex: Texture2D = CyberTheme.get_model_texture("res://assets/cyber_models/banner_" + wid + ".png")
 			var rect := Rect2(Vector2.ZERO, p_sz)
 			if banner_tex:
-				# Aspect-cover centrato: niente stiramenti né bande vuote su 16:9 o 20:9!
+				# Fondale HD 800x450 con leggero effetto parallasse dinamico!
 				var tw: float = float(banner_tex.get_width())
 				var th: float = float(banner_tex.get_height())
-				var sc: float = maxf(p_sz.x / maxf(1.0, tw), p_sz.y / maxf(1.0, th))
+				var sc: float = maxf(p_sz.x / maxf(1.0, tw), p_sz.y / maxf(1.0, th)) * 1.04
 				var src_w: float = p_sz.x / sc
 				var src_h: float = p_sz.y / sc
-				var src_rect := Rect2(Vector2((tw - src_w) * 0.5, (th - src_h) * 0.5), Vector2(src_w, src_h))
-				boss_holo_node.draw_texture_rect_region(banner_tex, rect, src_rect, Color.WHITE)
+				var pan_x: float = sin(menu_anim_t * 0.55) * minf(12.0, maxf(0.0, (tw - src_w) * 0.45))
+				var src_rect := Rect2(Vector2((tw - src_w) * 0.5 + pan_x, (th - src_h) * 0.5), Vector2(src_w, src_h))
+				var bg_tint := Color(0.38, 0.34, 0.46, 1.0) if is_locked else Color.WHITE
+				boss_holo_node.draw_texture_rect_region(banner_tex, rect, src_rect, bg_tint)
 			else:
-				boss_holo_node.draw_rect(rect, Color(0.03, 0.05, 0.12, 0.95), true)
+				boss_holo_node.draw_rect(rect, Color(0.03, 0.04, 0.08, 0.98), true)
+
+			# Vignettatura cinematografica inferiore per staccare Boss 3D e telemetria HUD
 			boss_holo_node.draw_polygon(
-				PackedVector2Array([Vector2(0, p_sz.y * 0.52), Vector2(p_sz.x, p_sz.y * 0.52), Vector2(p_sz.x, p_sz.y), Vector2(0, p_sz.y)]),
-				PackedColorArray([Color(0.01, 0.02, 0.05, 0.0), Color(0.01, 0.02, 0.05, 0.0), Color(0.01, 0.02, 0.05, 0.82), Color(0.01, 0.02, 0.05, 0.82)])
+				PackedVector2Array([Vector2(0, p_sz.y * 0.44), Vector2(p_sz.x, p_sz.y * 0.44), Vector2(p_sz.x, p_sz.y), Vector2(0, p_sz.y)]),
+				PackedColorArray([Color(0.01, 0.015, 0.04, 0.0), Color(0.01, 0.015, 0.04, 0.0), Color(0.01, 0.015, 0.04, 0.86), Color(0.01, 0.015, 0.04, 0.86)])
 			)
-			boss_holo_node.draw_rect(rect, acc, false, 3.0)
-			var fnt: Font = ThemeDB.fallback_font
+
+			# Cornice chirurgica Cyberpunk 2077 + mirini telemetrici
+			boss_holo_node.draw_rect(rect, Color(acc.r, acc.g, acc.b, 0.85), false, 2.0)
+			boss_holo_node.draw_rect(Rect2(Vector2(0, 0), Vector2(5, p_sz.y)), acc, true)
+
+			var fnt: Font = CyberTheme.get_cyber_font(true)
 			if fnt and w:
-				var w_idx: int = maxi(1, WorldDB.world_order.find(wid) + 1)
-				boss_holo_node.draw_rect(Rect2(Vector2(10, 10), Vector2(150, 30)), Color(0.02, 0.04, 0.10, 0.90), true)
-				boss_holo_node.draw_rect(Rect2(Vector2(10, 10), Vector2(150, 30)), acc, false, 1.8)
-				boss_holo_node.draw_string(fnt, Vector2(20, 31), "SETTORE 0" + str(w_idx) + "/08", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+				var sec_str := "SETTORE %02d / %02d" % [w_idx, tot_worlds]
+				boss_holo_node.draw_rect(Rect2(Vector2(12, 10), Vector2(158, 28)), Color(0.02, 0.03, 0.06, 0.92), true)
+				boss_holo_node.draw_rect(Rect2(Vector2(12, 10), Vector2(3, 28)), acc, true)
+				boss_holo_node.draw_string(fnt, Vector2(22, 30), sec_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+
+				var right_tag := "[ CRIPTATO ]" if is_locked else ("[ CHIUDI INTEL ]" if world_intel_open else "[ INTEL » ]")
+				var rt_w: float = 136.0
+				boss_holo_node.draw_rect(Rect2(Vector2(p_sz.x - rt_w - 10.0, 10.0), Vector2(rt_w, 28.0)), Color(0.02, 0.03, 0.06, 0.90), true)
+				boss_holo_node.draw_rect(Rect2(Vector2(p_sz.x - rt_w - 10.0, 10.0), Vector2(rt_w, 28.0)), Color(acc.r, acc.g, acc.b, 0.72), false, 1.2)
+				boss_holo_node.draw_string(fnt, Vector2(p_sz.x - rt_w - 4.0, 30.0), right_tag, HORIZONTAL_ALIGNMENT_CENTER, rt_w - 8.0, 14, CyberTheme.COL_YELLOW if (not is_locked and world_intel_open) else acc)
+
+				# Barra inferiore sintetica (zero spoiler prolissi!)
+				var b_tag := ("BERSAGLIO CRIPTATO  //  SBLOCCA SETTORE %02d" % (w_idx - 1)) if is_locked else ("BERSAGLIO: " + w.boss_name + "   •   BOTTINO x" + str(w.reward_multiplier))
+				boss_holo_node.draw_string(fnt, Vector2(14, p_sz.y - 11.0), b_tag, HORIZONTAL_ALIGNMENT_LEFT, p_sz.x - 24.0, 14, Color(1.0, 0.42, 0.52, 0.96) if is_locked else Color(0.92, 0.96, 1.0, 0.95))
+
+				if world_intel_open and not is_locked:
+					var ir := Rect2(Vector2(12.0, p_sz.y - 98.0), Vector2(p_sz.x - 24.0, 62.0))
+					boss_holo_node.draw_rect(ir, Color(0.02, 0.03, 0.06, 0.94), true)
+					boss_holo_node.draw_rect(ir, CyberTheme.COL_YELLOW, false, 1.5)
+					boss_holo_node.draw_string(fnt, Vector2(22.0, ir.position.y + 22.0), w.description, HORIZONTAL_ALIGNMENT_LEFT, ir.size.x - 18.0, 13, Color.WHITE)
+					boss_holo_node.draw_string(fnt, Vector2(22.0, ir.position.y + 46.0), "ZONE: " + str(w.total_rooms) + "   •   MINACCIA OSTILI: x" + str(w.enemy_hp_multiplier) + "   •   ANOMALIA: " + w.trap_type, HORIZONTAL_ALIGNMENT_LEFT, ir.size.x - 18.0, 13, CyberTheme.COL_YELLOW)
+
 			if is_instance_valid(boss_actor_node):
-				var dyn_sc: float = clampf(p_sz.y / 195.0, 1.18, 1.52)
-				boss_actor_node.position = Vector2(p_sz.x * 0.5, p_sz.y * 0.60)
+				var dyn_sc: float = clampf(p_sz.y / 205.0, 1.15, 1.48)
+				boss_actor_node.position = Vector2(p_sz.x * 0.5, p_sz.y * 0.57)
 				boss_actor_node.scale = Vector2(dyn_sc, dyn_sc)
+				boss_actor_node.modulate = Color(0.03, 0.04, 0.07, 0.95) if is_locked else Color.WHITE
 		)
 		preview_icon.add_child(boss_holo_node)
 
 		boss_actor_node = Node2D.new()
-		boss_actor_node.position = Vector2(248, 138)
+		boss_actor_node.position = Vector2(258, 140)
 		boss_actor_node.scale = Vector2(1.24, 1.24)
 		boss_actor_node.draw.connect(func():
 			var w: WorldData = WorldDB.get_selected_world()
@@ -641,7 +677,7 @@ func _update_top_bar() -> void:
 		var has_gift := not Global.checkin_claimed
 		btn_checkin_top.icon = CyberTheme.get_ui_icon("gift")
 		btn_checkin_top.expand_icon = true
-		btn_checkin_top.text = "PREMI !" if has_gift else "PREMI"
+		btn_checkin_top.text = "DROP !" if has_gift else "DROP"
 		CyberTheme.style_button(btn_checkin_top, CyberTheme.COL_YELLOW if has_gift else CyberTheme.COL_CYAN, has_gift)
 
 	_update_nav_badges()
@@ -658,12 +694,13 @@ func _update_nav_badges() -> void:
 	var talent_alert := _has_affordable_talent()
 	var quest_alert := _has_ready_quest()
 	var shop_alert := (Global.total_credits >= 100)
+	var home_alert := (WorldDB.count_claimable_milestones() > 0) if WorldDB.has_method("count_claimable_milestones") else false
 
-	_set_nav_label_text(btn_nav_shop, "NEGOZIO", shop_alert)
-	_set_nav_label_text(btn_nav_equip, "EQUIP", equip_alert)
-	_set_nav_label_text(btn_nav_home, "GIOCA", false)
-	_set_nav_label_text(btn_upgrades, "TALENTI", talent_alert)
-	_set_nav_label_text(btn_nav_quests, "MISSIONI", quest_alert)
+	_set_nav_label_text(btn_nav_shop, "MERCATO", shop_alert)
+	_set_nav_label_text(btn_nav_equip, "CROMO", equip_alert)
+	_set_nav_label_text(btn_nav_home, "INCURSIONE", home_alert)
+	_set_nav_label_text(btn_upgrades, "SINAPSI", talent_alert)
+	_set_nav_label_text(btn_nav_quests, "CONTRATTI", quest_alert)
 
 func _set_nav_label_text(btn: Control, txt: String, has_alert: bool = false) -> void:
 	if not btn: return
@@ -689,30 +726,102 @@ func _style_nav_btn(btn: Control, is_active: bool) -> void:
 	btn.pivot_offset = btn.size / 2.0
 	var label: Label = btn.find_child("Label", true, false) as Label
 	if label:
-		label.add_theme_color_override("font_color", Color(1.0, 0.98, 0.88, 1.0) if is_active else Color(0.90, 0.95, 1.0, 1.0))
-		label.add_theme_color_override("font_outline_color", Color(0.06, 0.04, 0.01, 0.98) if is_active else Color(0.02, 0.03, 0.08, 0.95))
-		label.add_theme_constant_override("outline_size", 4 if is_active else 3)
+		var f_bold := CyberTheme.get_cyber_font(true)
+		if f_bold:
+			label.add_theme_font_override("font", f_bold)
+		label.add_theme_font_size_override("font_size", 13)
+		if is_active:
+			# Contrasto altissimo Cyberpunk 2077: testo nero ossidiana su placca Giallo Acido #FCEE0A!
+			label.add_theme_color_override("font_color", Color(0.04, 0.05, 0.08, 1.0))
+			label.add_theme_constant_override("outline_size", 0)
+		else:
+			label.add_theme_color_override("font_color", Color(0.88, 0.94, 1.0, 0.96))
+			label.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.96))
+			label.add_theme_constant_override("outline_size", 3)
 
 	var nav_tex := CyberTheme.get_model_texture("res://assets/cyber_models/ui_btn_gold_3d.png" if is_active else "res://assets/cyber_models/ui_btn_cyan_3d.png")
 	if nav_tex:
 		var sbt := StyleBoxTexture.new()
 		sbt.texture = nav_tex
-		sbt.texture_margin_left = 32; sbt.texture_margin_right = 32
-		sbt.texture_margin_top = 24; sbt.texture_margin_bottom = 32
+		sbt.texture_margin_left = 18; sbt.texture_margin_right = 28
+		sbt.texture_margin_top = 14; sbt.texture_margin_bottom = 26
 		sbt.content_margin_left = 6; sbt.content_margin_right = 6
-		sbt.content_margin_top = 6; sbt.content_margin_bottom = 10
+		sbt.content_margin_top = 6; sbt.content_margin_bottom = 8
 		if not is_active:
-			sbt.modulate_color = Color(0.88, 0.93, 1.0, 0.96)
+			sbt.modulate_color = Color(0.90, 0.94, 1.0, 0.96)
 		btn.add_theme_stylebox_override("panel", sbt)
 	else:
 		btn.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box())
 
-	var target_scale := Vector2(1.06, 1.06) if is_active else Vector2(1.0, 1.0)
+	var target_scale := Vector2(1.05, 1.05) if is_active else Vector2(1.0, 1.0)
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(btn, "scale", target_scale, 0.18)
 
 func _get_rarity_color(rarity_str: String) -> Color:
 	return CyberTheme.get_rarity_color(rarity_str)
+
+func _on_world_preview_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			world_swipe_active = true
+			world_swipe_start = event.position
+			world_swipe_handled = false
+		else:
+			if world_swipe_active and not world_swipe_handled:
+				var dx: float = event.position.x - world_swipe_start.x
+				if absf(dx) >= 36.0:
+					_cycle_world(-1 if dx > 0.0 else 1)
+				else:
+					var w: WorldData = WorldDB.get_selected_world()
+					var w_num: int = WorldDB.world_order.find(w.id) + 1 if w else 1
+					if w_num <= Global.max_unlocked_world:
+						world_intel_open = not world_intel_open
+						SoundFX.play_click()
+						if is_instance_valid(boss_holo_node):
+							boss_holo_node.queue_redraw()
+					else:
+						SoundFX.play_hit()
+			world_swipe_active = false
+	elif event is InputEventMouseMotion and world_swipe_active and not world_swipe_handled:
+		var dx_m: float = event.position.x - world_swipe_start.x
+		if absf(dx_m) >= 52.0:
+			world_swipe_handled = true
+			_cycle_world(-1 if dx_m > 0.0 else 1)
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			world_swipe_active = true
+			world_swipe_start = event.position
+			world_swipe_handled = false
+		else:
+			if world_swipe_active and not world_swipe_handled:
+				var dx_t: float = event.position.x - world_swipe_start.x
+				if absf(dx_t) >= 36.0:
+					_cycle_world(-1 if dx_t > 0.0 else 1)
+				else:
+					var w2: WorldData = WorldDB.get_selected_world()
+					var w_num2: int = WorldDB.world_order.find(w2.id) + 1 if w2 else 1
+					if w_num2 <= Global.max_unlocked_world:
+						world_intel_open = not world_intel_open
+						SoundFX.play_click()
+						if is_instance_valid(boss_holo_node):
+							boss_holo_node.queue_redraw()
+			world_swipe_active = false
+
+func _select_world_by_id(target_id: String, anim_dir: int = 1) -> void:
+	if WorldDB.selected_world_id == target_id:
+		return
+	WorldDB.selected_world_id = target_id
+	world_intel_open = false
+	var sys_save: Node = get_node_or_null("/root/SaveSystem")
+	if sys_save and sys_save.has_method("save_game"): sys_save.save_game()
+	SoundFX.play_click()
+	_show_home_view()
+	if is_instance_valid(boss_holo_node):
+		boss_holo_node.position = Vector2(28.0 * float(anim_dir), 0.0)
+		boss_holo_node.modulate.a = 0.55
+		var tw := create_tween().set_parallel(true)
+		tw.tween_property(boss_holo_node, "position:x", 0.0, 0.18).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(boss_holo_node, "modulate:a", 1.0, 0.18)
 
 func _cycle_world(direction: int) -> void:
 	var keys: Array = WorldDB.world_order if ("world_order" in WorldDB and not WorldDB.world_order.is_empty()) else WorldDB.worlds.keys()
@@ -720,11 +829,7 @@ func _cycle_world(direction: int) -> void:
 	var current_idx: int = keys.find(WorldDB.selected_world_id)
 	if current_idx == -1: current_idx = 0
 	var new_idx: int = (current_idx + direction + keys.size()) % keys.size()
-	WorldDB.selected_world_id = str(keys[new_idx])
-	var sys_save: Node = get_node_or_null("/root/SaveSystem")
-	if sys_save and sys_save.has_method("save_game"): sys_save.save_game()
-	SoundFX.play_click()
-	_show_home_view()
+	_select_world_by_id(str(keys[new_idx]), direction)
 
 # --- VIEW NAVIGATION METHODS ---
 
@@ -758,28 +863,318 @@ func _show_home_view() -> void:
 		var is_locked: bool = (world_num > Global.max_unlocked_world)
 
 		if world_card_name:
-			world_card_name.text = world.display_name + (" [BLOCCATO]" if is_locked else "")
-			world_card_name.add_theme_color_override("font_color", Color(0.75, 0.38, 0.48, 1.0) if is_locked else world.accent_color)
+			world_card_name.text = ("SETTORE %02d  //  " % world_num) + world.display_name
+			world_card_name.add_theme_color_override("font_color", Color(0.95, 0.32, 0.44, 1.0) if is_locked else world.accent_color)
 		if world_card_info:
-			world_card_info.text = "★ " + str(world.total_rooms) + " Livelli  •  Boss: " + world.boss_name + "  •  Bottino x" + str(world.reward_multiplier)
+			world_card_info.visible = false
 		if world_card_desc:
-			if is_locked:
-				world_card_desc.text = "Completa prima il Mondo 0" + str(world_num - 1) + " per sbloccare questo settore."
-			else:
-				world_card_desc.text = world.description
+			world_card_desc.visible = false
 		if btn_play_home:
-			btn_play_home.custom_minimum_size = Vector2(640, 88)
+			btn_play_home.custom_minimum_size = Vector2(640, 84)
 			btn_play_home.disabled = is_locked
 			if is_locked:
-				btn_play_home.text = "BLOCCATO — COMPLETA MONDO 0" + str(world_num - 1)
+				btn_play_home.text = "ACCESSO NEGATO // SBLOCCA SETTORE %02d" % (world_num - 1)
 				CyberTheme.style_button(btn_play_home, CyberTheme.COL_MAGENTA, false)
 			else:
-				btn_play_home.text = "⚡ GIOCA CAPITOLO 0" + str(world_num) + " (" + str(world.total_rooms) + " LIVELLI) ▶"
+				btn_play_home.text = "AVVIA INCURSIONE »"
 				CyberTheme.style_button(btn_play_home, CyberTheme.COL_YELLOW, true)
 		if is_instance_valid(boss_holo_node):
 			boss_holo_node.queue_redraw()
 
+		_rebuild_sector_node_strip(world)
+		_rebuild_world_milestone_bar(world, is_locked)
+
 	_rebuild_home_loadout_dashboard()
+
+func _rebuild_sector_node_strip(selected_world: WorldData) -> void:
+	var world_card: PanelContainer = find_child("WorldCard", true, false) as PanelContainer
+	if not world_card:
+		return
+	var wc_vbox := world_card.get_node_or_null("VBox") as VBoxContainer
+	if not wc_vbox:
+		return
+
+	var old_strip := wc_vbox.get_node_or_null("SectorNodeStrip")
+	if old_strip:
+		wc_vbox.remove_child(old_strip)
+		old_strip.queue_free()
+
+	var strip_box := VBoxContainer.new()
+	strip_box.name = "SectorNodeStrip"
+	strip_box.add_theme_constant_override("separation", 5)
+
+	var grid := GridContainer.new()
+	grid.columns = 6
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
+	strip_box.add_child(grid)
+
+	var sel_idx: int = WorldDB.world_order.find(selected_world.id)
+	for i in range(WorldDB.world_order.size()):
+		var wid: String = WorldDB.world_order[i]
+		var w_obj: WorldData = WorldDB.worlds.get(wid, null) as WorldData
+		var w_num: int = i + 1
+		var is_sel: bool = (wid == selected_world.id)
+		var is_unl: bool = (w_num <= Global.max_unlocked_world)
+		var best_r: int = Global.get_world_best_room(wid) if Global.has_method("get_world_best_room") else 0
+		var is_cleared: bool = (w_obj != null and best_r >= w_obj.total_rooms)
+		var has_claim: bool = (WorldDB.count_claimable_milestones(wid) > 0) if WorldDB.has_method("count_claimable_milestones") else false
+
+		var n_btn := Button.new()
+		n_btn.custom_minimum_size = Vector2(0, 34)
+		n_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		n_btn.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		n_btn.focus_mode = Control.FOCUS_NONE
+		n_btn.add_theme_font_size_override("font_size", 14)
+		var f_bold := CyberTheme.get_cyber_font(true)
+		if f_bold:
+			n_btn.add_theme_font_override("font", f_bold)
+
+		var num_str := "%02d" % w_num
+		if has_claim:
+			n_btn.text = "★ " + num_str
+		elif is_cleared:
+			n_btn.text = "✓ " + num_str
+		elif not is_unl:
+			n_btn.text = "× " + num_str
+		else:
+			n_btn.text = num_str
+
+		var sb := StyleBoxFlat.new()
+		var w_acc: Color = w_obj.accent_color if w_obj else CyberTheme.COL_CYAN
+		if is_sel:
+			sb.bg_color = CyberTheme.COL_YELLOW if is_unl else Color(0.28, 0.06, 0.12, 0.98)
+			sb.border_color = Color.WHITE if is_unl else CyberTheme.COL_MAGENTA
+			sb.border_width_left = 3; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 2
+		elif has_claim:
+			sb.bg_color = Color(0.22, 0.19, 0.03, 0.96)
+			sb.border_color = CyberTheme.COL_YELLOW
+			sb.border_width_left = 3; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+		elif is_cleared:
+			sb.bg_color = Color(0.03, 0.16, 0.11, 0.94)
+			sb.border_color = CyberTheme.COL_GREEN
+			sb.border_width_left = 3; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+		elif is_unl:
+			sb.bg_color = Color(0.05, 0.08, 0.14, 0.94)
+			sb.border_color = w_acc
+			sb.border_width_left = 3; sb.border_width_top = 1; sb.border_width_right = 1; sb.border_width_bottom = 1
+		else:
+			sb.bg_color = Color(0.025, 0.03, 0.055, 0.78)
+			sb.border_color = Color(0.18, 0.22, 0.30, 0.45)
+			sb.border_width_bottom = 1
+		sb.corner_radius_top_left = 2; sb.corner_radius_top_right = 2
+		sb.corner_radius_bottom_left = 2; sb.corner_radius_bottom_right = 6
+		sb.content_margin_left = 4; sb.content_margin_right = 4
+		sb.content_margin_top = 3; sb.content_margin_bottom = 3
+
+		n_btn.add_theme_stylebox_override("normal", sb)
+		n_btn.add_theme_stylebox_override("hover", sb)
+		n_btn.add_theme_stylebox_override("pressed", sb)
+		if is_sel and is_unl:
+			n_btn.add_theme_color_override("font_color", Color(0.04, 0.05, 0.08, 1.0))
+			n_btn.add_theme_constant_override("outline_size", 0)
+		else:
+			var fc := CyberTheme.COL_YELLOW if has_claim else (Color.WHITE if is_unl else Color(0.46, 0.52, 0.62, 0.78))
+			n_btn.add_theme_color_override("font_color", fc)
+			n_btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06, 0.95))
+			n_btn.add_theme_constant_override("outline_size", 2)
+
+		var dir_hint: int = 1 if i >= sel_idx else -1
+		n_btn.pressed.connect(func(): _select_world_by_id(wid, dir_hint))
+		grid.add_child(n_btn)
+
+	wc_vbox.add_child(strip_box)
+	wc_vbox.move_child(strip_box, 0)
+
+func _rebuild_world_milestone_bar(world: WorldData, is_locked: bool) -> void:
+	var world_card: PanelContainer = find_child("WorldCard", true, false) as PanelContainer
+	if not world_card:
+		return
+	var wc_vbox := world_card.get_node_or_null("VBox") as VBoxContainer
+	if not wc_vbox:
+		return
+
+	var old_ms := wc_vbox.get_node_or_null("MilestoneTrackBox")
+	if old_ms:
+		wc_vbox.remove_child(old_ms)
+		old_ms.queue_free()
+
+	var ms_box := VBoxContainer.new()
+	ms_box.name = "MilestoneTrackBox"
+	ms_box.add_theme_constant_override("separation", 6)
+
+	var best_r: int = Global.get_world_best_room(world.id) if Global.has_method("get_world_best_room") else 0
+	var tot_r: int = maxi(1, world.total_rooms)
+	var milestones: Array[Dictionary] = WorldDB.get_world_milestones(world.id) if WorldDB.has_method("get_world_milestones") else []
+
+	var hdr_hb := HBoxContainer.new()
+	hdr_hb.add_theme_constant_override("separation", 8)
+	ms_box.add_child(hdr_hb)
+
+	var lbl_ms_hdr := Label.new()
+	lbl_ms_hdr.text = "SOGLIE RIFORNIMENTO SETTORE"
+	lbl_ms_hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_ms_hdr.add_theme_font_size_override("font_size", 14)
+	CyberTheme.style_label(lbl_ms_hdr, CyberTheme.COL_CYAN, 2)
+	hdr_hb.add_child(lbl_ms_hdr)
+
+	var lbl_rec := Label.new()
+	lbl_rec.text = ("BLOCCATO" if is_locked else ("AVANZAMENTO: ZONA " + str(best_r) + " / " + str(tot_r)))
+	lbl_rec.add_theme_font_size_override("font_size", 14)
+	CyberTheme.style_label(lbl_rec, Color(0.65, 0.72, 0.84, 0.9) if is_locked else CyberTheme.COL_YELLOW, 2)
+	hdr_hb.add_child(lbl_rec)
+
+	var pbar := ProgressBar.new()
+	pbar.custom_minimum_size = Vector2(0, 12)
+	pbar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pbar.max_value = tot_r
+	pbar.value = mini(best_r, tot_r)
+	pbar.show_percentage = false
+	var pb_bg := CyberTheme.make_cyber_box(Color(0.025, 0.035, 0.065, 0.96), Color(0.18, 0.26, 0.38, 0.85), 0.0, 1, 3, 0)
+	pb_bg.content_margin_top = 0; pb_bg.content_margin_bottom = 0
+	var pb_fill := StyleBoxFlat.new()
+	pb_fill.bg_color = CyberTheme.COL_GREEN if best_r >= tot_r else world.accent_color
+	pb_fill.corner_radius_top_left = 1; pb_fill.corner_radius_bottom_right = 4
+	pbar.add_theme_stylebox_override("background", pb_bg)
+	pbar.add_theme_stylebox_override("fill", pb_fill)
+	ms_box.add_child(pbar)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	ms_box.add_child(row)
+
+	for m in milestones:
+		var m_key: String = str(m.get("key", ""))
+		var target_r: int = int(m.get("target_room", 3))
+		var tier_idx: int = int(m.get("tier", 1))
+		var is_claimed: bool = bool(Global.world_milestones_claimed.get(m_key, false))
+		var is_ready: bool = (best_r >= target_r and not is_claimed)
+
+		var m_card := PanelContainer.new()
+		m_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		m_card.custom_minimum_size = Vector2(0, 76)
+		if is_ready:
+			m_card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box("LEGENDARY", 8, 6))
+		elif is_claimed:
+			m_card.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
+		else:
+			m_card.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(8, 6, Color(0.82, 0.88, 0.96, 0.92)))
+
+		var mv := VBoxContainer.new()
+		mv.alignment = BoxContainer.ALIGNMENT_CENTER
+		mv.add_theme_constant_override("separation", 2)
+		mv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		m_card.add_child(mv)
+
+		var top_hb := HBoxContainer.new()
+		top_hb.alignment = BoxContainer.ALIGNMENT_CENTER
+		top_hb.add_theme_constant_override("separation", 5)
+		top_hb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		mv.add_child(top_hb)
+
+		var ico := TextureRect.new()
+		ico.custom_minimum_size = Vector2(20, 20)
+		ico.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ico.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ico.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ico_name := "core" if tier_idx == 1 else ("gem" if tier_idx == 2 else "gift")
+		ico.texture = CyberTheme.get_ui_icon(ico_name)
+		top_hb.add_child(ico)
+
+		var l_t := Label.new()
+		l_t.text = str(m.get("title", "ZONA"))
+		l_t.add_theme_font_size_override("font_size", 13)
+		l_t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		CyberTheme.style_label(l_t, CyberTheme.COL_YELLOW if is_ready else (CyberTheme.COL_GREEN if is_claimed else Color.WHITE), 2)
+		top_hb.add_child(l_t)
+
+		var l_rew := Label.new()
+		var c_v: int = int(m.get("coins", 0))
+		var g_v: int = int(m.get("gems", 0))
+		var s_v: int = int(m.get("scrolls", 0))
+		var gr_s: String = str(m.get("gear_rarity", ""))
+		var short_parts: Array[String] = []
+		if g_v > 0: short_parts.append("+" + str(g_v) + " Gemme")
+		if c_v > 0: short_parts.append("+" + str(c_v) + "¢")
+		if s_v > 0 and gr_s.is_empty(): short_parts.append("+" + str(s_v) + " Nuclei")
+		if not gr_s.is_empty(): short_parts.append("Cromo " + ("MK.III" if gr_s == "EPIC" else "MK.II"))
+		l_rew.text = " • ".join(short_parts)
+		l_rew.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l_rew.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		l_rew.add_theme_font_size_override("font_size", 12)
+		l_rew.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		CyberTheme.style_label(l_rew, Color(0.86, 0.94, 1.0, 0.96), 2)
+		mv.add_child(l_rew)
+
+		var l_st := Label.new()
+		l_st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l_st.add_theme_font_size_override("font_size", 12)
+		l_st.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if is_ready:
+			l_st.text = "★ TOCCA E RISCATTA"
+			CyberTheme.style_label(l_st, CyberTheme.COL_YELLOW, 2)
+		elif is_claimed:
+			l_st.text = "✓ ACQUISITO"
+			CyberTheme.style_label(l_st, Color(0.82, 1.0, 0.92, 1.0), 2)
+		else:
+			l_st.text = "SOGLIA " + str(int(round(float(target_r) / float(tot_r) * 100.0))) + "%"
+			CyberTheme.style_label(l_st, Color(0.58, 0.68, 0.82, 0.85), 2)
+		mv.add_child(l_st)
+
+		if is_ready:
+			var captured_m: Dictionary = m.duplicate()
+			var captured_wid: String = world.id
+			_connect_button(m_card, func(): _claim_world_milestone(captured_wid, captured_m))
+		row.add_child(m_card)
+
+	wc_vbox.add_child(ms_box)
+
+func _claim_world_milestone(world_id: String, m: Dictionary) -> void:
+	var m_key: String = str(m.get("key", ""))
+	if m_key.is_empty() or bool(Global.world_milestones_claimed.get(m_key, false)):
+		return
+	var best_r: int = Global.get_world_best_room(world_id)
+	if best_r < int(m.get("target_room", 999)):
+		SoundFX.play_hit()
+		return
+
+	Global.world_milestones_claimed[m_key] = true
+	var c_add: int = int(m.get("coins", 0))
+	var g_add: int = int(m.get("gems", 0))
+	var s_add: int = int(m.get("scrolls", 0))
+	var gr_rar: String = str(m.get("gear_rarity", ""))
+	Global.total_coins += c_add
+	Global.total_credits += g_add
+	Global.upgrade_scrolls += s_add
+
+	var reward_parts: Array[String] = []
+	if c_add > 0: reward_parts.append("+" + str(c_add) + " Crediti")
+	if g_add > 0: reward_parts.append("+" + str(g_add) + " Gemme")
+	if s_add > 0: reward_parts.append("+" + str(s_add) + " Nuclei")
+
+	if not gr_rar.is_empty():
+		var im: Node = get_node_or_null("/root/InventoryManager")
+		var pool_m := [
+			{"id": "katana", "name": "Katana Termica", "slot": "ARMA"},
+			{"id": "laser_rifle", "name": "Fucile Laser", "slot": "ARMA"},
+			{"id": "nano_armor", "name": "Corazza Nano-Tech", "slot": "CORAZZA"},
+			{"id": "drone_shield", "name": "Drone Scudo", "slot": "PET 2"},
+			{"id": "smg", "name": "Mitraglietta Cyber", "slot": "ARMA"},
+			{"id": "ring_speed", "name": "Anello Velocità", "slot": "ANELLO 2"}
+		]
+		var pick_g: Dictionary = pool_m[randi() % pool_m.size()]
+		if im and im.has_method("add_item"):
+			im.add_item(str(pick_g["id"]), str(pick_g["name"]), str(pick_g["slot"]), gr_rar)
+		reward_parts.append(str(pick_g["name"]) + " (" + CyberTheme.get_rarity_badge_text(gr_rar) + ")")
+
+	var sys_save: Node = get_node_or_null("/root/SaveSystem")
+	if sys_save and sys_save.has_method("save_game"): sys_save.save_game()
+	SoundFX.play_win()
+	_trigger_rewards_popup("★", "TRAGUARDO SETTORE ACQUISITO", "  •  ".join(reward_parts))
+	_update_top_bar()
+	_show_home_view()
 
 func _rebuild_home_loadout_dashboard() -> void:
 	var summary_card: PanelContainer = find_child("EquippedSummaryCard", true, false) as PanelContainer
@@ -789,6 +1184,7 @@ func _rebuild_home_loadout_dashboard() -> void:
 
 	var old_dash := summary_card.get_node_or_null("HomeLoadoutDash")
 	if old_dash:
+		summary_card.remove_child(old_dash)
 		old_dash.queue_free()
 
 	var dash := VBoxContainer.new()
@@ -807,9 +1203,9 @@ func _rebuild_home_loadout_dashboard() -> void:
 	dash.add_child(hdr_row)
 
 	var hdr := Label.new()
-	hdr.text = "⚡ DOTAZIONE ATTIVA"
+	hdr.text = "ASSETTO CROMO // OPERATIVO"
 	hdr.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hdr.add_theme_font_size_override("font_size", 18)
+	hdr.add_theme_font_size_override("font_size", 17)
 	CyberTheme.style_label(hdr, CyberTheme.COL_CYAN, 3)
 	hdr_row.add_child(hdr)
 
@@ -817,21 +1213,21 @@ func _rebuild_home_loadout_dashboard() -> void:
 	if can_auto_eq:
 		status_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box("LEGENDARY"))
 		var sl := Label.new()
-		sl.text = "▲ UPGRADE DISPONIBILE!"
-		sl.add_theme_font_size_override("font_size", 14)
+		sl.text = "▲ INNESTO SUPERIORE"
+		sl.add_theme_font_size_override("font_size", 13)
 		CyberTheme.style_label(sl, CyberTheme.COL_YELLOW, 2)
 		status_pill.add_child(sl)
 	elif fusible_cnt > 0:
 		status_pill.add_theme_stylebox_override("panel", CyberTheme.make_rarity_pill_box("EPIC"))
 		var sl2 := Label.new()
-		sl2.text = "▲ FUSIONE PRONTA (" + str(fusible_cnt) + ")"
-		sl2.add_theme_font_size_override("font_size", 14)
+		sl2.text = "▲ SINTESI PRONTA (" + str(fusible_cnt) + ")"
+		sl2.add_theme_font_size_override("font_size", 13)
 		CyberTheme.style_label(sl2, Color(0.95, 0.72, 1.0, 1.0), 2)
 		status_pill.add_child(sl2)
 	else:
 		status_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
 		var sl3 := Label.new()
-		sl3.text = "TOCCA PER GESTIRE ▶"
+		sl3.text = "CONFIGURA »"
 		sl3.add_theme_font_size_override("font_size", 13)
 		CyberTheme.style_label(sl3, Color(0.88, 1.0, 0.94, 1.0), 2)
 		status_pill.add_child(sl3)
@@ -927,7 +1323,7 @@ func _rebuild_home_loadout_dashboard() -> void:
 func _show_inventory_view() -> void:
 	current_view = ViewMode.INVENTORY
 	_update_nav_styles()
-	if section_title: section_title.text = "EQUIPAGGIAMENTO (6 SLOT) & FUSIONE"
+	if section_title: section_title.text = "CROMO // DOTAZIONE CYBERWARE"
 	_hide_all_views()
 	_fade_in_view(inventory_view)
 	_populate_inventory()
@@ -935,7 +1331,7 @@ func _show_inventory_view() -> void:
 func _show_upgrades_view() -> void:
 	current_view = ViewMode.UPGRADES
 	_update_nav_styles()
-	if section_title: section_title.text = "ALBERO TALENTI PERMANENTI (14)"
+	if section_title: section_title.text = "RETE SINAPTICA // INNESTI NEURALI"
 	_hide_all_views()
 	_fade_in_view(upgrades_view)
 	_populate_upgrades()
@@ -943,7 +1339,7 @@ func _show_upgrades_view() -> void:
 func _show_quests_view() -> void:
 	current_view = ViewMode.QUESTS
 	_update_nav_styles()
-	if section_title: section_title.text = "MISSIONI E OBIETTIVI"
+	if section_title: section_title.text = "CONTRATTI // RETE FIXER"
 	_hide_all_views()
 	_fade_in_view(quests_view)
 	_populate_quests()
@@ -951,7 +1347,7 @@ func _show_quests_view() -> void:
 func _show_checkin_view() -> void:
 	current_view = ViewMode.CHECKIN
 	_update_nav_styles()
-	if section_title: section_title.text = "PREMI DI ACCESSO SETTIMANALE"
+	if section_title: section_title.text = "PROTOCOLLO DROP // LOGISTICA"
 	_hide_all_views()
 	_fade_in_view(checkin_view)
 	_populate_checkin()
@@ -959,7 +1355,7 @@ func _show_checkin_view() -> void:
 func _show_shop_view() -> void:
 	current_view = ViewMode.SHOP
 	_update_nav_styles()
-	if section_title: section_title.text = "NEGOZIO & MONETIZZAZIONE"
+	if section_title: section_title.text = "MERCATO NERO // FORNITURE CORP"
 	_hide_all_views()
 	_fade_in_view(shop_view)
 	_populate_shop()
@@ -1199,28 +1595,28 @@ func _populate_inventory() -> void:
 		fusible = im.get_fusible_items()
 	var can_improve: bool = (im != null and im.has_method("can_improve_loadout") and im.can_improve_loadout())
 
-	# Aggiorna stile e badge del Selettore Segmentato EQUIP
+	# Aggiorna stile e badge del Selettore Segmentato CROMO
 	if btn_equip_tab_arsenal:
 		btn_equip_tab_arsenal.icon = CyberTheme.get_ui_icon("nav_equip")
 		btn_equip_tab_arsenal.expand_icon = true
-		btn_equip_tab_arsenal.text = "ARSENALE !" if can_improve else "ARSENALE"
+		btn_equip_tab_arsenal.text = "DOTAZIONE !" if can_improve else "DOTAZIONE"
 		CyberTheme.style_segmented_tab(btn_equip_tab_arsenal, current_equip_tab == "ARSENAL", CyberTheme.COL_CYAN)
 	if btn_equip_tab_upgrade:
 		btn_equip_tab_upgrade.icon = CyberTheme.get_ui_icon("core")
 		btn_equip_tab_upgrade.expand_icon = true
-		btn_equip_tab_upgrade.text = "OFFICINA (" + str(Global.upgrade_scrolls) + ")"
+		btn_equip_tab_upgrade.text = "CALIBRA (" + str(Global.upgrade_scrolls) + ")"
 		CyberTheme.style_segmented_tab(btn_equip_tab_upgrade, current_equip_tab == "UPGRADE", CyberTheme.COL_YELLOW)
 	if btn_equip_tab_merge:
 		btn_equip_tab_merge.icon = CyberTheme.get_ui_icon("merge")
 		btn_equip_tab_merge.expand_icon = true
-		btn_equip_tab_merge.text = ("FUSIONE (" + str(fusible.size()) + ")") if not fusible.is_empty() else "FUSIONE"
+		btn_equip_tab_merge.text = ("SINTESI (" + str(fusible.size()) + ")") if not fusible.is_empty() else "SINTESI"
 		CyberTheme.style_segmented_tab(btn_equip_tab_merge, current_equip_tab == "MERGE", CyberTheme.COL_MAGENTA)
 
 	if btn_auto_equip_best:
 		btn_auto_equip_best.visible = can_improve
 		if can_improve:
-			btn_auto_equip_best.custom_minimum_size = Vector2(480, 64)
-			btn_auto_equip_best.text = "⚡ EQUIPAGGIA DOTAZIONE MIGLIORE ⚡"
+			btn_auto_equip_best.custom_minimum_size = Vector2(460, 62)
+			btn_auto_equip_best.text = "OTTIMIZZA ASSETTO CROMO »"
 			CyberTheme.style_button(btn_auto_equip_best, CyberTheme.COL_YELLOW, true)
 
 	var show_arsenal: bool = (current_equip_tab == "ARSENAL")
@@ -1229,11 +1625,11 @@ func _populate_inventory() -> void:
 
 	if section_title and current_view == ViewMode.INVENTORY:
 		if show_arsenal:
-			section_title.text = "EQUIPAGGIAMENTO — ARSENALE EROE"
+			section_title.text = "CROMO // DOTAZIONE OPERATIVO"
 		elif show_upgrade:
-			section_title.text = "OFFICINA — POTENZIAMENTO LIVELLI"
+			section_title.text = "OFFICINA // CALIBRAZIONE NUCLEI"
 		else:
-			section_title.text = "FUCINA RIPPERDOC — FUSIONE 3-IN-1"
+			section_title.text = "RIPPERDOC // SINTESI 3-IN-1"
 
 	if hero_section_panel: hero_section_panel.visible = show_arsenal
 	if inventory_title_lbl: inventory_title_lbl.visible = show_arsenal
@@ -1268,7 +1664,7 @@ func _populate_inventory() -> void:
 			var eq_pill := PanelContainer.new()
 			eq_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
 			var eq_lbl := Label.new()
-			eq_lbl.text = "✓ INDOSSATO"
+			eq_lbl.text = "✓ INNESTATO"
 			eq_lbl.add_theme_font_size_override("font_size", 14)
 			CyberTheme.style_label(eq_lbl, Color(0.88, 1.0, 0.94, 1.0), 2)
 			eq_pill.add_child(eq_lbl)
@@ -1874,13 +2270,13 @@ func _populate_upgrades() -> void:
 		btn_upg.add_theme_font_size_override("font_size", 16)
 		if cost == -1:
 			btn_upg.disabled = true
-			btn_upg.text = "LIVELLO MASSIMO"
+			btn_upg.text = "SINAPSI MAX"
 			CyberTheme.style_button(btn_upg, CyberTheme.COL_YELLOW, false)
 		else:
 			btn_upg.disabled = (Global.total_coins < cost)
 			btn_upg.icon = CyberTheme.get_ui_icon("coin")
 			btn_upg.expand_icon = true
-			btn_upg.text = "POTENZIA (" + str(cost) + ")"
+			btn_upg.text = "INNESTA (" + str(cost) + ")"
 			CyberTheme.style_button(btn_upg, CyberTheme.COL_CYAN, Global.total_coins >= cost)
 
 		btn_upg.pressed.connect(func():
@@ -2117,7 +2513,7 @@ func _populate_quests() -> void:
 	var m_rdy: int = _count_ready_in_pool(m_pool)
 
 	if btn_quest_daily:
-		btn_quest_daily.text = ("GIORNALIERE (" + str(d_rdy) + ")") if d_rdy > 0 else "GIORNALIERE"
+		btn_quest_daily.text = ("GIORNALIERI (" + str(d_rdy) + ")") if d_rdy > 0 else "GIORNALIERI"
 		_style_subnav_btn(btn_quest_daily, current_quest_tab == "DAILY")
 	if btn_quest_weekly:
 		btn_quest_weekly.text = ("SETTIMANALI (" + str(w_rdy) + ")") if w_rdy > 0 else "SETTIMANALI"
@@ -2146,7 +2542,7 @@ func _populate_quests() -> void:
 		btn_claim_all.custom_minimum_size = Vector2(0, 56)
 		btn_claim_all.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn_claim_all.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-		btn_claim_all.text = "★ RISCATTA TUTTE LE MISSIONI PRONTE (" + str(claimable_all.size()) + ") ⚡"
+		btn_claim_all.text = "★ RISCATTA CONTRATTI PRONTI (" + str(claimable_all.size()) + ") »"
 		btn_claim_all.add_theme_font_size_override("font_size", 17)
 		CyberTheme.style_button(btn_claim_all, CyberTheme.COL_YELLOW, true)
 		btn_claim_all.pressed.connect(func():
@@ -2513,21 +2909,21 @@ func _show_welcome_entrance_screen() -> void:
 
 	var dossier_pill := PanelContainer.new()
 	dossier_pill.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	dossier_pill.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(18, 10, Color(1, 1, 1, 0.92)))
+	dossier_pill.add_theme_stylebox_override("panel", CyberTheme.make_3d_panel_box(18, 10, Color(1, 1, 1, 0.94)))
 	var op_call := Global.player_name if not Global.player_name.is_empty() else "V-77"
 	var d_lbl := Label.new()
-	d_lbl.text = "⚡ " + op_call + "  •  " + Global.get_class_display_name() + "  •  SETTORE 0" + str(Global.max_unlocked_world) + "/08"
+	d_lbl.text = op_call + "  //  " + Global.get_class_display_name() + "  //  SETTORE " + ("%02d" % Global.max_unlocked_world) + "/12"
 	d_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	d_lbl.add_theme_font_size_override("font_size", 17)
+	d_lbl.add_theme_font_size_override("font_size", 16)
 	CyberTheme.style_label(d_lbl, CyberTheme.COL_CYAN, 3)
 	dossier_pill.add_child(d_lbl)
 	dv.add_child(dossier_pill)
 
 	var btn_enter := Button.new()
-	btn_enter.custom_minimum_size = Vector2(0, 86)
+	btn_enter.custom_minimum_size = Vector2(0, 84)
 	btn_enter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_enter.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	btn_enter.text = "⚡ ENTRA A NIGHT CITY ▶"
+	btn_enter.text = "CONNETTI NEURAL-LINK »"
 	btn_enter.add_theme_font_size_override("font_size", 24)
 	CyberTheme.style_button(btn_enter, CyberTheme.COL_YELLOW, true)
 	btn_enter.pressed.connect(func():
@@ -2543,10 +2939,10 @@ func _show_welcome_entrance_screen() -> void:
 	dv.add_child(btn_enter)
 
 	var btn_customize := Button.new()
-	btn_customize.custom_minimum_size = Vector2(360, 60)
+	btn_customize.custom_minimum_size = Vector2(340, 58)
 	btn_customize.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	btn_customize.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-	btn_customize.text = "★ CAMBIA / RICREA OPERATIVO"
+	btn_customize.text = "MODIFICA IDENTITÀ"
 	btn_customize.add_theme_font_size_override("font_size", 16)
 	CyberTheme.style_button(btn_customize, CyberTheme.COL_CYAN, false)
 	btn_customize.pressed.connect(func():
@@ -2818,8 +3214,8 @@ func _show_character_creation_modal(is_first_time: bool = true) -> void:
 	btn_confirm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_confirm.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	btn_confirm.focus_mode = Control.FOCUS_NONE
-	btn_confirm.text = "⚡ ENTRA A NIGHT CITY — INIZIA ORA ⚡" if is_first_time else "⚡ SALVA E APPLICA OPERATIVO ⚡"
-	btn_confirm.add_theme_font_size_override("font_size", 18)
+	btn_confirm.text = "INIZIALIZZA OPERATIVO »" if is_first_time else "APPLICA IDENTITÀ »"
+	btn_confirm.add_theme_font_size_override("font_size", 19)
 	CyberTheme.style_button(btn_confirm, CyberTheme.COL_YELLOW, true)
 	btn_confirm.pressed.connect(_on_char_confirm_pressed.bind(is_first_time))
 	action_hbox.add_child(btn_confirm)

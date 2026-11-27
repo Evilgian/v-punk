@@ -153,7 +153,15 @@ static func _get_world_profile(world_id: String) -> Dictionary:
 		"world_7":
 			return {"armor": Color(1.08, 0.98, 0.88), "glow": Color(1.0, 0.86, 0.28), "sec": Color(0.74, 0.34, 1.0)}
 		"world_8":
-			return {"armor": Color(0.92, 0.84, 1.10), "glow": Color(1.0, 0.16, 0.52), "sec": Color(0.58, 0.18, 1.0)}
+			return {"armor": Color(1.06, 0.80, 0.90), "glow": Color(1.0, 0.06, 0.38), "sec": Color(0.65, 0.12, 0.95)}
+		"world_9":
+			return {"armor": Color(1.08, 0.84, 0.82), "glow": Color(1.0, 0.18, 0.22), "sec": Color(1.0, 0.72, 0.12)}
+		"world_10":
+			return {"armor": Color(0.80, 1.08, 1.04), "glow": Color(0.0, 0.95, 0.82), "sec": Color(0.10, 0.55, 1.0)}
+		"world_11":
+			return {"armor": Color(0.96, 1.02, 1.12), "glow": Color(0.78, 0.92, 1.0), "sec": Color(1.0, 0.86, 0.25)}
+		"world_12":
+			return {"armor": Color(0.92, 0.80, 1.08), "glow": Color(1.0, 0.04, 0.34), "sec": Color(0.62, 0.14, 1.0)}
 	return {"armor": Color.WHITE, "glow": Color(1.0, 0.22, 0.32), "sec": Color(0.0, 0.92, 1.0)}
 
 
@@ -822,41 +830,53 @@ static func draw_boss(c: CanvasItem, world_id: String, anim_t: float, boss_col: 
 		c.draw_arc(Vector2.ZERO, shock_r, 0.0, TAU, 40, Color(1.0, 0.22, 0.22, 0.55 * (1.0 - (shock_r - 52.0) / 38.0)), 2.8)
 		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	var tint := Color(1.16, 0.90, 0.90, 1.0) if in_phase_2 else Color.WHITE
+	var tint: Color = Color(1.16, 0.90, 0.90, 1.0) if in_phase_2 else prof.get("armor", Color.WHITE)
 
-	# 1. Boss Bipedi Giganti (Mondo 1 Golem, Mondo 5 Vulcan, Mondo 8 Omega) -> Gambe separate senza tagliare le armi!
-	if world_id in ["world_1", "world_5", "world_8"]:
-		var b_torso := CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + world_id + "_torso.png")
-		var b_ll := CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + world_id + "_leg_l.png")
-		var b_lr := CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + world_id + "_leg_r.png")
+	# Mappa 12 Settori -> Rig Anatomico 3D ad Alta Definizione (con armatura/energia unica per distretto!)
+	var rig_id: String = world_id
+	match world_id:
+		"world_8": rig_id = "titan"    # Kuro-Shinobi / Mecha-Oni Kabuki
+		"world_9": rig_id = "world_5"  # Ares Dreadnought Militech
+		"world_10": rig_id = "world_6" # Leviathan Cryo Abissale
+		"world_11": rig_id = "world_4" # Celestial Valkyrie Lunare
+		"world_12": rig_id = "world_8" # Omega Protocol A.R.G.O.N.
+
+	# 1. Boss Bipedi Giganti -> Gambe separate senza tagliare le armi!
+	if rig_id in ["world_1", "world_5", "world_8"]:
+		var b_torso := CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + rig_id + "_torso.png")
+		var b_ll := CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + rig_id + "_leg_l.png")
+		var b_lr := CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + rig_id + "_leg_r.png")
 		if b_torso and b_ll and b_lr:
 			var sway: float = sin(stride_phase) * 0.042
 			_draw_segmented_mech_walker(c, b_torso, b_ll, b_lr, Vector2(0, 46.0), 148.0, stride_phase, 0.18, 6.2, sway, face_left, tint)
 			return
 
-	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + world_id + ".png")
+	var tex: Texture2D = null
+	if rig_id == "titan":
+		tex = CyberTheme.get_model_texture("res://assets/cyber_models/unit_boss_titan.png")
+	else:
+		tex = CyberTheme.get_model_texture("res://assets/cyber_models/boss_" + rig_id + ".png")
 	if not tex:
 		tex = CyberTheme.get_model_texture("res://assets/cyber_models/unit_boss_titan.png")
 	if not tex:
 		return
 
-	# 2. Boss Aracnide / Quadrupede (Mondo 2 Scorpione Imperiale, Mondo 6 Hydra Chimera a 3 Teste)
-	if world_id == "world_2" or world_id == "world_6":
-		var beast_h: float = 142.0 if world_id == "world_2" else 148.0
+	# 2. Boss Aracnide / Quadrupede / Mecha-Titan
+	if rig_id in ["world_2", "world_6", "titan"]:
+		var beast_h: float = 148.0 if rig_id != "world_2" else 142.0
 		var strike_pitch: float = attack_telegraph * 0.10
 		_draw_arachnid_unit(c, tex, Vector2(0, 46.0), beast_h, anim_t, 9.5 if in_phase_2 else 6.8, strike_pitch, not face_left, tint)
 		return
 
-	# 3. Boss Volanti / Alati (Mondo 3 Mega Dron-Core, Mondo 4 Cryo-Valkyrie, Mondo 7 Archon Seraphim)
+	# 3. Boss Volanti / Alati
 	var hover_y: float = sin(anim_t * 3.2) * 7.5
 	var wing_breath: float = 1.0 + sin(anim_t * 5.6) * 0.035
 	var bank: float = cos(aim_angle) * 0.06 + sin(anim_t * 2.4) * 0.035
-	var fly_h: float = 128.0 if world_id == "world_3" else 152.0
+	var fly_h: float = 128.0 if rig_id == "world_3" else 152.0
 	var fly_w: float = fly_h * _aspect(tex, 1.0) * wing_breath
 	var center_p := Vector2(0, -24.0 + hover_y)
-	# Scia energetica/propulsori sotto i boss volanti
 	c.draw_circle(center_p + Vector2(0, fly_h * 0.28), 18.0 + sin(anim_t * 14.0) * 3.0, Color(active_col.r, active_col.g, active_col.b, 0.20))
-	_draw_part(c, tex, center_p, bank, Rect2(Vector2(-fly_w * 0.5, -fly_h * 0.5), Vector2(fly_w, fly_h)), face_left and world_id == "world_3", tint)
+	_draw_part(c, tex, center_p, bank, Rect2(Vector2(-fly_w * 0.5, -fly_h * 0.5), Vector2(fly_w, fly_h)), face_left and rig_id == "world_3", tint)
 
 
 # ==============================================================================

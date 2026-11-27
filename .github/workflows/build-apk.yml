@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v2.0.${{ github.run_number }}"
-          VERSION_NAME="2.0.${{ github.run_number }}"
-          VERSION_CODE=$((100 + ${{ github.run_number }}))
+          VERSION_TAG="v2.1.${{ github.run_number }}"
+          VERSION_NAME="2.1.${{ github.run_number }}"
+          VERSION_CODE=$((200 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,36 +76,36 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v2.0.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v2.0.${{ github.run_number }}.apk
+          name: V-Punk-v2.1.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.1.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.0.${{ github.run_number }}
-          name: "V-PUNK: Rogue Protocol — Release v2.0.${{ github.run_number }}"
+          tag_name: v2.1.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.1.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### V-PUNK: Rogue Protocol — Versione `v2.0.${{ github.run_number }}` (Major Overhaul Android APK)
+            ### V-PUNK: Rogue Protocol — Versione `v2.1.${{ github.run_number }}` (Cyberpunk 2077 Visual & 12-Worlds Overhaul)
 
-            #### 1. Nuova Interfaccia 3D Moderna & Gestione Spazi Mobile (16:9 - 21:9)
-            - **Pulsanti 3D Tattili Spessi & Smussati**: sostituite tutte le vecchie barre sottili con vere placche 3D cyber-smussate ad alto spessore, selettori segmentati unificati (`Arsenale / Officina / Fusione` e `Giornaliere / Settimanali / Mensili`) e contatori risorse in vetro scuro.
-            - **Layout Full-Screen Bilanciato**: la schermata Home si adatta all'intera altezza dello smartphone con un grande diorama 3D Settore/Boss, vetrina equipaggiamento pulita e pulsante principale `GIOCA CAPITOLO` ad alto impatto in basso; griglia Arsenale a **3 colonne** in stile RPG moderno (1 tocco per aprire scheda dettagliata, equipaggiare o potenziare).
-            - **Schermata d'Ingresso Cinematografica Full-Bleed**: nuovo poster verticale 21:9 a tutto schermo (`edge-to-edge`, zero bande nere sopra o sotto), pioggia neon animata, riflettori volumetrici e palco olografico 3D dell'Operativo.
+            #### 1. Vera Estetica Dark-Cyberpunk HD & Tipografia Tecnica (`Chakra Petch`)
+            - **Nuovi Sfondi HD per tutti i 12 Mondi (`800x450`) & Fondale Night City**: eliminata completamente la vecchia estetica anni '80 a griglie wireframe a bassa risoluzione; ogni Settore ha ora un fondale 3D Cyberpunk ad alta definizione coerente con i modelli HD dei personaggi.
+            - **UI Asimmetrica Cyberpunk 2077**: nuove placche in ossidiana opaca con angoli vivi a `90°`, taglio chirurgico a `45°` in basso a destra, barre laterali neon `#FF003C` / `#00F0FF` e pulsanti primari Giallo Acido `#FCEE0A` con testo nero ad altissimo contrasto.
+            - **Font Cyberpunk Dedicato (`Chakra Petch Bold / SemiBold`)**: installata tipografia geometrica sci-fi su tutta l'interfaccia, HUD e numeri di danno in combattimento.
 
-            #### 2. Corsa Atletica 3D & Impugnatura Armi Realistica
-            - **Locomozione Dinamica in Gioco**: durante lo spostamento col joystick il personaggio ruota istantaneamente nella direzione di corsa con falcata ampia a 2 snodi, sollevamento ginocchia, rimbalzo elastico e oscillazione coordinata di braccia e arma, tornando a puntare il nemico appena ci si ferma per sparare.
-            - **Rig Anatomici Dedicati**: gambe e busti separati per Mech e Boss bipedi, andatura aracnide per Mantis/Scorpioni e torrette rotanti indipendenti.
+            #### 2. 12 Settori Cyberpunk, Selezione Mondo Interattiva & Premi a Soglie
+            - **Espansione a 12 Mondi (`Settori 01–12`)**: aggiunti *Vicolo Kabuki*, *Bastione Militech*, *Reattore Abissale*, *Cupola Selene* e *Nucleo A.R.G.O.N.*, ciascuno con mix ostili dedicati, Boss 3D ed emblema reattore in-game.
+            - **Mappa Tattica Interattiva a 12 Nodi + Swipe Touch**: selettore rapido dei 12 Settori collegati, scorrimento touch sul diorama HD, silhouette criptate per i bersagli bloccati (zero muri di testo spoiler) e scheda `[ INTEL ]` consultabile a richiesta.
+            - **Premi Intermedi a Soglie in Ogni Mondo (`36 Casse Traguardo`)**: barra di avanzamento per ogni Settore con **3 soglie riscattabili** (`30%`, `65%`, `100%` delle Zone raggiunte) che premiano con Crediti, Gemme, Nuclei e Cromo Raro/Epico anche prima di battere il Boss finale.
 
-            #### 3. 7 Archetipi di Nemici, 8 Boss 3D Unici & Bilanciamento Armi
-            - **Nuovi Ostili**: *Ticker Kamikaze Bot*, *Aegis Riot Enforcer* (scudo frontale direzionale), *Cyber-Wraith Assassin* e *Bio-Cryo Spitter Turret*, distribuiti progressivamente nei Mondi 1–8.
-            - **8 Boss 3D Inediti**: modelli 3D dedicati per ciascuno degli 8 mondi con telegrafi d'attacco a terra e barra Boss HUD non sovrapposta.
-            - **Armi Ribilanciate**: onda d'urto perforante da `130px` per la *Katana Cyber*, esplosione AoE da `84px` per il *Cannone al Plasma* e progressione DPS coerente con la rarità (`Comune < Raro < Epico < Leggendario`).
+            #### 3. Lessico Immersivo & Arena Gunmetal HD
+            - **Terminologia Diegetica Concisa**: testi snelli e immersivi (`AVVIA INCURSIONE »`, `MERCATO`, `CROMO`, `SINAPSI`, `CONTRATTI`, `CALIBRA`, `SINTESI`, `MK.I–MK.IV`).
+            - **Arena In-Game Acciaio Brunito**: nuova pavimentazione industriale scura ad alto contrasto che valorizza personaggi, boss e proiettili neon.
 
             ---
-            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.0.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i tuoi salvataggi (`versionCode` incrementato con keystore permanente).
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.1.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i tuoi salvataggi (`versionCode` incrementato con keystore permanente).
           files: |
-            build/android/V-Punk-v2.0.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.1.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
