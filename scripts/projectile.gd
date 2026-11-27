@@ -141,9 +141,10 @@ func _on_body_entered(body: Node2D) -> void:
 
 			if hit_particles_scene:
 				var hit_fx := hit_particles_scene.instantiate() as Node2D
-				if hit_fx:
+				var p_sc: Node = get_tree().current_scene if get_tree().current_scene else get_parent()
+				if hit_fx and p_sc:
 					hit_fx.global_position = global_position
-					get_tree().current_scene.add_child.call_deferred(hit_fx)
+					p_sc.add_child.call_deferred(hit_fx)
 
 		if weapon_type == "plasma_cannon":
 			_trigger_plasma_aoe(global_position, body)
@@ -179,9 +180,10 @@ func _on_body_entered(body: Node2D) -> void:
 
 		if hit_particles_scene:
 			var hit_fx := hit_particles_scene.instantiate() as Node2D
-			if hit_fx:
+			var p_sc2: Node = get_tree().current_scene if get_tree().current_scene else get_parent()
+			if hit_fx and p_sc2:
 				hit_fx.global_position = global_position
-				get_tree().current_scene.add_child.call_deferred(hit_fx)
+				p_sc2.add_child.call_deferred(hit_fx)
 
 		if bounces_left > 0:
 			bounces_left -= 1

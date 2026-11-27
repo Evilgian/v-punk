@@ -22,49 +22,49 @@ func _add(id: String, display_name: String, desc: String, perk_type: String, rar
 func _init_perks() -> void:
 	available_perks.clear()
 
-	# --- BALISTICA: pattern di fuoco ---
-	_add("front_arrow", "🎯 Multishot", "+1 proiettile frontale a ventaglio stretto.", "BALISTICA", "RARE", 3)
-	_add("twin_shot", "🔫 Doppio Colpo Parallelo", "Spara 2 colpi paralleli ravvicinati in avanti.", "BALISTICA", "RARE", 2)
-	_add("diagonal_arrow", "🏹 Sparo Diagonale", "2 proiettili extra a ±45°.", "BALISTICA", "RARE", 1)
-	_add("spread_shot", "🔱 Ventaglio Cyber", "2 proiettili extra a ±18°.", "BALISTICA", "COMMON", 1)
-	_add("rear_arrow", "↩️ Colpo alle Spalle", "Spara anche un proiettile all'indietro.", "BALISTICA", "COMMON", 1)
-	_add("side_arrows", "↔️ Fuoco Laterale", "2 proiettili extra a 90° ai fianchi.", "BALISTICA", "COMMON", 1)
-	_add("bouncy_wall", "🧱 Rimbalzo Pareti", "I proiettili rimbalzano 2 volte su muri e coperture.", "BALISTICA", "COMMON", 1)
-	_add("ricochet", "🪃 Rimbalzo a Catena", "I proiettili rimbalzano automaticamente verso un altro nemico vicino!", "BALISTICA", "EPIC", 2)
-	_add("piercing", "⚡ Colpo Perforante", "I proiettili trapassano tutti i nemici.", "BALISTICA", "EPIC", 1)
-	_add("homing_rounds", "🛰️ Munizioni Smart", "I proiettili inseguono il nemico più vicino.", "BALISTICA", "EPIC", 1)
-	_add("giant_shots", "🔵 Proiettili Titanici", "Proiettili più grandi del 25% e +4 danno.", "BALISTICA", "COMMON", 2)
-	_add("burst_volley", "☄️ Raffica Sequenziale", "Ogni 4° attacco spara una raffica tripla ultra-rapida!", "BALISTICA", "EPIC", 2)
+	# --- BALISTICA: pattern di fuoco (testi corti e immediati stile Archero!) ---
+	_add("front_arrow", "MULTISHOT", "+1 Colpo Frontale", "BALISTICA", "RARE", 3)
+	_add("twin_shot", "DOPPIO COLPO", "2 Colpi Paralleli", "BALISTICA", "RARE", 2)
+	_add("diagonal_arrow", "DIAGONALI", "+2 Colpi a ±45°", "BALISTICA", "RARE", 1)
+	_add("spread_shot", "VENTAGLIO", "+2 Colpi a ±18°", "BALISTICA", "COMMON", 1)
+	_add("rear_arrow", "RETRO-FUOCO", "+1 Colpo Dietro", "BALISTICA", "COMMON", 1)
+	_add("side_arrows", "LATERALI", "+2 Colpi ai Fianchi", "BALISTICA", "COMMON", 1)
+	_add("bouncy_wall", "RIMBALZO MURI", "2 Rimbalzi su Pareti", "BALISTICA", "COMMON", 1)
+	_add("ricochet", "RICOCHET", "Rimbalza tra i Nemici", "BALISTICA", "EPIC", 2)
+	_add("piercing", "PERFORANTE", "Trapassa i Nemici", "BALISTICA", "EPIC", 1)
+	_add("homing_rounds", "RICERCA SMART", "Colpi Autoguidati", "BALISTICA", "EPIC", 1)
+	_add("giant_shots", "MAXI CALIBRO", "Colpi +25% • +4 ATK", "BALISTICA", "COMMON", 2)
+	_add("burst_volley", "RAFFICA X3", "Ogni 4° Colpo: Salva x3", "BALISTICA", "EPIC", 2)
 
 	# --- POTENZA ---
-	_add("attack_speed", "🔥 Overclock Cadenza", "Cadenza di fuoco +20%.", "POTENZA", "COMMON", 4)
-	_add("damage_up", "💥 Sovraccarico Plasma", "+8 danno a ogni colpo.", "POTENZA", "COMMON", 5)
-	_add("crit_up", "🎲 Bersaglio Critico", "+12% probabilità di colpo critico (danno x2).", "POTENZA", "RARE", 3)
-	_add("sniper_caliber", "🔭 Calibro Antimateria", "Velocità proiettili +35%, +6 danno e +15% danno critico.", "POTENZA", "RARE", 3)
-	_add("executioner", "💀 Protocollo Esecutore", "Infligge +45% danni ai nemici e Boss sotto il 40% di HP!", "POTENZA", "EPIC", 2)
-	_add("berserker", "💢 Furia Cibernetica", "Più bassi sono i tuoi HP, più aumentano Danno e Cadenza (fino a +50%).", "POTENZA", "RARE", 2)
-	_add("lucky_overdrive", "🍀 Fortuna Quantistica", "+10% Critico, +8% Schivata e +25% Monete trovate.", "POTENZA", "RARE", 2)
+	_add("attack_speed", "CADENZA +", "Velocità Sparo +20%", "POTENZA", "COMMON", 4)
+	_add("damage_up", "DANNO +", "+8 Danno Base", "POTENZA", "COMMON", 5)
+	_add("crit_up", "CRITICO +", "+12% Prob. Critico", "POTENZA", "RARE", 3)
+	_add("sniper_caliber", "CECCHINO", "+6 ATK • +15% Danno Crit", "POTENZA", "RARE", 3)
+	_add("executioner", "ESECUTORE", "+45% Danno sotto 40% HP", "POTENZA", "EPIC", 2)
+	_add("berserker", "FURIA", "Più Danno a Vita Bassa", "POTENZA", "RARE", 2)
+	_add("lucky_overdrive", "FORTUNA", "+10% Crit • +8% Schivata", "POTENZA", "RARE", 2)
 
 	# --- ELEMENTALI / EFFETTI AL COLPO ---
-	_add("explosive", "💣 Testate Esplosive", "I colpi esplodono e danneggiano i nemici vicini.", "ELEMENTALE", "EPIC", 2)
-	_add("chain_lightning", "🌩️ Fulmine a Catena", "Ogni colpo folgora 2 nemici vicini (35% danno).", "ELEMENTALE", "EPIC", 2)
-	_add("freeze_shot", "❄️ Criogenia", "I colpi rallentano i nemici del 45% per 1,5 s.", "ELEMENTALE", "RARE", 1)
-	_add("burn_shot", "🔥 Napalm Neon", "I colpi incendiano: 3 danni bruciatura extra nel tempo.", "ELEMENTALE", "RARE", 2)
-	_add("static_field", "⚡ Campo Elettrostatico", "Emette scariche elettriche automatiche sui nemici vicini ogni 1,2 s.", "ELEMENTALE", "EPIC", 3)
-	_add("plasma_trail", "☣️ Scia al Plasma", "Mentre corri rilasci impulsi energetici che danneggiano gli inseguitori.", "ELEMENTALE", "RARE", 2)
+	_add("explosive", "ESPLOSIVO", "Colpi con Danno ad Area", "ELEMENTALE", "EPIC", 2)
+	_add("chain_lightning", "FULMINE", "Folgora 2 Nemici Vicini", "ELEMENTALE", "EPIC", 2)
+	_add("freeze_shot", "CRIOGENIA", "Rallenta Nemici -45%", "ELEMENTALE", "RARE", 1)
+	_add("burn_shot", "INCENDIARIO", "Brucia i Nemici nel Tempo", "ELEMENTALE", "RARE", 2)
+	_add("static_field", "AURA TESLA", "Scariche Automatiche Vicini", "ELEMENTALE", "EPIC", 3)
+	_add("plasma_trail", "SCIA PLASMA", "Scia Dannosa Mentre Corri", "ELEMENTALE", "RARE", 2)
 
 	# --- SUPPORTO / DIFESA ---
-	_add("orbit_blades", "🌀 Lame Orbitali", "Una lama al plasma ruota attorno a te e trancia i nemici.", "SUPPORTO", "LEGENDARY", 3)
-	_add("shoulder_missiles", "🚀 Lanciamissili Spalla", "Ogni 2,8 s lancia 2 micro-missili a ricerca verso i nemici!", "SUPPORTO", "LEGENDARY", 3)
-	_add("shockwave_nova", "🌊 Supernova Difensiva", "Se vieni colpito (o ogni 9 s) sprigiona un'onda d'urto che spazza i nemici.", "SUPPORTO", "EPIC", 2)
-	_add("energy_shield", "🛡️ Scudo Energetico", "Blocca 1 colpo; si ricarica ogni 7 secondi.", "DIFESA", "EPIC", 2)
-	_add("vampire", "🩸 Nanobot Vampiri", "25% di probabilità di curarti a ogni colpo a segno.", "DIFESA", "RARE", 3)
-	_add("dodge", "💨 Riflessi Sintetici", "+12% probabilità di schivare i danni.", "DIFESA", "RARE", 3)
-	_add("regen", "💚 Rigenerazione", "Recuperi HP automaticamente ogni 3 secondi.", "DIFESA", "COMMON", 3)
-	_add("max_hp_up", "❤️ Telaio Rinforzato", "+30 HP massimi (e curati di 30).", "DIFESA", "COMMON", 4)
-	_add("titan_heart", "💎 Cuore di Titanio", "+60 HP massimi immediati e riduzione danni subiti del 12%.", "DIFESA", "EPIC", 2)
-	_add("move_speed", "👟 Servo-Gambe", "Velocità di movimento +10%.", "DIFESA", "COMMON", 3)
-	_add("heal", "➕ Riparazione Nanobot", "Ripristina subito il 35% degli HP massimi.", "DIFESA", "COMMON", 99)
+	_add("orbit_blades", "LAME ORBITALI", "Lame Rotanti Attorno a Te", "SUPPORTO", "LEGENDARY", 3)
+	_add("shoulder_missiles", "MICRO-MISSILI", "2 Missili Smart ogni 2,8s", "SUPPORTO", "LEGENDARY", 3)
+	_add("shockwave_nova", "ONDA D'URTO", "Esplosione Difensiva Nova", "SUPPORTO", "EPIC", 2)
+	_add("energy_shield", "SCUDO AEGIS", "Blocca 1 Colpo (Ricarica 7s)", "DIFESA", "EPIC", 2)
+	_add("vampire", "VAMPIRISMO", "25% Cura a Ogni Colpo", "DIFESA", "RARE", 3)
+	_add("dodge", "SCHIVATA +", "+12% Schivata Colpi", "DIFESA", "RARE", 3)
+	_add("regen", "RIGENERA HP", "Cura Automatica ogni 3s", "DIFESA", "COMMON", 3)
+	_add("max_hp_up", "VITA MAX +", "+30 HP Massimi Subito", "DIFESA", "COMMON", 4)
+	_add("titan_heart", "CUORE TITANIO", "+60 HP • -12% Danni Subiti", "DIFESA", "EPIC", 2)
+	_add("move_speed", "VELOCITÀ +", "+10% Velocità Corsa", "DIFESA", "COMMON", 3)
+	_add("heal", "CURA SUBITO", "Ripristina +35% HP Ora", "DIFESA", "COMMON", 99)
 
 	print("PerkDB inizializzato con ", available_perks.size(), " potenziamenti!")
 
@@ -74,11 +74,6 @@ func get_perk(perk_id: String) -> PerkData:
 			return p
 	return null
 
-## Selezione intelligente e pesata:
-## - esclude le abilità già al massimo dei livelli
-## - propone la cura solo se gli HP sono sotto l'80%
-## - evita le stesse carte appena proposte
-## - le abilità già possedute hanno peso minore → più varietà di build
 func get_random_perks(count: int = 3, player: Node = null) -> Array[PerkData]:
 	var stacks: Dictionary = {}
 	var hp_ratio: float = 1.0
@@ -97,7 +92,6 @@ func get_random_perks(count: int = 3, player: Node = null) -> Array[PerkData]:
 			continue
 		pool.append(p)
 
-	# Evita di riproporre le stesse carte della scelta precedente (se ne restano abbastanza)
 	var fresh: Array[PerkData] = []
 	for p in pool:
 		if not last_offer_ids.has(p.id):
@@ -114,7 +108,7 @@ func get_random_perks(count: int = 3, player: Node = null) -> Array[PerkData]:
 			var w: float = float(RARITY_WEIGHT.get(p.rarity, 5.0))
 			w *= pow(0.65, float(stacks.get(p.id, 0)))
 			if used_types.has(p.perk_type):
-				w *= 0.55 # favorisce categorie diverse nella stessa scelta
+				w *= 0.55
 			weights.append(w)
 			total += w
 		var roll: float = randf() * total

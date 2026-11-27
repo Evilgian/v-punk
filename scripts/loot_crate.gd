@@ -45,11 +45,11 @@ func _destroy_crate() -> void:
 			drop.global_position = global_position
 			if "drop_type" in drop:
 				var r := randf()
-				if r < 0.22:
-					drop.drop_type = "gear_drop" # 22% Drop diretto di Equipaggiamento dalle Casse!
-				elif r < 0.60:
-					drop.drop_type = "upgrade_scroll" # 38% Nucleo Potenziamento ⚙️
-				elif r < 0.85:
+				if r < 0.05:
+					drop.drop_type = "gear_drop" # 5% Drop raro di Equipaggiamento dalle Casse
+				elif r < 0.38:
+					drop.drop_type = "upgrade_scroll" # 33% Nucleo Potenziamento
+				elif r < 0.68:
 					drop.drop_type = "heal"
 			get_tree().current_scene.add_child.call_deferred(drop)
 

@@ -136,11 +136,11 @@ func die() -> void:
 			drop.global_position = global_position
 			if "drop_type" in drop:
 				var r := randf()
-				if r < 0.055:
+				if r < 0.012:
 					drop.drop_type = "gear_drop"
-				elif r < 0.21:
+				elif r < 0.14:
 					drop.drop_type = "upgrade_scroll"
-				elif r < 0.29:
+				elif r < 0.22:
 					drop.drop_type = "heal"
 			get_tree().current_scene.add_child.call_deferred(drop)
 	queue_free()

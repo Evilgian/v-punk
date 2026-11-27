@@ -394,7 +394,9 @@ func _die() -> void:
 				h.hide_boss_bar()
 
 		if drop_scene:
-			var mid_drops := ["gear_drop", "upgrade_scroll", "heal"]
+			var mid_drops := ["upgrade_scroll", "heal"]
+			if randf() < 0.35:
+				mid_drops.insert(0, "gear_drop")
 			for i in range(mid_drops.size()):
 				var d := drop_scene.instantiate() as Area2D
 				if d:
@@ -418,12 +420,11 @@ func _die() -> void:
 	Global.upgrade_scrolls += reward_scrolls
 	Global.quest_runs += 1
 
-	# 2 Drop Equipaggiamento Garantiti al Completamento del Mondo!
+	# 1 Drop Equipaggiamento Garantito al Completamento del Mondo (rarità pesata per Settore!)
 	var dropped_items: Array = []
 	var im: Node = get_node_or_null("/root/InventoryManager")
 	if im and im.has_method("roll_random_in_run_gear_drop"):
-		dropped_items.append(im.roll_random_in_run_gear_drop(world_num))
-		dropped_items.append(im.roll_random_in_run_gear_drop(world_num))
+		dropped_items.append(im.roll_random_in_run_gear_drop(world_num, "BOSS"))
 
 	# Sblocco Sequenziale del Mondo Successivo (fino al Settore 12!)
 	if Global.has_method("record_world_progress"):

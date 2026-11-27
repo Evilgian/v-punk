@@ -18,7 +18,7 @@ func setup_item(item_data: Dictionary) -> void:
 	var islot: String = str(item_data.get("slot", "ARMA"))
 	var rar_str: String = str(item_data.get("rarity", "COMMON"))
 	var rar_col: Color = CyberTheme.get_rarity_color(rar_str)
-	var is_eq: bool = im.is_item_equipped(iid) if (im and im.has_method("is_item_equipped")) else false
+	var is_eq: bool = im.is_item_equipped(iid, rar_str) if (im and im.has_method("is_item_equipped")) else false
 	var cur_lvl: int = im.get_item_level(iid) if (im and im.has_method("get_item_level")) else 1
 	var coin_cost: int = im.get_upgrade_coin_cost(iid) if (im and im.has_method("get_upgrade_coin_cost")) else 40
 	var scroll_cost: int = im.get_upgrade_scroll_cost(iid) if (im and im.has_method("get_upgrade_scroll_cost")) else 1
@@ -126,7 +126,7 @@ func setup_item(item_data: Dictionary) -> void:
 				if is_eq and islot.to_upper() != "ARMA":
 					im.unequip_item(islot)
 				elif not is_eq:
-					im.equip_item(iid, islot)
+					im.equip_item(iid, islot, rar_str)
 			SoundFX.play_pickup()
 			action_completed.emit()
 			queue_free()

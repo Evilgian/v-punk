@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v2.5.${{ github.run_number }}"
-          VERSION_NAME="2.5.${{ github.run_number }}"
-          VERSION_CODE=$((600 + ${{ github.run_number }}))
+          VERSION_TAG="v2.6.${{ github.run_number }}"
+          VERSION_NAME="2.6.${{ github.run_number }}"
+          VERSION_CODE=$((700 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,32 +76,31 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v2.5.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v2.5.${{ github.run_number }}.apk
+          name: V-Punk-v2.6.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.6.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.5.${{ github.run_number }}
-          name: "V-PUNK: Rogue Protocol — Release v2.5.${{ github.run_number }}"
+          tag_name: v2.6.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.6.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### V-PUNK: Rogue Protocol — Versione `v2.5.${{ github.run_number }}` (Arma Sempre in Primo Piano, Bilanciamento Boss & Nuova Cyber-Valchiria 3D)
+            ### V-PUNK: Rogue Protocol — Versione `v2.6.${{ github.run_number }}` (Fix Slot Anelli Attivi, Economia Drop Bilanciata & Scelta Perk Stile Archero)
 
-            #### 1. Arma 3D Sempre Visibile & Proiettili Allineati alla Volata
-            - **Zero Occultamento quando Miri in Alto**: rimosso il passaggio dell'arma dietro il personaggio e aggiunto l'offset laterale dinamico del braccio armato, così ogni fucile/pistola/lama resta sempre nitido in primo piano a 360° e i proiettili partono esattamente dalla punta della canna.
+            #### 1. Fix Tracciamento Rarità negli Slot Equipaggiamento (Max 2 Anelli Attivi)
+            - **Zero Doppioni `✓ ATTIVO` nell'Inventario**: ora ogni slot (`ARMA`, `CORAZZA`, `ANELLO 1`, `ANELLO 2`, `PET 1`, `PET 2`) registra l'esatta coppia `(id, rarità)` innestata, evitando che copie di altre rarità dello stesso anello o arma vengano mostrate contemporaneamente come attive.
 
-            #### 2. Ribilanciamento Combattimento, Settori & Boss Multi-Fase
-            - **Boss Epici Anti-Oneshot**: triplicati/quadruplicati gli HP base dei Guardiani e dei Boss Finali (`2.800` / `4.400` base × moltiplicatore Settore), aggiunto adattamento automatico all'ATK dell'equipaggiamento del giocatore, Corazza Reattiva anti-oneshot per colpo singolo e Scudo di Sovraccarico alla transizione in Fase 2 (50% HP).
-            - **Curva Nemici Settori 1–12**: ricalibrati HP e danni di nemici base, élite e proiettili Boss lungo tutti i 12 Settori.
+            #### 2. Economia Drop & Casse Ribilanciata (Progressione Sintesi 3-in-1)
+            - **Addio Pioggia di Leggendari**: ridotta la frequenza dei drop in partita e introdotto il tiro di rarità pesato per Settore (`0%` Leggendari nei primi Settori, `2%` nella Cassa Epica da 300 Gemme), rendendo la **Sintesi 3-in-1** il vero cuore dell'evoluzione verso Epico e Leggendario.
 
-            #### 3. Nuovo Modello 3D Stilizzato per il Santuario della Cyber-Valchiria
-            - **Addio al Vecchio Sprite Geometrico**: sostituita la vecchia icona piatta del Santuario (Stage 5/15/25...) con una vera **Cyber-Valchiria 3D Stilizzata** ad alta definizione con ali olografiche animate e particelle nanobot.
+            #### 3. Scelta Perk al Level-Up Ridisegnata in Stile *Archero*
+            - **3 Carte Affiancate con Grandi Icone Dedicate**: nuovo layout visivo immediato con medaglione icona `128x128` specifico per ognuna delle 36 abilità, cornice di rarità e spiegazione lampo di 3-4 parole leggibile all'istante.
 
             ---
-            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.5.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.6.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
           files: |
-            build/android/V-Punk-v2.5.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.6.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1907,8 +1907,9 @@ func _populate_inventory() -> void:
 		var filtered: Array = []
 		for item in raw_items:
 			var item_id: String = str(item.get("id", ""))
+			var item_rar: String = str(item.get("rarity", "COMMON"))
 			var cnt: int = int(item.get("count", 1))
-			var is_eq: bool = im.is_item_equipped(item_id) if (im and im.has_method("is_item_equipped")) else false
+			var is_eq: bool = im.is_item_equipped(item_id, item_rar) if (im and im.has_method("is_item_equipped")) else false
 			if cnt <= 0 and not is_eq:
 				continue
 			var sl_up: String = str(item.get("slot", "ARMA")).to_upper()
@@ -1929,8 +1930,9 @@ func _populate_inventory() -> void:
 
 		for item in filtered:
 			var item_id: String = str(item.get("id", ""))
+			var item_rar: String = str(item.get("rarity", "COMMON"))
 			var cnt: int = int(item.get("count", 1))
-			var is_eq: bool = im.is_item_equipped(item_id) if (im and im.has_method("is_item_equipped")) else false
+			var is_eq: bool = im.is_item_equipped(item_id, item_rar) if (im and im.has_method("is_item_equipped")) else false
 			var i_lvl: int = im.get_item_level(item_id) if (im and im.has_method("get_item_level")) else 1
 			var card := _create_gear_grid_card(item, item_id, str(item["name"]), str(item["slot"]), item.get("rarity", "COMMON"), is_eq, cnt, i_lvl)
 			inventory_grid.add_child(card)
@@ -2775,33 +2777,15 @@ func _buy_crate(cost: int, crate_type: String) -> void:
 		Global.total_credits -= cost
 		SoundFX.play_pickup()
 
-		var normal_pool := [
-			{"id": "shotgun", "name": "Fucile a Pompa", "slot": "ARMA", "rarity": "RARE"},
-			{"id": "homing_wand", "name": "Conduttore Psionico", "slot": "ARMA", "rarity": "RARE"},
-			{"id": "smg", "name": "Mitraglietta Cyber", "slot": "ARMA", "rarity": "RARE"},
-			{"id": "kevlar", "name": "Giubbotto Kevlar", "slot": "CORAZZA", "rarity": "COMMON"},
-			{"id": "ring_crit", "name": "Anello Critico", "slot": "ANELLO 1", "rarity": "COMMON"},
-			{"id": "ring_speed", "name": "Anello Velocità", "slot": "ANELLO 2", "rarity": "RARE"},
-			{"id": "drone_laser", "name": "Drone Laser", "slot": "PET 1", "rarity": "RARE"}
-		]
-		var epic_pool := [
-			{"id": "katana", "name": "Katana Cyber", "slot": "ARMA", "rarity": "EPIC"},
-			{"id": "laser_rifle", "name": "Fucile Laser", "slot": "ARMA", "rarity": "EPIC"},
-			{"id": "nano_armor", "name": "Corazza Nano-Tech", "slot": "CORAZZA", "rarity": "EPIC"},
-			{"id": "drone_shield", "name": "Drone Scudo", "slot": "PET 2", "rarity": "EPIC"},
-			{"id": "scythe", "name": "Falce al Plasma", "slot": "ARMA", "rarity": "LEGENDARY"},
-			{"id": "plasma_cannon", "name": "Cannone al Plasma", "slot": "ARMA", "rarity": "LEGENDARY"}
-		]
-
-		var chosen: Dictionary = normal_pool[randi() % normal_pool.size()] if crate_type == "NORMAL" else epic_pool[randi() % epic_pool.size()]
-		var item_id: String = str(chosen["id"])
-		var item_name: String = str(chosen["name"])
-		var slot_type: String = str(chosen["slot"])
-		var rarity: String = str(chosen["rarity"])
-
 		var im: Node = get_node_or_null("/root/InventoryManager")
-		if im and im.has_method("add_item"):
-			im.add_item(item_id, item_name, slot_type, rarity)
+		var chosen: Dictionary = {}
+		if im and im.has_method("roll_random_in_run_gear_drop"):
+			var src_tag := "CRATE_NORMAL" if crate_type == "NORMAL" else "CRATE_EPIC"
+			chosen = im.roll_random_in_run_gear_drop(maxi(1, Global.max_unlocked_world), src_tag)
+		else:
+			chosen = {"id": "pistol_base", "name": "Pistola Cyber", "slot": "ARMA", "rarity": "RARE"}
+		var item_name: String = str(chosen.get("name", "Modulo"))
+		var rarity: String = str(chosen.get("rarity", "COMMON"))
 
 		var sys_save: Node = get_node_or_null("/root/SaveSystem")
 		if sys_save and sys_save.has_method("save_game"): sys_save.save_game()

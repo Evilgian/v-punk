@@ -51,6 +51,7 @@ func save_game() -> void:
 			"equipped_ring2_id": im.equipped_ring2_id if (im and "equipped_ring2_id" in im) else "",
 			"equipped_pet1_id": im.equipped_pet1_id if (im and "equipped_pet1_id" in im) else "",
 			"equipped_pet2_id": im.equipped_pet2_id if (im and "equipped_pet2_id" in im) else "",
+			"equipped_rarities": im.equipped_rarities if (im and "equipped_rarities" in im) else {},
 			"items": im.inventory if (im and "inventory" in im) else [],
 			"item_levels": im.item_levels if (im and "item_levels" in im) else {}
 		},
@@ -154,6 +155,10 @@ func load_game() -> void:
 			if "equipped_ring2_id" in im: im.equipped_ring2_id = str(inv_data.get("equipped_ring2_id", ""))
 			if "equipped_pet1_id" in im: im.equipped_pet1_id = str(inv_data.get("equipped_pet1_id", ""))
 			if "equipped_pet2_id" in im: im.equipped_pet2_id = str(inv_data.get("equipped_pet2_id", ""))
+			if "equipped_rarities" in im and inv_data.get("equipped_rarities") is Dictionary:
+				var eq_r: Dictionary = inv_data["equipped_rarities"]
+				for rk in eq_r.keys():
+					im.equipped_rarities[str(rk)] = str(eq_r[rk])
 			if "inventory" in im and inv_data.get("items") is Array:
 				im.inventory = inv_data["items"]
 			if "item_levels" in im and inv_data.get("item_levels") is Dictionary:
