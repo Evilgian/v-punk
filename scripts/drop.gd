@@ -126,7 +126,8 @@ func _collect(body: Node2D) -> void:
 
 		var tm: Node = get_node_or_null("/root/TalentManager")
 		var gold_pct: float = tm.get_bonus_value("gold") if (tm and tm.has_method("get_bonus_value")) else 0.0
-		var final_coins: int = int(float(base_coins) * (1.0 + (gold_pct / 100.0)))
+		var skin_coin_pct: float = float(Global.get_skin_def().get("coin_pct", 0.0)) if Global.has_method("get_skin_def") else 0.0
+		var final_coins: int = int(round(float(base_coins) * (1.0 + (gold_pct + skin_coin_pct) / 100.0)))
 		Global.total_coins += final_coins
 		Global.run_coins += final_coins
 

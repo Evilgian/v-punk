@@ -19,7 +19,9 @@ func save_game() -> void:
 			"profile_created": Global.profile_created,
 			"player_name": Global.player_name,
 			"player_class": Global.player_class,
-			"player_color_id": Global.player_color_id
+			"player_color_id": Global.player_color_id,
+			"equipped_skin_id": Global.equipped_skin_id,
+			"unlocked_skins": Global.unlocked_skins
 		},
 		"settings": {
 			"sfx_volume": Global.sfx_volume,
@@ -94,9 +96,16 @@ func load_game() -> void:
 
 	var prof: Dictionary = data["profile"]
 	Global.profile_created = bool(prof.get("profile_created", false))
-	Global.player_name = str(prof.get("player_name", "V-RONIN"))
+	Global.player_name = str(prof.get("player_name", "V-77"))
 	Global.player_class = str(prof.get("player_class", "RONIN"))
 	Global.player_color_id = str(prof.get("player_color_id", "CYAN"))
+	Global.equipped_skin_id = str(prof.get("equipped_skin_id", "v_runner"))
+	if not Global.SKIN_DEFS.has(Global.equipped_skin_id):
+		Global.equipped_skin_id = "v_runner"
+	if prof.get("unlocked_skins") is Array:
+		Global.unlocked_skins = prof["unlocked_skins"]
+		if not Global.unlocked_skins.has("v_runner"):
+			Global.unlocked_skins.append("v_runner")
 
 	if data.has("settings") and data["settings"] is Dictionary:
 		var st: Dictionary = data["settings"]
@@ -174,6 +183,8 @@ func reset_save() -> void:
 	Global.player_name = ""
 	Global.player_class = "RONIN"
 	Global.player_color_id = "CYAN"
+	Global.equipped_skin_id = "v_runner"
+	Global.unlocked_skins = ["v_runner"]
 	Global.total_coins = 0
 	Global.total_credits = 0
 	Global.upgrade_scrolls = 3 # 3 Nuclei iniziali di benvenuto per provare il potenziamento

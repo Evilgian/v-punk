@@ -194,8 +194,12 @@ static func draw_hero(
 	aim_angle: float,
 	move_vec: Vector2 = Vector2.ZERO,
 	body_h: float = 68.0,
-	parade_mode: bool = false
+	parade_mode: bool = false,
+	skin_override: String = ""
 ) -> void:
+	var skin_id: String = skin_override if not skin_override.is_empty() else Global.equipped_skin_id
+	if skin_id.is_empty():
+		skin_id = "v_runner"
 	var aura := Global.get_player_accent_color()
 	var k: float = body_h / 68.0
 
@@ -257,12 +261,12 @@ static func draw_hero(
 			c.draw_circle(Vector2(0, feet.y - 2.0) + trail_off, (4.4 * (1.0 - phase_p)) * k, Color(aura.r, aura.g, aura.b, 0.42 * (1.0 - phase_p)))
 
 	if pose == "back":
-		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, false, stride_phase, move_ratio)
+		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, false, stride_phase, move_ratio, skin_id)
 
-	_draw_hero_articulated_body(c, pose, face_left, feet, bob, stride_phase, move_ratio, mv, k, aura, anim_t)
+	_draw_hero_articulated_body(c, pose, face_left, feet, bob, stride_phase, move_ratio, mv, k, aura, anim_t, skin_id)
 
 	if pose != "back":
-		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, use_parade, stride_phase, move_ratio)
+		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, use_parade, stride_phase, move_ratio, skin_id)
 
 
 static func _draw_hero_2joint_leg(
@@ -295,11 +299,18 @@ static func _draw_hero_articulated_body(
 	mv: Vector2,
 	k: float,
 	aura: Color,
-	anim_t: float
+	anim_t: float,
+	skin_id: String = "v_runner"
 ) -> void:
-	var upper_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_upper_" + pose + ".png")
-	var thigh_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_thigh_" + pose + ".png")
-	var shin_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_shin_" + pose + ".png")
+	var upper_tex := CyberTheme.get_model_texture("res://assets/cyber_models/skin_" + skin_id + "_upper_" + pose + ".png")
+	if not upper_tex:
+		upper_tex = CyberTheme.get_model_texture("res://assets/cyber_models/hero_upper_" + pose + ".png")
+	var thigh_tex := CyberTheme.get_model_texture("res://assets/cyber_models/skin_" + skin_id + "_thigh_" + pose + ".png")
+	if not thigh_tex:
+		thigh_tex = CyberTheme.get_model_texture("res://assets/cyber_models/hero_thigh_" + pose + ".png")
+	var shin_tex := CyberTheme.get_model_texture("res://assets/cyber_models/skin_" + skin_id + "_shin_" + pose + ".png")
+	if not shin_tex:
+		shin_tex = CyberTheme.get_model_texture("res://assets/cyber_models/hero_shin_" + pose + ".png")
 	if not upper_tex or not thigh_tex or not shin_tex:
 		return
 
@@ -403,11 +414,15 @@ static func aura_b_safe(c: Color) -> float:
 	return c.b
 
 
-static func _draw_arm_limb(c: CanvasItem, shoulder: Vector2, elbow: Vector2, hand: Vector2, k: float, is_rear: bool) -> void:
+static func _draw_arm_limb(c: CanvasItem, shoulder: Vector2, elbow: Vector2, hand: Vector2, k: float, is_rear: bool, skin_id: String = "v_runner") -> void:
 	var shade: float = 0.72 if is_rear else 0.96
 	var mod := Color(shade, shade, minf(1.0, shade * 1.05), 1.0)
-	var u_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_arm_upper.png")
-	var f_tex := CyberTheme.get_model_texture("res://assets/cyber_models/hero_arm_forearm.png")
+	var u_tex := CyberTheme.get_model_texture("res://assets/cyber_models/skin_" + skin_id + "_arm_upper.png")
+	if not u_tex:
+		u_tex = CyberTheme.get_model_texture("res://assets/cyber_models/hero_arm_upper.png")
+	var f_tex := CyberTheme.get_model_texture("res://assets/cyber_models/skin_" + skin_id + "_arm_forearm.png")
+	if not f_tex:
+		f_tex = CyberTheme.get_model_texture("res://assets/cyber_models/hero_arm_forearm.png")
 
 	var u_vec: Vector2 = elbow - shoulder
 	var u_len: float = maxf(4.0 * k, u_vec.length())
@@ -448,7 +463,8 @@ static func _draw_hero_weapon_and_arms(
 	aura: Color,
 	parade_mode: bool = false,
 	stride_phase: float = 0.0,
-	move_ratio: float = 0.0
+	move_ratio: float = 0.0,
+	skin_id: String = "v_runner"
 ) -> void:
 	var is_melee: bool = (weapon_id == "katana" or weapon_id == "scythe")
 	var is_one_handed: bool = (weapon_id == "pistol_base")
@@ -510,16 +526,16 @@ static func _draw_hero_weapon_and_arms(
 	var rear_elbow: Vector2 = rear_shoulder.lerp(foregrip_pos, 0.52) + gravity_down * (6.0 * k)
 	var front_elbow: Vector2 = front_shoulder.lerp(grip_pos, 0.50) + gravity_down * (7.2 * k) - Vector2(face_sign * 2.2 * k, 0.0)
 
-	# 1. Braccia corazzate 3D disegnate sotto/dietro l'arma (con oscillazione del braccio libero in corsa!)
+	# 1. Braccia 3D della Skin attiva disegnate sotto/dietro l'arma
 	if not is_one_handed:
-		_draw_arm_limb(c, rear_shoulder, rear_elbow, foregrip_pos, k, true)
+		_draw_arm_limb(c, rear_shoulder, rear_elbow, foregrip_pos, k, true, skin_id)
 	elif is_sprinting or pose == "front" or pose == "back":
 		var off_side: float = (1.0 if cos(eff_angle) >= 0.0 else -1.0) if pose != "side" else -face_sign
 		var off_hand := rear_shoulder + Vector2(off_side * (3.2 - arm_swing * 4.5) * k, (11.0 - arm_swing * 6.5) * k)
 		var off_elbow := rear_shoulder.lerp(off_hand, 0.5) + Vector2(off_side * 2.5 * k, 3.0 * k)
-		_draw_arm_limb(c, rear_shoulder, off_elbow, off_hand, k, true)
+		_draw_arm_limb(c, rear_shoulder, off_elbow, off_hand, k, true, skin_id)
 
-	_draw_arm_limb(c, front_shoulder, front_elbow, grip_pos, k, false)
+	_draw_arm_limb(c, front_shoulder, front_elbow, grip_pos, k, false, skin_id)
 
 	# 2. Modello 3D dell'arma allineato al millimetro su calcio (grip_uv) e asse canna (barrel_uv_y)
 	var wep_tex := CyberTheme.get_item_model_texture(weapon_id, "ARMA")
@@ -882,27 +898,38 @@ static func draw_boss(c: CanvasItem, world_id: String, anim_t: float, boss_col: 
 # ==============================================================================
 # 7. OSTACOLO E CASSA RIFORNIMENTI 3D CON DETTAGLI BIOMA
 # ==============================================================================
-static func draw_obstacle(c: CanvasItem, accent_col: Color, world_id: String = "world_1") -> void:
+static func draw_obstacle(c: CanvasItem, accent_col: Color, world_id: String = "world_1", variant_idx: int = 0) -> void:
 	var prof := _get_world_profile(world_id)
 	var glow: Color = prof.get("glow", accent_col)
 	var armor_mod: Color = prof.get("armor", Color.WHITE)
 
-	c.draw_colored_polygon(PackedVector2Array([
-		Vector2(-26, 24), Vector2(28, 24), Vector2(44, 34), Vector2(-10, 34)
-	]), Color(0, 0, 0, 0.42))
-	draw_ground_shadow(c, Vector2(2, 22), 32.0, 0.44)
-	var obs_tex := CyberTheme.get_model_texture("res://assets/cyber_models/prop_obstacle.png")
+	# Sceglie prop urbani 3D HD coerenti col mondo in cui si combatte!
+	var prop_pool: Array[String] = ["prop_barricade", "prop_vending", "prop_cybercar"]
+	match world_id:
+		"world_1", "world_6", "world_10":
+			prop_pool = ["prop_biopod", "prop_barricade", "prop_biopod"]
+		"world_2", "world_5", "world_9":
+			prop_pool = ["prop_barricade", "prop_cybercar", "prop_barricade"]
+		"world_4", "world_7", "world_12":
+			prop_pool = ["prop_biopod", "prop_barricade", "prop_vending"]
+		_: # Night City / Eliporto Arasaka / Vicolo Kabuki / Selene
+			prop_pool = ["prop_vending", "prop_cybercar", "prop_barricade"]
+
+	var chosen_prop: String = prop_pool[posmod(variant_idx, prop_pool.size())]
+	draw_ground_shadow(c, Vector2(0, 22), 36.0, 0.55)
+	c.draw_set_transform(Vector2(0, 22), 0.0, Vector2(1.0, PERSPECTIVE_Y))
+	c.draw_circle(Vector2.ZERO, 36.0, Color(glow.r, glow.g, glow.b, 0.10))
+	c.draw_arc(Vector2.ZERO, 36.0, 0.0, TAU, 28, Color(glow.r, glow.g, glow.b, 0.52), 1.8)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	var obs_tex := CyberTheme.get_model_texture("res://assets/cyber_models/" + chosen_prop + ".png")
+	if not obs_tex:
+		obs_tex = CyberTheme.get_model_texture("res://assets/cyber_models/prop_obstacle.png")
 	if obs_tex:
-		c.draw_texture_rect(obs_tex, Rect2(Vector2(-32, -48), Vector2(64, 72)), false, armor_mod)
+		var draw_sz := Vector2(88, 88) if chosen_prop == "prop_cybercar" else Vector2(80, 84)
+		c.draw_texture_rect(obs_tex, Rect2(Vector2(-draw_sz.x * 0.5, -draw_sz.y + 28.0), draw_sz), false, armor_mod)
 	else:
 		c.draw_rect(Rect2(Vector2(-24, -40), Vector2(48, 64)), Color(0.12, 0.15, 0.22, 1.0), true)
-
-	c.draw_circle(Vector2(0, -34), 6.0, Color(0.05, 0.08, 0.14, 0.92))
-	c.draw_circle(Vector2(0, -34), 3.6, glow)
-
-	c.draw_set_transform(Vector2(0, 22), 0.0, Vector2(1.0, PERSPECTIVE_Y))
-	c.draw_arc(Vector2.ZERO, 34.0, 0.0, TAU, 28, Color(glow.r, glow.g, glow.b, 0.62), 2.0)
-	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 static func draw_loot_crate(c: CanvasItem, anim_t: float, hp_ratio: float) -> void:

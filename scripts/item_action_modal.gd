@@ -32,7 +32,9 @@ func setup_item(item_data: Dictionary) -> void:
 		if vbox:
 			vbox.add_theme_constant_override("separation", 10)
 			var old_m := vbox.get_node_or_null("Modal3DModel")
-			if old_m: old_m.queue_free()
+			if old_m:
+				vbox.remove_child(old_m)
+				old_m.queue_free()
 			var m_ctrl := Control.new()
 			m_ctrl.name = "Modal3DModel"
 			m_ctrl.custom_minimum_size = Vector2(0, 148)
@@ -44,12 +46,14 @@ func setup_item(item_data: Dictionary) -> void:
 			vbox.move_child(m_ctrl, 1)
 
 			var old_cmp := vbox.get_node_or_null("ComparePill")
-			if old_cmp: old_cmp.queue_free()
+			if old_cmp:
+				vbox.remove_child(old_cmp)
+				old_cmp.queue_free()
 			if not cmp.is_empty():
 				var cmp_lbl := Label.new()
 				cmp_lbl.name = "ComparePill"
 				cmp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				cmp_lbl.text = "CONFRONTO CON INDOSSATO:   " + str(cmp.get("text", ""))
+				cmp_lbl.text = "CONFRONTO CON INNESTATO:   " + str(cmp.get("text", ""))
 				cmp_lbl.add_theme_font_size_override("font_size", 16)
 				var c_col := CyberTheme.COL_GREEN if bool(cmp.get("is_better", false)) else (CyberTheme.COL_CYAN if bool(cmp.get("is_same", true)) else Color(1.0, 0.42, 0.48, 1.0))
 				CyberTheme.style_label(cmp_lbl, c_col, 3)
@@ -57,7 +61,9 @@ func setup_item(item_data: Dictionary) -> void:
 				vbox.move_child(cmp_lbl, 2)
 
 			var old_upg := vbox.get_node_or_null("BtnUpgradeItem")
-			if old_upg: old_upg.queue_free()
+			if old_upg:
+				vbox.remove_child(old_upg)
+				old_upg.queue_free()
 			var btn_upg := Button.new()
 			btn_upg.name = "BtnUpgradeItem"
 			btn_upg.custom_minimum_size = Vector2(0, 56)

@@ -162,6 +162,29 @@ func _ready() -> void:
 	speed += WeaponDB.get_equipped_boots_speed_bonus() + speed_talent
 	max_hp += (Global.upgrade_hp_lvl * 20) + hp_talent
 	bonus_damage += (Global.upgrade_dmg_lvl * 2) + atk_talent
+
+	# Applica i Perk Passivi Esclusivi della Skin Operativo equipaggiata!
+	var skin_d: Dictionary = Global.get_skin_def()
+	if float(skin_d.get("spd_pct", 0.0)) > 0.0:
+		speed *= (1.0 + float(skin_d["spd_pct"]) / 100.0)
+	if float(skin_d.get("fire_rate_pct", 0.0)) > 0.0:
+		fire_rate = maxf(0.08, fire_rate / (1.0 + float(skin_d["fire_rate_pct"]) / 100.0))
+	if float(skin_d.get("exp_pct", 0.0)) > 0.0:
+		exp_boost_bonus += float(skin_d["exp_pct"]) / 100.0
+	if float(skin_d.get("crit_pct", 0.0)) > 0.0:
+		crit_chance = minf(0.85, crit_chance + float(skin_d["crit_pct"]) / 100.0)
+	if float(skin_d.get("crit_dmg_pct", 0.0)) > 0.0:
+		crit_dmg_mult += float(skin_d["crit_dmg_pct"]) / 100.0
+	if int(skin_d.get("hp_flat", 0)) > 0:
+		max_hp += int(skin_d["hp_flat"])
+	if int(skin_d.get("regen_stacks", 0)) > 0:
+		regen_stacks += int(skin_d["regen_stacks"])
+	if float(skin_d.get("atk_pct", 0.0)) > 0.0:
+		bonus_damage += maxi(3, int(round(float(weapon_base_damage + bonus_damage) * (float(skin_d["atk_pct"]) / 100.0))))
+	if int(skin_d.get("start_shield", 0)) > 0:
+		shield_max += int(skin_d["start_shield"])
+		shield_charges = shield_max
+
 	current_hp = max_hp
 
 	shoot_timer = Timer.new()
