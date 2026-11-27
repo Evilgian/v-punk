@@ -704,8 +704,11 @@ func get_closest_enemy() -> Node2D:
 
 	return closest_enemy
 
+func _get_muzzle_world_pos(dir: Vector2) -> Vector2:
+	return global_position + CyberModels.get_hero_muzzle_offset(WeaponDB.equipped_weapon_id, dir.angle(), 88.0)
+
 func _spawn_projectile(dir: Vector2) -> void:
-	_spawn_projectile_from(global_position, dir, 1.0)
+	_spawn_projectile_from(_get_muzzle_world_pos(dir), dir, 1.0)
 
 func _spawn_projectile_from(origin: Vector2, dir: Vector2, dmg_mult: float = 1.0) -> void:
 	if not projectile_scene:
@@ -790,9 +793,10 @@ func _on_shoot_timer_timeout() -> void:
 		shot_counter += 1
 
 		if twin_shot_stacks > 0:
+			var muz_p := _get_muzzle_world_pos(base_dir)
 			var perp := Vector2(-base_dir.y, base_dir.x)
-			_spawn_projectile_from(global_position - perp * 8.5, base_dir, 0.90)
-			_spawn_projectile_from(global_position + perp * 8.5, base_dir, 0.90)
+			_spawn_projectile_from(muz_p - perp * 8.5, base_dir, 0.90)
+			_spawn_projectile_from(muz_p + perp * 8.5, base_dir, 0.90)
 			if twin_shot_stacks >= 2:
 				_spawn_projectile(base_dir)
 		else:

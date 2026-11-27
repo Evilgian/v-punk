@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
-@export var hp: int = 500
-@export var speed: float = 60.0
+@export var hp: int = 3600
+@export var speed: float = 68.0
 @export var enemy_projectile_scene: PackedScene = preload("res://scenes/EnemyProjectile.tscn")
 @export var ranged_enemy_scene: PackedScene = preload("res://scenes/RangedEnemy.tscn")
 @export var victory_scene: PackedScene = preload("res://scenes/Victory.tscn")
@@ -10,13 +10,15 @@ extends CharacterBody2D
 @onready var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 @onready var shadow: Sprite2D = get_node_or_null("Shadow") as Sprite2D
 
-var max_hp: int = 500
+var max_hp: int = 3600
 var is_final_boss: bool = true
 var is_attacking: bool = false
 var is_dying: bool = false
 var death_anim_t: float = 0.0
 var hide_boss_mesh: bool = false
 var in_phase_2: bool = false
+var phase_shield_t: float = 0.0
+var world_dmg_mult: float = 1.0
 var spawned_minions_75: bool = false
 var spawned_minions_50: bool = false
 var attack_timer: Timer
@@ -37,9 +39,10 @@ func _ready() -> void:
 	if w:
 		world_id = w.id
 		boss_col = w.boss_color
+		world_dmg_mult = w.enemy_dmg_multiplier
 
 	attack_timer = Timer.new()
-	attack_timer.wait_time = 2.0
+	attack_timer.wait_time = 1.72
 	attack_timer.one_shot = false
 	attack_timer.autostart = true
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
@@ -78,6 +81,8 @@ func _physics_process(delta: float) -> void:
 
 	if contact_cooldown > 0.0:
 		contact_cooldown -= delta
+	if phase_shield_t > 0.0:
+		phase_shield_t = maxf(0.0, phase_shield_t - delta)
 	if telegraph_t > 0.0:
 		telegraph_t = maxf(0.0, telegraph_t - delta)
 	queue_redraw()
@@ -93,7 +98,7 @@ func _physics_process(delta: float) -> void:
 
 		if distance < 55.0 and contact_cooldown <= 0.0:
 			if player.has_method("take_damage"):
-				player.take_damage(25)
+				player.take_damage(maxi(18, int(round(24.0 * world_dmg_mult))))
 				contact_cooldown = 0.8
 
 		var move_speed := speed * (1.55 if in_phase_2 else 1.0)
@@ -124,6 +129,11 @@ func _draw() -> void:
 
 	var tel_prog: float = clampf(1.0 - telegraph_t / 0.38, 0.0, 1.0) if telegraph_t > 0.0 else 0.0
 	CyberModels.draw_boss(self, world_id, anim_t, boss_col, in_phase_2, aim_angle, tel_prog)
+	if phase_shield_t > 0.0:
+		draw_set_transform(Vector2(0, 10), 0.0, Vector2(1.0, 0.65))
+		draw_arc(Vector2.ZERO, 68.0, 0.0, TAU, 36, Color(1.0, 0.86, 0.18, 0.92), 4.5)
+		draw_circle(Vector2.ZERO, 66.0, Color(1.0, 0.25, 0.18, 0.18))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 var spiral_step: float = 0.0
 var burst_counter: int = 0
@@ -154,6 +164,8 @@ func _spawn_boss_proj(dir: Vector2, spd_mult: float = 1.0) -> void:
 		proj.rotation = dir.angle()
 		if "speed" in proj:
 			proj.speed = float(proj.speed) * spd_mult
+		if "damage" in proj:
+			proj.damage = maxi(12, int(round(16.0 * world_dmg_mult * (1.20 if in_phase_2 else 1.0))))
 		var target_p: Node = get_tree().current_scene if (is_inside_tree() and get_tree() and get_tree().current_scene != null) else get_parent()
 		if target_p:
 			target_p.add_child.call_deferred(proj)
@@ -254,20 +266,24 @@ func take_damage(amount: int) -> void:
 	if is_dying:
 		return
 	if max_hp < hp: max_hp = hp
-	hp -= amount
+
+	# Scudo di transizione Fase 2 (0.55s) per impedire che raffiche simultanee saltino la seconda fase!
+	if phase_shield_t > 0.0:
+		amount = maxi(1, int(round(float(amount) * 0.15)))
+
+	# Corazza Reattiva Boss: nessun singolo proiettile può togliere più dell'8.5% (Finale) / 11.5% (Guardiano) degli HP!
+	var cap_pct: float = 0.085 if is_final_boss else 0.115
+	var max_single_hit: int = maxi(14, int(round(float(max_hp) * cap_pct)))
+	var eff_amt: int = mini(amount, max_single_hit)
+
+	hp -= eff_amt
 	var is_crit: bool = bool(get_meta("last_hit_crit", false))
 	set_meta("last_hit_crit", false)
 
 	var vfx: Node = get_node_or_null("/root/VFXManager")
 	if vfx:
-		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, amount, is_crit)
+		if vfx.has_method("spawn_floating_damage"): vfx.spawn_floating_damage(global_position, eff_amt, is_crit)
 		if vfx.has_method("flash_hit"): vfx.flash_hit(self)
-
-	var huds := get_tree().get_nodes_in_group("hud")
-	if not huds.is_empty():
-		var hud := huds[0]
-		if hud.has_method("update_boss_hp"):
-			hud.update_boss_hp(hp, max_hp)
 
 	var hp_ratio := float(hp) / float(max_hp)
 
@@ -278,8 +294,18 @@ func take_damage(amount: int) -> void:
 	if hp_ratio <= 0.50 and not in_phase_2:
 		in_phase_2 = true
 		spawned_minions_50 = true
-		attack_timer.wait_time = 1.3
+		hp = maxi(hp, int(round(float(max_hp) * 0.48)))
+		phase_shield_t = 0.55
+		attack_timer.wait_time = 1.15
 		_spawn_minions(2)
+		if vfx and vfx.has_method("spawn_floating_text"):
+			vfx.spawn_floating_text(global_position + Vector2(0, -68), "⚠ FASE 2: FURIA CORAZZATA!", CyberTheme.COL_YELLOW)
+
+	var huds := get_tree().get_nodes_in_group("hud")
+	if not huds.is_empty():
+		var hud := huds[0]
+		if hud.has_method("update_boss_hp"):
+			hud.update_boss_hp(maxi(0, hp), max_hp)
 
 	queue_redraw()
 	if hp <= 0:

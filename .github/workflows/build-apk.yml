@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v2.4.${{ github.run_number }}"
-          VERSION_NAME="2.4.${{ github.run_number }}"
-          VERSION_CODE=$((500 + ${{ github.run_number }}))
+          VERSION_TAG="v2.5.${{ github.run_number }}"
+          VERSION_NAME="2.5.${{ github.run_number }}"
+          VERSION_CODE=$((600 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,29 +76,32 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v2.4.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v2.4.${{ github.run_number }}.apk
+          name: V-Punk-v2.5.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.5.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.4.${{ github.run_number }}
-          name: "V-PUNK: Rogue Protocol — Release v2.4.${{ github.run_number }}"
+          tag_name: v2.5.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.5.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### V-PUNK: Rogue Protocol — Versione `v2.4.${{ github.run_number }}` (Operativi & Nemici 3D Stilizzati + Veri Cicli di Corsa a Sprite-Sheet)
+            ### V-PUNK: Rogue Protocol — Versione `v2.5.${{ github.run_number }}` (Arma Sempre in Primo Piano, Bilanciamento Boss & Nuova Cyber-Valchiria 3D)
 
-            #### 1. Nuovo Stile 3D Cyberpunk Stilizzato/Eroico (Stile *Brawl Stars* / *Mighty Doom* / *Archero 2*)
-            - **5 Operativi Giocabili Rigenerati da Zero**: tutti i 5 operativi (`V-RUNNER`, `GHOST NETRUNNER`, `NEON REBEL`, `TRAUMA VALKYRIE`, `CHROME OVERLORD`) hanno ora proporzioni 3D stilizzate compatte e carismatiche, perfette e super leggibili nella visuale dall'alto.
-            - **Nemici Umanoidi Coerenti**: rigenerati nello stesso stile 3D stilizzato anche `Aegis Riot Shielder` e `Cyber-Wraith Assassin`.
+            #### 1. Arma 3D Sempre Visibile & Proiettili Allineati alla Volata
+            - **Zero Occultamento quando Miri in Alto**: rimosso il passaggio dell'arma dietro il personaggio e aggiunto l'offset laterale dinamico del braccio armato, così ogni fucile/pistola/lama resta sempre nitido in primo piano a 360° e i proiettili partono esattamente dalla punta della canna.
 
-            #### 2. Ciclo di Corsa Reale a Sprite-Sheet (Zero Arti Tagliati a Marionetta)
-            - **Eliminata la Rotazione 2D degli Arti Separati**: sostituito completamente il vecchio sistema ad arti tagliati con **veri frame 3D dedicati** (`Idle`, `Run Stride A`, `Run Mid-Pass`, `Run Stride B`) con passo reversibile automatico in arretramento (kiting), squash & stretch fluido e impugnatura compatta delle armi 3D.
+            #### 2. Ribilanciamento Combattimento, Settori & Boss Multi-Fase
+            - **Boss Epici Anti-Oneshot**: triplicati/quadruplicati gli HP base dei Guardiani e dei Boss Finali (`2.800` / `4.400` base × moltiplicatore Settore), aggiunto adattamento automatico all'ATK dell'equipaggiamento del giocatore, Corazza Reattiva anti-oneshot per colpo singolo e Scudo di Sovraccarico alla transizione in Fase 2 (50% HP).
+            - **Curva Nemici Settori 1–12**: ricalibrati HP e danni di nemici base, élite e proiettili Boss lungo tutti i 12 Settori.
+
+            #### 3. Nuovo Modello 3D Stilizzato per il Santuario della Cyber-Valchiria
+            - **Addio al Vecchio Sprite Geometrico**: sostituita la vecchia icona piatta del Santuario (Stage 5/15/25...) con una vera **Cyber-Valchiria 3D Stilizzata** ad alta definizione con ali olografiche animate e particelle nanobot.
 
             ---
-            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.4.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.5.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
           files: |
-            build/android/V-Punk-v2.4.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.5.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

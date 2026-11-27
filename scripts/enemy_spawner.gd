@@ -143,14 +143,25 @@ func start_room() -> void:
 				boss.global_position = Vector2(360, 360)
 				if "is_final_boss" in boss:
 					boss.is_final_boss = is_final
-				var progress_ratio: float = clampf(float(current_room) / float(maxi(1, current_world.total_rooms)), 0.65, 1.0)
-				var boss_stage_bonus: float = 1.0 + float(maxi(0, current_room - 10)) * 0.038
+				var progress_ratio: float = clampf(float(current_room) / float(maxi(1, current_world.total_rooms)), 0.72, 1.0)
+				var boss_stage_bonus: float = 1.0 + float(maxi(0, current_room - 10)) * 0.048
+				var base_boss_hp: float = 4400.0 if is_final else 2800.0
+				var calc_hp: int = int(round(base_boss_hp * current_world.enemy_hp_multiplier * progress_ratio * boss_stage_bonus))
+				# Adattamento anti-oneshot rispetto all'ATK attuale dell'eroe: ogni Boss richiede sempre un vero scontro!
+				var p_nodes := get_tree().get_nodes_in_group("player")
+				if not p_nodes.is_empty():
+					var pl: Node = p_nodes[0]
+					var p_atk: int = 16
+					if "weapon_base_damage" in pl and "bonus_damage" in pl:
+						p_atk = maxi(16, int(pl.weapon_base_damage) + int(pl.bonus_damage))
+					var min_hits: int = 48 if is_final else 32
+					calc_hp = maxi(calc_hp, p_atk * min_hits)
 				if "hp" in boss:
-					boss.hp = int(float(boss.hp) * current_world.enemy_hp_multiplier * progress_ratio * boss_stage_bonus)
+					boss.hp = calc_hp
 				if "max_hp" in boss:
-					boss.max_hp = boss.hp
+					boss.max_hp = calc_hp
 				if "speed" in boss:
-					boss.speed = float(boss.speed) * minf(1.38, 1.0 + float(current_room) * 0.007)
+					boss.speed = float(boss.speed) * minf(1.42, 1.0 + float(current_room) * 0.008)
 				_spawn_into_arena(boss)
 		_update_hud_counter()
 		return

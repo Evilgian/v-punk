@@ -295,10 +295,6 @@ static func draw_hero(
 	var sprite_sz: float = 78.0 * k
 	# Nelle texture 256x256 la suola degli scarponi appoggia a y = 242/256 (0.9453)
 	var foot_pad_bottom: float = sprite_sz * (1.0 - 242.0 / 256.0)
-	var aim_behind_body: bool = (not use_parade) and (sin_a < -0.58)
-
-	if aim_behind_body:
-		_draw_stylized_hero_weapon(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, face_left, feet, bob, sprite_sz, k, aura, false, move_ratio)
 
 	if tex:
 		var pivot := Vector2(feet.x, feet.y + bob)
@@ -306,8 +302,51 @@ static func draw_hero(
 		c.draw_texture_rect(tex, Rect2(Vector2(-sprite_sz * 0.5, -sprite_sz + foot_pad_bottom), Vector2(sprite_sz, sprite_sz)), false, Color.WHITE)
 		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	if not aim_behind_body:
-		_draw_stylized_hero_weapon(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, face_left, feet, bob, sprite_sz, k, aura, use_parade, move_ratio)
+	# L'arma 3D è SEMPRE disegnata in primo piano davanti/a lato dell'operativo (MAI nascosta dietro il corpo!)
+	_draw_stylized_hero_weapon(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, face_left, feet, bob, sprite_sz, k, aura, use_parade, move_ratio)
+
+
+static func _get_weapon_visual_spec(weapon_id: String, k: float) -> Dictionary:
+	match weapon_id:
+		"pistol_base":
+			return {"len": 31.0 * k, "grip": Vector2(0.24, 0.64), "barrel_y": 0.39}
+		"smg":
+			return {"len": 39.0 * k, "grip": Vector2(0.32, 0.58), "barrel_y": 0.44}
+		"shotgun":
+			return {"len": 48.0 * k, "grip": Vector2(0.24, 0.54), "barrel_y": 0.47}
+		"laser_rifle":
+			return {"len": 52.0 * k, "grip": Vector2(0.26, 0.55), "barrel_y": 0.47}
+		"plasma_cannon":
+			return {"len": 50.0 * k, "grip": Vector2(0.28, 0.55), "barrel_y": 0.46}
+		"homing_wand":
+			return {"len": 47.0 * k, "grip": Vector2(0.27, 0.55), "barrel_y": 0.48}
+		"katana":
+			return {"len": 54.0 * k, "grip": Vector2(0.20, 0.50), "barrel_y": 0.50}
+		"scythe":
+			return {"len": 56.0 * k, "grip": Vector2(0.28, 0.50), "barrel_y": 0.50}
+	return {"len": 46.0 * k, "grip": Vector2(0.26, 0.54), "barrel_y": 0.47}
+
+
+static func get_hero_muzzle_offset(weapon_id: String, aim_angle: float, body_h: float = 88.0) -> Vector2:
+	var k: float = body_h / 68.0
+	var sprite_sz: float = 78.0 * k
+	var face_left: bool = cos(aim_angle) < -0.05
+	var face_sign: float = -1.0 if face_left else 1.0
+	var vert_factor: float = absf(sin(aim_angle))
+	var feet := Vector2(0.0, 19.0 * k)
+	var hand_anchor := Vector2(
+		feet.x + face_sign * (8.5 + vert_factor * 11.5) * k,
+		feet.y - sprite_sz * 0.37 - maxf(0.0, -sin(aim_angle)) * 4.5 * k
+	)
+	var w_dir := Vector2.from_angle(aim_angle)
+	var grip_pos: Vector2 = hand_anchor + w_dir * (7.5 * k)
+	var spec := _get_weapon_visual_spec(weapon_id, k)
+	var draw_len: float = float(spec["len"])
+	var grip_uv: Vector2 = spec["grip"]
+	var barrel_uv_y: float = float(spec["barrel_y"])
+	var sy: float = -1.0 if cos(aim_angle) < -0.05 else 1.0
+	var muz_local := Vector2((0.95 - grip_uv.x) * draw_len, (barrel_uv_y - grip_uv.y) * draw_len * sy)
+	return grip_pos + muz_local.rotated(aim_angle)
 
 
 static func _draw_stylized_hero_weapon(
@@ -335,73 +374,44 @@ static func _draw_stylized_hero_weapon(
 	var is_sprinting: bool = (move_ratio > 0.10 and not is_shooting and not parade_mode)
 
 	var eff_angle: float = aim_angle
-	var push_back: float = recoil_kick * 5.8 * k
+	var push_back: float = recoil_kick * 6.2 * k
 	if parade_mode:
 		face_sign = 1.0
 		eff_angle = (-0.42 if is_melee else -0.18) + sin(anim_t * 2.6) * 0.065
 		push_back = 0.0
 	elif is_sprinting:
 		var run_sway: float = sin(anim_t * 10.4 * PI * 0.5) * 0.12 * face_sign
-		var base_a: float = (PI + 0.18) if face_left else -0.18
+		var base_a: float = (PI + 0.16) if face_left else -0.16
 		if is_melee:
-			base_a = (PI + 0.45) if face_left else -0.45
+			base_a = (PI + 0.42) if face_left else -0.42
 		eff_angle = base_a + run_sway
 	elif is_melee:
 		if is_shooting:
 			var slash_wave: float = sin(anim_t * 16.0)
-			eff_angle = aim_angle + slash_wave * 1.12 * face_sign
-			push_back = -absf(slash_wave) * 4.5 * k
+			eff_angle = aim_angle + slash_wave * 1.15 * face_sign
+			push_back = -absf(slash_wave) * 5.0 * k
 		else:
 			eff_angle = aim_angle - 0.48 * face_sign + sin(anim_t * 3.4) * 0.06
 	else:
-		eff_angle = aim_angle - recoil_kick * 0.12 * face_sign + sin(anim_t * 3.8) * 0.032 * (1.0 - move_ratio)
+		eff_angle = aim_angle - recoil_kick * 0.12 * face_sign + sin(anim_t * 3.8) * 0.030 * (1.0 - move_ratio)
 
 	var flip_wep_y: bool = (not parade_mode) and (cos(eff_angle) < -0.05)
 	var w_dir := Vector2.from_angle(eff_angle)
+	var vert_factor: float = 0.0 if parade_mode else absf(sin(eff_angle))
 
-	# Punto d'impugnatura allineato esattamente alle mani 3D integrate sul petto dell'operativo stilizzato!
-	var hand_anchor := Vector2(feet.x + face_sign * (sprite_sz * 0.07), feet.y - sprite_sz * 0.36 + bob)
+	# Quando mira in alto/basso sposta lateralmente il braccio armato così l'arma è SEMPRE 100% visibile di fianco al visore!
+	var hand_anchor := Vector2(
+		feet.x + face_sign * (8.5 + vert_factor * 11.5) * k,
+		feet.y - sprite_sz * 0.37 + bob - maxf(0.0, -sin(eff_angle)) * (0.0 if parade_mode else 4.5 * k)
+	)
 	if parade_mode:
-		hand_anchor = Vector2(feet.x + 2.0 * k, feet.y - sprite_sz * 0.35 + bob)
-	var grip_pos: Vector2 = hand_anchor + w_dir * (3.2 * k - push_back)
+		hand_anchor = Vector2(feet.x + 5.5 * k, feet.y - sprite_sz * 0.35 + bob)
+	var grip_pos: Vector2 = hand_anchor + w_dir * ((3.5 if parade_mode else 7.5) * k - push_back)
 
-	# Proporzioni compatte delle armi 3D calibrate sui nuovi personaggi stilizzati (stile Brawl Stars / Archero 2)
-	var draw_len: float = 38.0 * k
-	var grip_uv := Vector2(0.26, 0.54)
-	var barrel_uv_y: float = 0.47
-	match weapon_id:
-		"pistol_base":
-			draw_len = 23.0 * k
-			grip_uv = Vector2(0.24, 0.64)
-			barrel_uv_y = 0.39
-		"smg":
-			draw_len = 30.0 * k
-			grip_uv = Vector2(0.32, 0.58)
-			barrel_uv_y = 0.44
-		"shotgun":
-			draw_len = 38.0 * k
-			grip_uv = Vector2(0.24, 0.54)
-			barrel_uv_y = 0.47
-		"laser_rifle":
-			draw_len = 41.0 * k
-			grip_uv = Vector2(0.26, 0.55)
-			barrel_uv_y = 0.47
-		"plasma_cannon":
-			draw_len = 39.0 * k
-			grip_uv = Vector2(0.28, 0.55)
-			barrel_uv_y = 0.46
-		"homing_wand":
-			draw_len = 38.0 * k
-			grip_uv = Vector2(0.27, 0.55)
-			barrel_uv_y = 0.48
-		"katana":
-			draw_len = 45.0 * k
-			grip_uv = Vector2(0.20, 0.50)
-			barrel_uv_y = 0.50
-		"scythe":
-			draw_len = 47.0 * k
-			grip_uv = Vector2(0.28, 0.50)
-			barrel_uv_y = 0.50
+	var spec := _get_weapon_visual_spec(weapon_id, k)
+	var draw_len: float = float(spec["len"])
+	var grip_uv: Vector2 = spec["grip"]
+	var barrel_uv_y: float = float(spec["barrel_y"])
 
 	var sy: float = -1.0 if flip_wep_y else 1.0
 	var muz_local_x: float = (0.95 - grip_uv.x) * draw_len
@@ -409,22 +419,22 @@ static func _draw_stylized_hero_weapon(
 
 	c.draw_set_transform_matrix(Transform2D(eff_angle, Vector2(1.0, sy), 0.0, grip_pos))
 	if is_shooting and not is_melee and not parade_mode:
-		c.draw_line(Vector2(muz_local_x, muz_local_y), Vector2(muz_local_x + 52.0 * k, muz_local_y), Color(aura.r, aura.g, aura.b, 0.38), 1.4)
+		c.draw_line(Vector2(muz_local_x, muz_local_y), Vector2(muz_local_x + 58.0 * k, muz_local_y), Color(aura.r, aura.g, aura.b, 0.44), 1.8)
 
 	var w_rect := Rect2(-Vector2(draw_len * grip_uv.x, draw_len * grip_uv.y), Vector2(draw_len, draw_len))
 	c.draw_texture_rect(wep_tex, w_rect, false, Color.WHITE)
 
 	# Guanto corazzato stilizzato sul calcio dell'arma
-	c.draw_circle(Vector2.ZERO, 3.2 * k, Color(0.08, 0.10, 0.16, 0.98))
-	c.draw_circle(Vector2.ZERO, 2.2 * k, Color(0.26, 0.32, 0.44, 1.0))
+	c.draw_circle(Vector2.ZERO, 3.8 * k, Color(0.06, 0.09, 0.15, 0.98))
+	c.draw_circle(Vector2.ZERO, 2.6 * k, Color(0.28, 0.35, 0.48, 1.0))
 
-	if is_shooting and recoil_kick > 0.22 and not parade_mode:
+	if is_shooting and recoil_kick > 0.18 and not parade_mode:
 		if is_melee:
-			c.draw_arc(Vector2(draw_len * 0.18, 0.0), draw_len * 0.64, -0.68, 0.68, 18, Color(aura.r, aura.g, aura.b, 0.72 * recoil_kick), 3.8 * k)
+			c.draw_arc(Vector2(draw_len * 0.18, 0.0), draw_len * 0.66, -0.72, 0.72, 18, Color(aura.r, aura.g, aura.b, 0.78 * recoil_kick), 4.2 * k)
 		else:
-			var muz := Vector2(muz_local_x + 2.0 * k, muz_local_y)
-			c.draw_circle(muz, 5.4 * k * recoil_kick, Color(aura.r, aura.g, aura.b, 0.85))
-			c.draw_circle(muz, 2.4 * k * recoil_kick, Color.WHITE)
+			var muz := Vector2(muz_local_x + 2.5 * k, muz_local_y)
+			c.draw_circle(muz, 7.2 * k * recoil_kick, Color(aura.r, aura.g, aura.b, 0.88))
+			c.draw_circle(muz, 3.4 * k * recoil_kick, Color.WHITE)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 

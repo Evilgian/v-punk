@@ -61,20 +61,29 @@ func _draw() -> void:
 		Vector2(-52, 30), Vector2(52, 30), Vector2(34, -155), Vector2(-34, -155)
 	]), Color(0.18, 0.96, 1.0, (0.14 if not blessing_claimed else 0.05) * pulse))
 
-	# Modello 3D-Shaded Cyber-Valchiria / Angelo Custode
+	# Modello 3D HD Stilizzato Cyber-Valchiria Custode (con ali energetiche vibranti e particelle nanobot)
+	for p_i in range(5):
+		var ph: float = fmod(anim_t * 0.65 + float(p_i) * 0.20, 1.0)
+		var px: float = sin(anim_t * 2.2 + float(p_i) * 1.7) * 44.0
+		var py: float = 20.0 - ph * 145.0
+		var p_col := Color(0.15, 0.96, 1.0, 0.75 * (1.0 - ph)) if (p_i % 2 == 0) else Color(1.0, 0.88, 0.25, 0.75 * (1.0 - ph))
+		draw_circle(Vector2(px, py), 3.4 * (1.0 - ph * 0.5), p_col)
+
 	var tex := CyberTheme.get_model_texture("res://assets/cyber_models/sanctuary_angel.png")
 	if tex:
-		var rect := Rect2(Vector2(-70, -86 + bob), Vector2(140, 140))
-		draw_texture_rect(tex, rect, false, Color(1.08, 1.08, 1.12, 1.0))
+		var wing_scale_x: float = 1.0 + sin(anim_t * 3.8) * 0.035
+		var wing_scale_y: float = 1.0 - sin(anim_t * 3.8) * 0.018
+		var sz := Vector2(168.0 * wing_scale_x, 168.0 * wing_scale_y)
+		draw_texture_rect(tex, Rect2(Vector2(-sz.x * 0.5, -sz.y + 28.0 + bob), sz), false, Color.WHITE)
 	else:
 		draw_circle(Vector2(0, bob), 32.0, Color(0.2, 1.0, 0.7, 0.85))
 
 	# Scritta olografica sopra la Valchiria
-	var font := ThemeDB.fallback_font
+	var font := CyberTheme.get_cyber_font(true)
 	if font:
-		var prompt_txt := "✦ AVVICINATI ALLA VALCHIRIA" if not blessing_claimed else "✓ BENEDIZIONE ATTIVA"
+		var prompt_txt := "✦ AVVICINATI ALLA CYBER-VALCHIRIA" if not blessing_claimed else "✓ BENEDIZIONE ATTIVA"
 		var prompt_col := CyberTheme.COL_YELLOW if not blessing_claimed else CyberTheme.COL_EQUIPPED
-		draw_string(font, Vector2(-115, -96 + bob * 0.5), prompt_txt, HORIZONTAL_ALIGNMENT_CENTER, 230, 14, prompt_col)
+		draw_string(font, Vector2(-150, -142 + bob * 0.5), prompt_txt, HORIZONTAL_ALIGNMENT_CENTER, 300, 15, prompt_col)
 
 func _open_sanctuary_modal() -> void:
 	if blessing_claimed or not is_inside_tree():
