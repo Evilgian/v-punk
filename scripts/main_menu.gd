@@ -611,61 +611,83 @@ func _setup_procedural_menu_models() -> void:
 		)
 		btn_buy_epic_crate.add_child(ec_vis)
 
+func _is_inside_scroll_container(node: Node) -> bool:
+	var cur: Node = node.get_parent()
+	while cur != null:
+		if cur is ScrollContainer:
+			return true
+		cur = cur.get_parent()
+	return false
+
+func _set_children_mouse_ignore(parent_node: Node) -> void:
+	for child in parent_node.get_children():
+		if child.name == "_NativeHitBtn":
+			continue
+		if child is Control:
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_set_children_mouse_ignore(child)
+
 func _connect_button(node: Control, method: Callable) -> void:
 	if not node:
 		return
-	if node is TextureButton:
-		(node as TextureButton).pressed.connect(method)
-	elif node is Button:
-		var b := node as Button
-		b.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
-		b.pressed.connect(method)
-	elif node is Control:
-		# MOUSE_FILTER_PASS + attivazione SOLO al rilascio senza trascinamento -> scroll touch fluido al 100%!
-		var is_footer_or_top: bool = (node.get_parent() != null and (node.get_parent().name == "FooterNavBar" or node.get_parent().name == "TopBar" or node.get_parent().name == "ResourceBar"))
-		node.mouse_filter = Control.MOUSE_FILTER_STOP if is_footer_or_top else Control.MOUSE_FILTER_PASS
-		for child in node.get_children():
-			if child is Control:
-				(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
-		node.set_meta("_tap_down", false)
-		node.set_meta("_tap_dragged", false)
-		node.set_meta("_tap_start", Vector2.ZERO)
-		node.gui_input.connect(func(event: InputEvent):
-			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-				if event.pressed:
-					node.set_meta("_tap_down", true)
-					node.set_meta("_tap_dragged", false)
-					node.set_meta("_tap_start", event.global_position)
-				else:
-					var was_down: bool = bool(node.get_meta("_tap_down", false))
-					var was_dragged: bool = bool(node.get_meta("_tap_dragged", false))
-					var st_pos: Vector2 = node.get_meta("_tap_start", event.global_position)
-					node.set_meta("_tap_down", false)
-					if was_down and not was_dragged and event.global_position.distance_to(st_pos) <= 18.0:
-						method.call()
-			elif event is InputEventMouseMotion:
-				if bool(node.get_meta("_tap_down", false)):
-					var st_m: Vector2 = node.get_meta("_tap_start", event.global_position)
-					if event.global_position.distance_to(st_m) > 14.0:
-						node.set_meta("_tap_dragged", true)
-			elif event is InputEventScreenTouch:
-				if event.pressed:
-					node.set_meta("_tap_down", true)
-					node.set_meta("_tap_dragged", false)
-					node.set_meta("_tap_start", event.position)
-				else:
-					var was_t: bool = bool(node.get_meta("_tap_down", false))
-					var was_td: bool = bool(node.get_meta("_tap_dragged", false))
-					var st_t: Vector2 = node.get_meta("_tap_start", event.position)
-					node.set_meta("_tap_down", false)
-					if was_t and not was_td and event.position.distance_to(st_t) <= 20.0:
-						method.call()
-			elif event is InputEventScreenDrag:
-				if bool(node.get_meta("_tap_down", false)):
-					var st_d: Vector2 = node.get_meta("_tap_start", event.position)
-					if event.position.distance_to(st_d) > 14.0:
-						node.set_meta("_tap_dragged", true)
-		)
+	var in_scroll: bool = (not node.is_inside_tree()) or _is_inside_scroll_container(node)
+	if node is BaseButton:
+		var bb := node as BaseButton
+		if in_scroll:
+			bb.mouse_filter = Control.MOUSE_FILTER_PASS
+			bb.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+		else:
+			bb.mouse_filter = Control.MOUSE_FILTER_STOP
+			bb.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
+		bb.pressed.connect(method)
+		return
+
+	# Se è dentro uno ScrollContainer (o è una card creata dinamicamente per le liste scorrevoli),
+	# usa un vero Button C++ di Godot con MOUSE_FILTER_PASS + ACTION_MODE_BUTTON_RELEASE -> scroll fluido e tocco perfetto!
+	if in_scroll:
+		node.mouse_filter = Control.MOUSE_FILTER_PASS
+		_set_children_mouse_ignore(node)
+		var old_hit := node.get_node_or_null("_NativeHitBtn")
+		if old_hit:
+			node.remove_child(old_hit)
+			old_hit.queue_free()
+		var hit_btn := Button.new()
+		hit_btn.name = "_NativeHitBtn"
+		hit_btn.flat = true
+		hit_btn.focus_mode = Control.FOCUS_NONE
+		hit_btn.text = ""
+		var empty_sb := StyleBoxEmpty.new()
+		for st_k in ["normal", "hover", "pressed", "disabled", "focus"]:
+			hit_btn.add_theme_stylebox_override(st_k, empty_sb)
+		hit_btn.mouse_filter = Control.MOUSE_FILTER_PASS
+		hit_btn.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+		hit_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hit_btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		hit_btn.pressed.connect(method)
+		node.add_child(hit_btn)
+		return
+
+	# Per le Tab fisse in basso (FooterNavBar) e la TopBar/ResourceBar:
+	# risposta istantanea al tocco con debounce di 120ms per evitare doppi invii Touch+Mouse su Android!
+	node.mouse_filter = Control.MOUSE_FILTER_STOP
+	for child in node.get_children():
+		if child is Control:
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	node.set_meta("_last_fire_ms", -999)
+	node.gui_input.connect(func(event: InputEvent):
+		var is_press: bool = false
+		if event is InputEventMouseButton:
+			var mb := event as InputEventMouseButton
+			is_press = mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
+		elif event is InputEventScreenTouch:
+			var st := event as InputEventScreenTouch
+			is_press = st.pressed
+		if is_press:
+			var now_ms: int = Time.get_ticks_msec()
+			if now_ms - int(node.get_meta("_last_fire_ms", -999)) > 120:
+				node.set_meta("_last_fire_ms", now_ms)
+				method.call()
+	)
 
 func _has_ready_quest() -> bool:
 	var rm: Node = get_node_or_null("/root/RewardManager")
@@ -1470,7 +1492,7 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 	for ch in slot_panel.get_children().duplicate():
 		if ch.name == "Lbl":
 			(ch as Control).visible = false
-		else:
+		elif ch.name != "_NativeHitBtn":
 			slot_panel.remove_child(ch)
 			ch.queue_free()
 
@@ -1544,6 +1566,9 @@ func _update_active_slot_ui(slot_node_name: String, slot_type: String) -> void:
 
 	hb.add_child(vb)
 	slot_panel.add_child(hb)
+	var hit_b := slot_panel.get_node_or_null("_NativeHitBtn")
+	if hit_b:
+		slot_panel.move_child(hit_b, slot_panel.get_child_count() - 1)
 
 func _setup_equip_subtabs() -> void:
 	if not inventory_view:

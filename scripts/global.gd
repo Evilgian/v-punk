@@ -1,6 +1,6 @@
 extends Node
 
-const GAME_VERSION: String = "v2.2.0"
+const GAME_VERSION: String = "v2.3.0"
 
 # Flag di sessione: mostra la schermata d'entrata cinematografica solo all'apertura dell'app
 var boot_entrance_shown: bool = false

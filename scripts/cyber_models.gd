@@ -195,12 +195,21 @@ static func draw_hero(
 	move_vec: Vector2 = Vector2.ZERO,
 	body_h: float = 68.0,
 	parade_mode: bool = false,
-	skin_override: String = ""
+	skin_override: String = "",
+	shot_kick_override: float = -1.0
 ) -> void:
-	var skin_id: String = skin_override if not skin_override.is_empty() else Global.equipped_skin_id
+	var gl: Node = null
+	var ml := Engine.get_main_loop()
+	if ml is SceneTree:
+		gl = (ml as SceneTree).root.get_node_or_null("Global")
+	var skin_id: String = skin_override
+	if skin_id.is_empty() and gl and "equipped_skin_id" in gl:
+		skin_id = str(gl.equipped_skin_id)
 	if skin_id.is_empty():
 		skin_id = "v_runner"
-	var aura := Global.get_player_accent_color()
+	var aura: Color = Color(0.0, 0.94, 1.0, 1.0)
+	if gl and gl.has_method("get_player_accent_color"):
+		aura = gl.get_player_accent_color()
 	var k: float = body_h / 68.0
 
 	# Nei podi del Menu / Creazione Personaggio usa automaticamente la Posa Eroica da Parata
@@ -223,21 +232,23 @@ static func draw_hero(
 		mv = Vector2(cos_a, sin_a)
 	var move_ratio: float = clampf(mv.length(), 0.0, 1.0) if is_moving else 0.0
 
-	# Calcolo direzione relativa (Avanti vs Retromarcia/Kiting) per eliminare il moonwalk!
 	var stride_dir: float = 1.0
 	if move_ratio > 0.05:
 		var look_vec := Vector2(-1.0 if face_left else 1.0, 0.0) if pose == "side" else Vector2(cos_a, sin_a)
 		if mv.normalized().dot(look_vec) < -0.15:
 			stride_dir = -1.0
 
-	var stride_phase: float = anim_t * 14.8 * stride_dir
+	var stride_phase: float = anim_t * 15.2 * stride_dir
 	var stride_c: float = absf(cos(stride_phase)) * move_ratio
-	# Rimbalzo atletico netto a ogni passo (2 impulsi per ciclo completo di corsa!)
-	var bob: float = (-stride_c * 6.2 + sin(anim_t * 2.8) * (1.0 - move_ratio) * 1.1) * k
+	# Idle vivo e reattivo: respirazione toracica + molleggio sulle ginocchia e bilanciamento del peso!
+	var idle_breath: float = sin(anim_t * 4.2) * (1.0 - move_ratio)
+	var idle_stance: float = sin(anim_t * 2.15) * (1.0 - move_ratio)
 	var recoil_phase: float = fmod(anim_t * 11.5, 1.0) if is_shooting else 1.0
-	var recoil_kick: float = clampf(1.0 - recoil_phase * 2.6, 0.0, 1.0) if is_shooting else 0.0
-	var lateral_sway: float = (sin(stride_phase) * 3.4 * move_ratio * k) if pose != "side" else 0.0
-	var body_shift := Vector2(mv.x * 2.8 * k + lateral_sway, 0.0) - Vector2(cos_a, 0.0) * (1.5 * recoil_kick * k)
+	var recoil_kick: float = clampf(shot_kick_override, 0.0, 1.0) if shot_kick_override >= 0.0 else (clampf(1.0 - recoil_phase * 2.6, 0.0, 1.0) if is_shooting else 0.0)
+
+	var bob: float = (-stride_c * 6.8 + idle_breath * 2.9 - absf(idle_stance) * 1.4 - recoil_kick * 1.6) * k
+	var lateral_sway: float = ((sin(stride_phase) * 3.8 * move_ratio + idle_stance * 2.4) * k) if pose != "side" else (idle_stance * 1.6 * k)
+	var body_shift := Vector2(mv.x * 3.0 * k + lateral_sway, 0.0) - Vector2(cos_a, sin_a * 0.30) * (3.6 * recoil_kick * k)
 	var feet := Vector2(body_shift.x, 18.0 * k)
 
 	# Ombra dinamica che si comprime/espande col salto della corsa + anello tattico sul pavimento
@@ -263,7 +274,7 @@ static func draw_hero(
 	if pose == "back":
 		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, false, stride_phase, move_ratio, skin_id)
 
-	_draw_hero_articulated_body(c, pose, face_left, feet, bob, stride_phase, move_ratio, mv, k, aura, anim_t, skin_id)
+	_draw_hero_articulated_body(c, pose, face_left, feet, bob, stride_phase, move_ratio, mv, k, aura, anim_t, skin_id, recoil_kick)
 
 	if pose != "back":
 		_draw_hero_weapon_and_arms(c, weapon_id, anim_t, is_shooting, recoil_kick, aim_angle, pose, face_left, feet, bob, k, aura, use_parade, stride_phase, move_ratio, skin_id)
@@ -300,7 +311,8 @@ static func _draw_hero_articulated_body(
 	k: float,
 	aura: Color,
 	anim_t: float,
-	skin_id: String = "v_runner"
+	skin_id: String = "v_runner",
+	recoil_kick: float = 0.0
 ) -> void:
 	var upper_tex := CyberTheme.get_model_texture("res://assets/cyber_models/skin_" + skin_id + "_upper_" + pose + ".png")
 	if not upper_tex:
@@ -316,6 +328,11 @@ static func _draw_hero_articulated_body(
 
 	var hip_y: float = feet.y - 29.2 * k + bob
 	var face_sign: float = -1.0 if face_left else 1.0
+	var idle_amt: float = 1.0 - move_ratio
+	var idle_breath: float = sin(anim_t * 4.2) * idle_amt
+	var idle_stance: float = sin(anim_t * 2.15) * idle_amt
+	var breath_sy: float = 1.0 + idle_breath * 0.032
+	var breath_sx: float = 1.0 - idle_breath * 0.015
 
 	if pose == "side":
 		var thigh_h: float = 18.2 * k
@@ -326,58 +343,60 @@ static func _draw_hero_articulated_body(
 		var r_sin: float = -f_sin
 		var r_cos: float = -f_cos
 
-		# Falcata atletica ampia e connessa al bacino (±40° sull'anca + flessione profonda del ginocchio!)
-		var f_thigh_rot: float = -f_sin * 0.68 * face_sign
-		var f_knee_bend: float = (0.08 + maxf(0.0, -f_cos) * 1.12 + maxf(0.0, -f_sin) * 0.30) * move_ratio
+		# In combattimento da fermo (idle_amt > 0): guardia atletica con ginocchia flesse e molleggio vivo!
+		var idle_f_th: float = (-0.12 + idle_stance * 0.08 - recoil_kick * 0.06) * idle_amt * face_sign
+		var idle_r_th: float = (0.14 - idle_stance * 0.08 + recoil_kick * 0.05) * idle_amt * face_sign
+		var idle_knee: float = (0.18 - idle_breath * 0.06 + recoil_kick * 0.08) * idle_amt
+
+		var f_thigh_rot: float = -f_sin * 0.72 * face_sign + idle_f_th
+		var f_knee_bend: float = (0.08 + maxf(0.0, -f_cos) * 1.15 + maxf(0.0, -f_sin) * 0.30) * move_ratio + idle_knee
 		var f_shin_rot: float = f_thigh_rot + f_knee_bend * face_sign
 
-		var r_thigh_rot: float = -r_sin * 0.68 * face_sign
-		var r_knee_bend: float = (0.08 + maxf(0.0, -r_cos) * 1.12 + maxf(0.0, -r_sin) * 0.30) * move_ratio
+		var r_thigh_rot: float = -r_sin * 0.72 * face_sign + idle_r_th
+		var r_knee_bend: float = (0.08 + maxf(0.0, -r_cos) * 1.15 + maxf(0.0, -r_sin) * 0.30) * move_ratio + idle_knee * 0.85
 		var r_shin_rot: float = r_thigh_rot + r_knee_bend * face_sign
 
-		var rear_hip := Vector2(feet.x + (-1.4 + r_sin * 2.6) * face_sign * k, hip_y + 1.4 * k - maxf(0.0, r_sin) * 2.8 * k)
-		var front_hip := Vector2(feet.x + (1.4 + f_sin * 2.6) * face_sign * k, hip_y + 1.4 * k - maxf(0.0, f_sin) * 2.8 * k)
+		var rear_hip := Vector2(feet.x + (-2.0 + r_sin * 2.8) * face_sign * k, hip_y + 1.4 * k - maxf(0.0, r_sin) * 3.0 * k)
+		var front_hip := Vector2(feet.x + (2.0 + f_sin * 2.8) * face_sign * k, hip_y + 1.4 * k - maxf(0.0, f_sin) * 3.0 * k)
 
-		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, rear_hip, r_thigh_rot, r_shin_rot, thigh_h, shin_h, face_left, Color(0.66, 0.72, 0.84, 1.0))
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, rear_hip, r_thigh_rot, r_shin_rot, thigh_h, shin_h, face_left, Color(0.68, 0.74, 0.86, 1.0))
 		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, front_hip, f_thigh_rot, f_shin_rot, thigh_h, shin_h, face_left, Color.WHITE)
 
-		# Busto + Spallacci Samurai con inclinazione dinamica in avanti durante lo scatto!
-		var uh: float = 44.5 * k
-		var uw: float = uh * _aspect(upper_tex, 0.72)
-		var lean_rot: float = (face_sign * 0.19 * move_ratio + sin(stride_phase * 2.0) * 0.045 * move_ratio) if move_ratio > 0.05 else sin(anim_t * 2.4) * 0.016
-		var waist_pivot := Vector2(feet.x + face_sign * 1.8 * move_ratio * k, hip_y + 4.4 * k)
+		var uh: float = 45.2 * k * breath_sy
+		var uw: float = (45.2 * k * _aspect(upper_tex, 0.72)) * breath_sx
+		var lean_rot: float = (face_sign * 0.21 * move_ratio + sin(stride_phase * 2.0) * 0.05 * move_ratio) if move_ratio > 0.05 else (idle_stance * 0.045 - recoil_kick * 0.095 * face_sign)
+		var waist_pivot := Vector2(feet.x + face_sign * 1.8 * move_ratio * k, hip_y + 5.6 * k)
 		_draw_part(c, upper_tex, waist_pivot, lean_rot, Rect2(Vector2(-uw * 0.50, -uh * 0.90), Vector2(uw, uh)), face_left, Color.WHITE)
 	else:
-		# Vista Frontale e Posteriore: corsa 2.5D ad alta escursione (ginocchio alto, stinco scorciato, suola stivale in spinta!)
 		var base_thigh_h: float = 18.0 * k
 		var base_shin_h: float = 19.4 * k
 
 		var l_wave: float = sin(stride_phase) * move_ratio
 		var r_wave: float = -l_wave
 
-		var l_tuck: float = maxf(0.0, l_wave)
-		var r_tuck: float = maxf(0.0, r_wave)
+		var l_tuck: float = maxf(0.0, l_wave) + maxf(0.0, idle_stance) * 0.14
+		var r_tuck: float = maxf(0.0, r_wave) + maxf(0.0, -idle_stance) * 0.14
 		var l_ext: float = maxf(0.0, -l_wave)
 		var r_ext: float = maxf(0.0, -r_wave)
 
-		var l_hip := Vector2(feet.x - 6.4 * k, hip_y - l_tuck * 9.5 * k + l_ext * 3.2 * k)
-		var r_hip := Vector2(feet.x + 6.4 * k, hip_y - r_tuck * 9.5 * k + r_ext * 3.2 * k)
+		var l_hip := Vector2(feet.x - 6.6 * k, hip_y - l_tuck * 9.8 * k + l_ext * 3.2 * k)
+		var r_hip := Vector2(feet.x + 6.6 * k, hip_y - r_tuck * 9.8 * k + r_ext * 3.2 * k)
 
-		var l_th: float = base_thigh_h * (1.0 - l_tuck * 0.24 + l_ext * 0.12)
+		var knee_flex_idle: float = (0.04 - idle_breath * 0.03 + recoil_kick * 0.05) * idle_amt
+		var l_th: float = base_thigh_h * (1.0 - l_tuck * 0.24 + l_ext * 0.12 - knee_flex_idle)
 		var l_sh: float = base_shin_h * (1.0 - l_tuck * 0.42 + l_ext * 0.12)
-		var r_th: float = base_thigh_h * (1.0 - r_tuck * 0.24 + r_ext * 0.12)
+		var r_th: float = base_thigh_h * (1.0 - r_tuck * 0.24 + r_ext * 0.12 - knee_flex_idle)
 		var r_sh: float = base_shin_h * (1.0 - r_tuck * 0.42 + r_ext * 0.12)
 
-		var l_rot: float = -0.04 + l_wave * 0.14
-		var r_rot: float = 0.04 - r_wave * 0.14
+		var l_rot: float = -0.06 + l_wave * 0.15 + idle_stance * 0.065
+		var r_rot: float = 0.06 - r_wave * 0.15 + idle_stance * 0.065
 
-		var l_mod := Color.WHITE if l_wave <= 0.0 else Color(0.70, 0.76, 0.88, 1.0)
-		var r_mod := Color.WHITE if r_wave <= 0.0 else Color(0.70, 0.76, 0.88, 1.0)
+		var l_mod := Color.WHITE if l_wave <= 0.05 else Color(0.72, 0.78, 0.88, 1.0)
+		var r_mod := Color.WHITE if r_wave <= 0.05 else Color(0.72, 0.78, 0.88, 1.0)
 
-		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, l_hip, l_rot, l_rot * 0.6, l_th, l_sh, false, l_mod)
-		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, r_hip, r_rot, r_rot * 0.6, r_th, r_sh, true, r_mod)
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, l_hip, l_rot, l_rot * 0.55, l_th, l_sh, false, l_mod)
+		_draw_hero_2joint_leg(c, thigh_tex, shin_tex, r_hip, r_rot, r_rot * 0.55, r_th, r_sh, true, r_mod)
 
-		# Dettaglio biomeccanico chiave in corsa verticale: suola corazzata alzata dietro (back) o ginocchiera in luce (front)
 		if move_ratio > 0.15:
 			if pose == "back":
 				if l_tuck > 0.25:
@@ -394,10 +413,10 @@ static func _draw_hero_articulated_body(
 				if r_tuck > 0.25:
 					c.draw_circle(r_hip + Vector2(0.0, r_th * 0.65), 3.4 * k * r_tuck, Color(0.82, 0.92, 1.0, 0.55 * r_tuck))
 
-		var uh: float = 45.0 * k
-		var uw: float = uh * _aspect(upper_tex, 0.84)
-		var sway_rot: float = clampf(mv.x * 0.08, -0.09, 0.09) - l_wave * 0.125
-		var waist_pivot := Vector2(feet.x, hip_y + 4.5 * k)
+		var uh: float = 45.6 * k * breath_sy
+		var uw: float = (45.6 * k * _aspect(upper_tex, 0.82)) * breath_sx
+		var sway_rot: float = clampf(mv.x * 0.09, -0.10, 0.10) - l_wave * 0.13 + idle_stance * 0.055 - recoil_kick * 0.05
+		var waist_pivot := Vector2(feet.x, hip_y + 5.8 * k)
 		_draw_part(c, upper_tex, waist_pivot, sway_rot, Rect2(Vector2(-uw * 0.50, -uh * 0.90), Vector2(uw, uh)), false, Color.WHITE)
 
 	# Reattori dorsali vibranti quando scatta verso Nord
@@ -427,9 +446,10 @@ static func _draw_arm_limb(c: CanvasItem, shoulder: Vector2, elbow: Vector2, han
 	var u_vec: Vector2 = elbow - shoulder
 	var u_len: float = maxf(4.0 * k, u_vec.length())
 	var u_rot: float = u_vec.angle() - PI * 0.5
+	c.draw_circle(shoulder, 2.2 * k, Color(0.11 * shade, 0.13 * shade, 0.19 * shade, 0.90))
 	if u_tex:
-		var uw: float = 8.4 * k
-		_draw_part(c, u_tex, shoulder, u_rot, Rect2(Vector2(-uw * 0.5, -1.2 * k), Vector2(uw, u_len + 2.4 * k)), false, mod)
+		var uw: float = 9.4 * k
+		_draw_part(c, u_tex, shoulder, u_rot, Rect2(Vector2(-uw * 0.5, -1.6 * k), Vector2(uw, u_len + 2.8 * k)), false, mod)
 
 	var f_vec: Vector2 = hand - elbow
 	var f_len: float = maxf(4.0 * k, f_vec.length())
@@ -475,35 +495,38 @@ static func _draw_hero_weapon_and_arms(
 	var arm_swing: float = sin(stride_phase) * move_ratio if is_sprinting else 0.0
 
 	var eff_angle: float = aim_angle
-	var push_back: float = recoil_kick * 4.2 * k
+	var push_back: float = recoil_kick * 7.2 * k
+	var idle_wep_sway: float = sin(anim_t * 3.8) * 0.045 * (1.0 - move_ratio)
 
 	if parade_mode:
-		# Posa eroica da parata nei Menu: arma tenuta in diagonale tattica davanti al busto
+		# Posa viva nei Menu: scansione tattica e respiro naturale dell'arma davanti al busto!
 		face_sign = 1.0
-		eff_angle = (-0.58 if is_melee else -0.26) + sin(anim_t * 2.2) * 0.03
+		eff_angle = (-0.54 if is_melee else -0.24) + sin(anim_t * 2.6) * 0.095
 		push_back = 0.0
 	elif is_sprinting:
-		# Durante la corsa: oscillazione atletica di braccia e arma al ritmo dei passi!
 		if pose == "side":
 			var run_base: float = (PI + 0.22) if face_left else -0.22
 			if is_melee:
 				run_base = (PI + 0.55) if face_left else -0.55
-			eff_angle = run_base + arm_swing * 0.30 * face_sign
+			eff_angle = run_base + arm_swing * 0.34 * face_sign
 		else:
-			eff_angle = (-0.42 if pose == "back" else 0.48) + arm_swing * 0.24
+			eff_angle = (-0.42 if pose == "back" else 0.48) + arm_swing * 0.28
 	elif is_melee:
 		if is_shooting:
 			var slash_wave: float = sin(anim_t * 16.0)
-			eff_angle = aim_angle + slash_wave * 1.12 * face_sign
-			push_back = -absf(slash_wave) * 4.5 * k
+			eff_angle = aim_angle + slash_wave * 1.18 * face_sign
+			push_back = -absf(slash_wave) * 5.2 * k
 		else:
-			eff_angle = aim_angle - 0.54 * face_sign + sin(anim_t * 3.0) * 0.04
+			eff_angle = aim_angle - 0.54 * face_sign + sin(anim_t * 3.4) * 0.075
+	else:
+		# Sparo / guardia con arma da fuoco: oscillazione viva + alzo di canna sul rinculo!
+		eff_angle = aim_angle - recoil_kick * 0.13 * face_sign + idle_wep_sway
 
 	var w_dir := Vector2.from_angle(eff_angle)
 	var flip_wep_y: bool = (not parade_mode) and (cos(eff_angle) < -0.05)
 
-	var front_shoulder := Vector2(feet.x - face_sign * 4.8 * k, shoulder_y)
-	var rear_shoulder := Vector2(feet.x + face_sign * 5.8 * k, shoulder_y - 0.5 * k)
+	var front_shoulder := Vector2(feet.x - face_sign * 2.2 * k, shoulder_y + 0.6 * k)
+	var rear_shoulder := Vector2(feet.x + face_sign * 4.4 * k, shoulder_y)
 	if pose == "front" or pose == "back":
 		var s_sign: float = 1.0 if cos(eff_angle) >= 0.0 else -1.0
 		front_shoulder = Vector2(feet.x - s_sign * 9.8 * k, shoulder_y - arm_swing * 1.8 * k)
@@ -511,13 +534,14 @@ static func _draw_hero_weapon_and_arms(
 
 	var grip_pos: Vector2
 	if parade_mode:
-		grip_pos = Vector2(feet.x - 4.5 * k, hip_y - 6.5 * k)
+		grip_pos = Vector2(feet.x - 4.5 * k + sin(anim_t * 2.15) * 1.8 * k, hip_y - 6.5 * k + sin(anim_t * 4.2) * 2.4 * k)
 	elif is_sprinting:
-		var pump_off := Vector2(arm_swing * 4.6 * face_sign * k, -absf(arm_swing) * 3.2 * k)
+		var pump_off := Vector2(arm_swing * 5.2 * face_sign * k, -absf(arm_swing) * 3.6 * k)
 		grip_pos = Vector2(feet.x + face_sign * 2.5 * k, hip_y - 9.5 * k) + w_dir * (5.5 * k) + pump_off
 	else:
-		var grip_dist: float = (8.8 if is_one_handed else (7.5 if is_melee else 5.8)) * k
-		grip_pos = Vector2(feet.x + face_sign * 2.8 * k, hip_y - 10.5 * k) + w_dir * (grip_dist - push_back)
+		var grip_dist: float = (9.2 if is_one_handed else (7.8 if is_melee else 6.4)) * k
+		var breath_arm_y: float = sin(anim_t * 4.2) * 1.8 * k
+		grip_pos = Vector2(feet.x + face_sign * 2.8 * k, hip_y - 10.5 * k + breath_arm_y) + w_dir * (grip_dist - push_back)
 
 	var foregrip_dist: float = (6.2 if is_melee else 10.8) * k
 	var foregrip_pos: Vector2 = grip_pos + w_dir * foregrip_dist
@@ -789,36 +813,21 @@ static func draw_special_enemy(
 				_draw_part(c, a_tex, Vector2(0, 17.0 + run_bob), dash_lean, Rect2(Vector2(-w * 0.5, -h), Vector2(w, h)), face_left, armor_mod)
 
 		"SPITTER":
-			# Bio-Cryo Spitter Turret: base quadrupede + testa cannone rotante indipendente!
+			# Bio-Cryo Spitter Turret: modello 3D integro (zero giunture tagliate!) + rinculo dinamico!
 			var sp_col: Color = prof.get("glow", Color(0.22, 1.0, 0.62))
 			draw_ground_shadow(c, Vector2(0, 17), 24.0, 0.58)
 			draw_ground_ring(c, Vector2(0, 17), 26.0, sp_col, -anim_t * 0.6, 2.2)
 			if is_elite:
 				_draw_elite_crown(c, Vector2(0, 17), -46.0, 27.0, anim_t)
 
-			var b_tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_spitter_base.png")
-			var h_tex := CyberTheme.get_model_texture("res://assets/cyber_models/unit_spitter_head.png")
-			if b_tex and h_tex:
-				var susp_bob: float = sin(anim_t * 5.5) * 1.4
-				var bw: float = 56.0
-				var bh: float = bw / maxf(0.2, _aspect(b_tex, 1.35))
-				_draw_part(c, b_tex, Vector2(0, 18.0 + susp_bob * 0.4), 0.0, Rect2(Vector2(-bw * 0.5, -bh), Vector2(bw, bh)), false, armor_mod)
-
-				# La torretta superiore ruota e rincula verso il giocatore!
-				var hw: float = 48.0
-				var hh: float = hw / maxf(0.2, _aspect(h_tex, 1.65))
-				var recoil_off := -Vector2.from_angle(aim_angle) * (action_ratio * 4.5)
-				var turret_pivot := Vector2(0, 18.0 - bh * 0.86 + susp_bob) + recoil_off
-				var head_rot: float = clampf(sin(aim_angle) * 0.28, -0.28, 0.28)
-				_draw_part(c, h_tex, turret_pivot, head_rot, Rect2(Vector2(-hw * 0.46, -hh * 0.55), Vector2(hw, hh)), face_left, armor_mod)
-				if action_ratio > 0.35:
-					var muz := turret_pivot + Vector2((-1.0 if face_left else 1.0) * hw * 0.48, 0.0).rotated(head_rot)
+			var full_t := CyberTheme.get_model_texture("res://assets/cyber_models/unit_spitter.png")
+			if full_t:
+				var recoil_pitch: float = -action_ratio * 0.14
+				_draw_arachnid_unit(c, full_t, Vector2(0, 18.0), 58.0, anim_t, 9.5, recoil_pitch, face_left, armor_mod)
+				if action_ratio > 0.30:
+					var muz := Vector2((-1.0 if face_left else 1.0) * 24.0, -24.0)
 					c.draw_circle(muz, 5.5 * action_ratio, Color(sp_col.r, sp_col.g, sp_col.b, 0.85))
 					c.draw_circle(muz, 2.4 * action_ratio, Color.WHITE)
-			else:
-				var full_t := CyberTheme.get_model_texture("res://assets/cyber_models/unit_spitter.png")
-				if full_t:
-					_draw_arachnid_unit(c, full_t, Vector2(0, 18.0), 56.0, anim_t, 8.0, 0.0, face_left, armor_mod)
 
 
 # ==============================================================================
@@ -926,8 +935,9 @@ static func draw_obstacle(c: CanvasItem, accent_col: Color, world_id: String = "
 	if not obs_tex:
 		obs_tex = CyberTheme.get_model_texture("res://assets/cyber_models/prop_obstacle.png")
 	if obs_tex:
-		var draw_sz := Vector2(88, 88) if chosen_prop == "prop_cybercar" else Vector2(80, 84)
-		c.draw_texture_rect(obs_tex, Rect2(Vector2(-draw_sz.x * 0.5, -draw_sz.y + 28.0), draw_sz), false, armor_mod)
+		var side_px := 106.0 if chosen_prop == "prop_cybercar" else 92.0
+		var draw_sz := Vector2(side_px, side_px)
+		c.draw_texture_rect(obs_tex, Rect2(Vector2(-draw_sz.x * 0.5, -draw_sz.y + 32.0), draw_sz), false, armor_mod)
 	else:
 		c.draw_rect(Rect2(Vector2(-24, -40), Vector2(48, 64)), Color(0.12, 0.15, 0.22, 1.0), true)
 

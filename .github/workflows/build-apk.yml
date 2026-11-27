@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v2.2.${{ github.run_number }}"
-          VERSION_NAME="2.2.${{ github.run_number }}"
-          VERSION_CODE=$((300 + ${{ github.run_number }}))
+          VERSION_TAG="v2.3.${{ github.run_number }}"
+          VERSION_NAME="2.3.${{ github.run_number }}"
+          VERSION_CODE=$((400 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,36 +76,31 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v2.2.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v2.2.${{ github.run_number }}.apk
+          name: V-Punk-v2.3.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.3.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.2.${{ github.run_number }}
-          name: "V-PUNK: Rogue Protocol — Release v2.2.${{ github.run_number }}"
+          tag_name: v2.3.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.3.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### V-PUNK: Rogue Protocol — Versione `v2.2.${{ github.run_number }}` (Operativi Cyberpunk, Skin con Perk, Arene Urbane HD & Fix Cromo)
+            ### V-PUNK: Rogue Protocol — Versione `v2.3.${{ github.run_number }}` (Fix Touch Tab Inferiori, Modelli 3D Integri & Animazioni Vive Personaggio)
 
-            #### 1. Nuovo Protagonista Cyberpunk ("V-Runner") & 5 Skin Giocabili con Perk Unici
-            - **Addio Armatura da Samurai**: nuovo protagonista *Cyberpunk 2077* in giubbotto bomber in pelle con colletto neon illuminato, visore LED e braccio cibernetico cromato, completo di rig articolato su 3 viste (`front / side / back`).
-            - **Sistema Skin Operativi con Abilità Passive (`CROMO -> SKIN`)**: 5 personaggi Cyberpunk giocabili (*V-Runner*, *Ghost Netrunner*, *Neon Rebel*, *Trauma Valkyrie*, *Chrome Overlord*), ciascuno con bonus passivi esclusivi in partita (`+Velocità/Crediti`, `+Cadenza/EXP`, `+Critico/Danno Crit`, `+HP/Rigenerazione`, `+ATK/HP/Scudo`).
-            - **Doppio Sistema di Sblocco**: ogni Skin si sblocca gratuitamente man mano che avanzi nei Settori (`02`, `04`, `07`, `10`) oppure istantaneamente tramite Gemme o Bundle VIP nel `MERCATO`.
+            #### 1. Ripristino Immediato Tab Inferiori & Scorrimento Touch su Android
+            - **Fix Conflitto Touch/Mouse nelle Tab di Navigazione**: risolto il blocco dei tocchi sulle 5 tab inferiori (`MERCATO`, `CROMO`, `INCURSIONE`, `SINAPSI`, `CONTRATTI`) e sulla barra superiore causato dalla doppia emissione `ScreenTouch + EmulatedMouse` su Android, mantenendo al contempo lo scorrimento fluido nelle liste con pulsanti nativi C++ `ACTION_MODE_BUTTON_RELEASE`.
 
-            #### 2. Arene di Gioco 2.5D Cyberpunk in Alta Definizione & Prop Urbani 3D
-            - **4 Nuove Arene 2.5D Fotorealistiche coerenti coi 12 Mondi**: strade di Night City bagnate dalla pioggia con strisce pedonali, pozzanghere neon e marciapiedi, impianti Biotechnica con griglie e tubature bio-luminescenti, fonderie/Badlands con canali al plasma fuso e caveau hi-tech Arasaka, integrate con lo skyline HD del Settore scelto.
-            - **Ostacoli Urbani 3D Variati**: distributori olografici neon, auto volanti della polizia cyber, barricate laser Militech e capsule bio-criogeniche.
+            #### 2. Modelli 3D In-Game 100% Integri (Zero Bordi Tagliati)
+            - **Auto della Polizia Cyber & Coperture Urbane `256x256` Complete**: rigenerati tutti i prop 3D (`prop_cybercar`, `prop_barricade`, `prop_vending`, `prop_biopod`) con proporzioni `1:1` centrate e margine trasparente di sicurezza, eliminando qualsiasi taglio laterale.
 
-            #### 3. Fix Schermata Equipaggiamento (`CROMO`) & Scroll Touch Mobile
-            - **Zero Sovrapposizioni al Cambio Arma**: rimozione immediata dei nodi precedenti negli slot attivi e nella scheda oggetto.
-            - **Scorrimento Touch Fluido**: le card dell'inventario lasciano scorrere liberamente la lista al trascinamento verticale e aprono l'oggetto solo al tocco netto.
-            - **Chiara Distinzione per Categoria**: barra filtri (`TUTTI` | `⚔ ARMI` | `🛡 CORAZZE` | `◎ ANELLI` | `✦ DRONI`), ordinamento automatico e badge categoria colorati su ogni oggetto e slot.
+            #### 3. Personaggio Vivo e Reattivo (Idle, Sparo, Menu e Corsa)
+            - **Guardia Attiva & Respirazione**: anche da fermo (nei menu o mentre mira e spara in partita) l'operativo mantiene una postura atletica viva con respiro toracico, molleggio sulle ginocchia, spostamento del peso e rinculo fisico sincronizzato a ogni colpo esploso.
 
             ---
-            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.2.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato con keystore permanente).
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.3.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
           files: |
-            build/android/V-Punk-v2.2.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.3.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

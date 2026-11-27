@@ -80,6 +80,7 @@ var shield_charges: int = 0
 var shield_recharge_t: float = 0.0
 
 var is_shooting: bool = false
+var shot_kick: float = 0.0
 var shoot_timer: Timer
 var joystick_node: Control
 
@@ -425,6 +426,8 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	anim_t += delta
+	if shot_kick > 0.0:
+		shot_kick = move_toward(shot_kick, 0.0, delta * 5.4)
 	queue_redraw()
 
 	if invulnerable_time > 0.0:
@@ -533,12 +536,12 @@ func _process(delta: float) -> void:
 		active_cam.offset = Vector2.ZERO
 
 func _draw() -> void:
-	# Modello 3D Articolato Cyber-Ronin Exo-Suit + Corsa Atletica Dinamica 3D
+	# Modello 3D Operativo Cyberpunk + Animazione Dinamica (Idle Respirazione, Rinculo Reale e Corsa 3D!)
 	var moving_now: bool = velocity.length() >= 12.0
-	var stride_strength: float = clampf(velocity.length() / maxf(1.0, speed * 0.45), 0.82, 1.0) if moving_now else 0.0
+	var stride_strength: float = clampf(velocity.length() / maxf(1.0, speed * 0.45), 0.85, 1.0) if moving_now else 0.0
 	var norm_vel: Vector2 = velocity.normalized() * stride_strength if moving_now else Vector2.ZERO
 	var firing_active: bool = is_shooting and (get_closest_enemy() != null)
-	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, moving_now, firing_active, aim_angle, norm_vel, 88.0)
+	CyberModels.draw_hero(self, WeaponDB.equipped_weapon_id, anim_t, moving_now, firing_active, aim_angle, norm_vel, 88.0, false, "", shot_kick)
 
 	# Disegna Lame Orbitali
 	if orbit_blades > 0:
@@ -783,6 +786,7 @@ func _on_shoot_timer_timeout() -> void:
 	if target_enemy:
 		var base_dir := (target_enemy.global_position - global_position).normalized()
 		aim_angle = base_dir.angle()
+		shot_kick = 1.0
 		shot_counter += 1
 
 		if twin_shot_stacks > 0:
