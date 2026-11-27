@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v2.3.${{ github.run_number }}"
-          VERSION_NAME="2.3.${{ github.run_number }}"
-          VERSION_CODE=$((400 + ${{ github.run_number }}))
+          VERSION_TAG="v2.4.${{ github.run_number }}"
+          VERSION_NAME="2.4.${{ github.run_number }}"
+          VERSION_CODE=$((500 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,31 +76,29 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v2.3.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v2.3.${{ github.run_number }}.apk
+          name: V-Punk-v2.4.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.4.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.3.${{ github.run_number }}
-          name: "V-PUNK: Rogue Protocol — Release v2.3.${{ github.run_number }}"
+          tag_name: v2.4.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.4.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### V-PUNK: Rogue Protocol — Versione `v2.3.${{ github.run_number }}` (Fix Touch Tab Inferiori, Modelli 3D Integri & Animazioni Vive Personaggio)
+            ### V-PUNK: Rogue Protocol — Versione `v2.4.${{ github.run_number }}` (Operativi & Nemici 3D Stilizzati + Veri Cicli di Corsa a Sprite-Sheet)
 
-            #### 1. Ripristino Immediato Tab Inferiori & Scorrimento Touch su Android
-            - **Fix Conflitto Touch/Mouse nelle Tab di Navigazione**: risolto il blocco dei tocchi sulle 5 tab inferiori (`MERCATO`, `CROMO`, `INCURSIONE`, `SINAPSI`, `CONTRATTI`) e sulla barra superiore causato dalla doppia emissione `ScreenTouch + EmulatedMouse` su Android, mantenendo al contempo lo scorrimento fluido nelle liste con pulsanti nativi C++ `ACTION_MODE_BUTTON_RELEASE`.
+            #### 1. Nuovo Stile 3D Cyberpunk Stilizzato/Eroico (Stile *Brawl Stars* / *Mighty Doom* / *Archero 2*)
+            - **5 Operativi Giocabili Rigenerati da Zero**: tutti i 5 operativi (`V-RUNNER`, `GHOST NETRUNNER`, `NEON REBEL`, `TRAUMA VALKYRIE`, `CHROME OVERLORD`) hanno ora proporzioni 3D stilizzate compatte e carismatiche, perfette e super leggibili nella visuale dall'alto.
+            - **Nemici Umanoidi Coerenti**: rigenerati nello stesso stile 3D stilizzato anche `Aegis Riot Shielder` e `Cyber-Wraith Assassin`.
 
-            #### 2. Modelli 3D In-Game 100% Integri (Zero Bordi Tagliati)
-            - **Auto della Polizia Cyber & Coperture Urbane `256x256` Complete**: rigenerati tutti i prop 3D (`prop_cybercar`, `prop_barricade`, `prop_vending`, `prop_biopod`) con proporzioni `1:1` centrate e margine trasparente di sicurezza, eliminando qualsiasi taglio laterale.
-
-            #### 3. Personaggio Vivo e Reattivo (Idle, Sparo, Menu e Corsa)
-            - **Guardia Attiva & Respirazione**: anche da fermo (nei menu o mentre mira e spara in partita) l'operativo mantiene una postura atletica viva con respiro toracico, molleggio sulle ginocchia, spostamento del peso e rinculo fisico sincronizzato a ogni colpo esploso.
+            #### 2. Ciclo di Corsa Reale a Sprite-Sheet (Zero Arti Tagliati a Marionetta)
+            - **Eliminata la Rotazione 2D degli Arti Separati**: sostituito completamente il vecchio sistema ad arti tagliati con **veri frame 3D dedicati** (`Idle`, `Run Stride A`, `Run Mid-Pass`, `Run Stride B`) con passo reversibile automatico in arretramento (kiting), squash & stretch fluido e impugnatura compatta delle armi 3D.
 
             ---
-            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.3.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.4.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
           files: |
-            build/android/V-Punk-v2.3.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.4.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
