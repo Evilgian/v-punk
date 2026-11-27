@@ -47,51 +47,51 @@ func _init_database() -> void:
 	worlds.clear()
 	world_order.clear()
 
-	_make_world("world_1", "SERRA BIO-SYNTH", 10, 1.10, 0.90, 1.2,
+	_make_world("world_1", "SERRA BIO-SYNTH", 10, 1.25, 1.05, 1.0,
 		"Zona di quarantena botanica della megatorre Biotechnica.",
 		Color(0.04, 0.12, 0.08, 1.0), Color(0.12, 0.98, 0.56, 1.0), "SPIKES", "BIO-GOLEM MK-I", Color(0.25, 1.0, 0.50, 1.0))
 
-	_make_world("world_2", "AUTOSTRADA BADLANDS", 15, 1.65, 1.25, 1.5,
+	_make_world("world_2", "AUTOSTRADA BADLANDS", 15, 2.20, 1.45, 1.3,
 		"Arteria desertica abbandonata tra convogli in fiamme e tempeste tossiche.",
 		Color(0.16, 0.11, 0.05, 1.0), Color(1.0, 0.72, 0.14, 1.0), "SANDPIT", "SCORPIO IMPERIALE", Color(1.0, 0.65, 0.15, 1.0))
 
-	_make_world("world_3", "ELIPORTO ARASAKA", 20, 2.35, 1.60, 2.0,
+	_make_world("world_3", "ELIPORTO ARASAKA", 20, 3.70, 1.95, 1.7,
 		"Attico blindato sotto pioggia acida nel cuore finanziario di Night City.",
 		Color(0.07, 0.05, 0.15, 1.0), Color(0.0, 0.94, 1.0, 1.0), "LASER", "DRON-CORE 3000", Color(0.0, 0.95, 1.0, 1.0))
 
-	_make_world("world_4", "CRIPTA CRIOGENICA", 20, 3.20, 1.95, 2.6,
+	_make_world("world_4", "CRIPTA CRIOGENICA", 20, 6.00, 2.55, 2.2,
 		"Archivio neurale sub-zero immerso in vapori d'azoto liquido.",
 		Color(0.03, 0.11, 0.18, 1.0), Color(0.38, 0.88, 1.0, 1.0), "CRYO", "VALKYRIE ZERO", Color(0.42, 0.88, 1.0, 1.0))
 
-	_make_world("world_5", "FONDERIA MAGMATICA", 25, 4.25, 2.35, 3.4,
+	_make_world("world_5", "FONDERIA MAGMATICA", 25, 9.50, 3.30, 2.8,
 		"Impianto siderurgico automatizzato sospeso su colate di metallo fuso.",
 		Color(0.18, 0.05, 0.03, 1.0), Color(1.0, 0.36, 0.08, 1.0), "MAGMA", "VULCAN OVERLORD", Color(1.0, 0.32, 0.06, 1.0))
 
-	_make_world("world_6", "CONDOTTI CHIMICI", 25, 5.50, 2.80, 4.3,
+	_make_world("world_6", "CONDOTTI CHIMICI", 25, 14.20, 4.15, 3.5,
 		"Sottosuolo industriale saturo di reagenti mutageni luminescenti.",
 		Color(0.05, 0.14, 0.04, 1.0), Color(0.62, 1.0, 0.14, 1.0), "ACID", "HYDRA CHIMERA X", Color(0.58, 1.0, 0.12, 1.0))
 
-	_make_world("world_7", "HANGAR ORBITALE", 30, 7.00, 3.30, 5.5,
+	_make_world("world_7", "HANGAR ORBITALE", 30, 20.50, 5.10, 4.3,
 		"Scalo aerospaziale in orbita bassa sopra l'emisfero notturno.",
 		Color(0.05, 0.08, 0.18, 1.0), Color(0.98, 0.88, 0.20, 1.0), "TESLA", "ARCHON SERAPHIM", Color(1.0, 0.86, 0.25, 1.0))
 
-	_make_world("world_8", "VICOLO KABUKI", 30, 8.80, 3.85, 6.8,
+	_make_world("world_8", "VICOLO KABUKI", 30, 29.00, 6.20, 5.2,
 		"Dedalo clandestino del mercato nero immerso tra insegne cremisi.",
 		Color(0.14, 0.03, 0.08, 1.0), Color(1.0, 0.05, 0.38, 1.0), "LASER", "KURO-SHINOBI X", Color(1.0, 0.12, 0.42, 1.0))
 
-	_make_world("world_9", "BASTIONE MILITECH", 35, 10.90, 4.45, 8.4,
+	_make_world("world_9", "BASTIONE MILITECH", 35, 40.00, 7.45, 6.3,
 		"Piazzaforte corazzata ad alta sicurezza presidiata da artiglieria pesante.",
 		Color(0.14, 0.04, 0.05, 1.0), Color(1.0, 0.18, 0.22, 1.0), "SPIKES", "ARES DREADNOUGHT", Color(1.0, 0.22, 0.18, 1.0))
 
-	_make_world("world_10", "REATTORE ABISSALE", 40, 13.40, 5.10, 10.2,
+	_make_world("world_10", "REATTORE ABISSALE", 40, 54.00, 8.90, 7.6,
 		"Centrale geotermica sottomarina ancorata nella fossa oceanica.",
 		Color(0.02, 0.10, 0.16, 1.0), Color(0.0, 0.90, 0.78, 1.0), "CRYO", "LEVIATHAN CRYO", Color(0.10, 0.95, 0.82, 1.0))
 
-	_make_world("world_11", "CUPOLA SELENE", 45, 16.40, 5.85, 12.5,
+	_make_world("world_11", "CUPOLA SELENE", 45, 72.00, 10.50, 9.0,
 		"Avamposto cibernetico sulla superficie lunare a gravità ridotta.",
 		Color(0.06, 0.08, 0.14, 1.0), Color(0.72, 0.88, 1.0, 1.0), "TESLA", "CELESTIAL VALKYRIE", Color(0.82, 0.92, 1.0, 1.0))
 
-	_make_world("world_12", "NUCLEO A.R.G.O.N.", 50, 20.00, 6.70, 16.0,
+	_make_world("world_12", "NUCLEO A.R.G.O.N.", 50, 96.00, 12.40, 11.0,
 		"Cattedrale digitale dell'IA ribelle oltre l'orizzonte degli eventi.",
 		Color(0.07, 0.02, 0.08, 1.0), Color(1.0, 0.0, 0.32, 1.0), "VOID", "OMEGA A.R.G.O.N.", Color(1.0, 0.08, 0.40, 1.0))
 

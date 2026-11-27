@@ -42,7 +42,7 @@ func _ready() -> void:
 		world_dmg_mult = w.enemy_dmg_multiplier
 
 	attack_timer = Timer.new()
-	attack_timer.wait_time = 1.72
+	attack_timer.wait_time = 1.42
 	attack_timer.one_shot = false
 	attack_timer.autostart = true
 	attack_timer.timeout.connect(_on_attack_timer_timeout)
@@ -411,9 +411,9 @@ func _die() -> void:
 		return
 
 	# Caso 2: Boss Finale (Ultimo Livello del Mondo) -> Salva subito i premi, poi Coreografia Epica di Vittoria (~3.3s)!
-	var reward_coins: int = int(600.0 * mult)
-	var reward_gems: int = int(200.0 * mult)
-	var reward_scrolls: int = 3 + world_num * 2
+	var reward_coins: int = int(280.0 * mult)
+	var reward_gems: int = int(65.0 * mult)
+	var reward_scrolls: int = 2 + world_num
 
 	Global.total_coins += reward_coins
 	Global.total_credits += reward_gems

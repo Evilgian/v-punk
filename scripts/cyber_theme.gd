@@ -101,17 +101,7 @@ static func get_rarity_label_it(rarity_str: String) -> String:
 			return "COMUNE"
 
 static func get_rarity_badge_text(rarity_str: String) -> String:
-	match rarity_str.to_upper():
-		"COMMON", "0", "COMUNE":
-			return "MK.I COMUNE"
-		"RARE", "1", "BLUE", "GREEN", "RARO":
-			return "MK.II RARO"
-		"EPIC", "2", "PURPLE", "EPICO":
-			return "MK.III EPICO"
-		"LEGENDARY", "3", "GOLD", "LEGGENDARIO":
-			return "MK.IV LEGGENDARIO"
-		_:
-			return "MK.I COMUNE"
+	return get_rarity_label_it(rarity_str)
 
 static func get_item_model_texture(item_id: String, slot_name: String = "") -> Texture2D:
 	var id_low := item_id.to_lower()

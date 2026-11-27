@@ -67,12 +67,17 @@ func setup_item(item_data: Dictionary) -> void:
 			var btn_upg := Button.new()
 			btn_upg.name = "BtnUpgradeItem"
 			btn_upg.custom_minimum_size = Vector2(0, 56)
-			var can_afford := (Global.total_coins >= coin_cost and Global.upgrade_scrolls >= scroll_cost)
-			btn_upg.icon = CyberTheme.get_ui_icon("core")
-			btn_upg.expand_icon = true
 			btn_upg.add_theme_font_size_override("font_size", 16)
-			btn_upg.text = "▲ CALIBRA A LV." + str(cur_lvl + 1) + "  (" + str(coin_cost) + "¢ + " + str(scroll_cost) + " Nuclei)"
-			CyberTheme.style_button(btn_upg, CyberTheme.COL_GREEN if can_afford else CyberTheme.COL_CYAN, can_afford)
+			if coin_cost < 0:
+				btn_upg.disabled = true
+				btn_upg.text = "★ LIVELLO MASSIMO"
+				CyberTheme.style_button(btn_upg, CyberTheme.COL_YELLOW, false)
+			else:
+				var can_afford := (Global.total_coins >= coin_cost and Global.upgrade_scrolls >= scroll_cost)
+				btn_upg.icon = CyberTheme.get_ui_icon("core")
+				btn_upg.expand_icon = true
+				btn_upg.text = "▲ LV." + str(cur_lvl + 1) + "  (" + str(coin_cost) + "¢ • " + str(scroll_cost) + " Nuclei)"
+				CyberTheme.style_button(btn_upg, CyberTheme.COL_GREEN if can_afford else CyberTheme.COL_CYAN, can_afford)
 			btn_upg.pressed.connect(func():
 				if im and im.has_method("upgrade_item_level"):
 					var res: Dictionary = im.upgrade_item_level(iid)

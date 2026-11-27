@@ -1,7 +1,7 @@
 extends Area2D
 
-@export var speed: float = 400.0
-@export var damage: int = 5
+@export var speed: float = 465.0
+@export var damage: int = 8
 var direction: Vector2 = Vector2.ZERO
 
 @onready var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D

@@ -13,10 +13,10 @@ extends CharacterBody2D
 # ==============================================================================
 
 @export var archetype: String = "KAMIKAZE" # KAMIKAZE, SHIELDER, ASSASSIN, SPITTER
-@export var speed: float = 112.0
-@export var hp: int = 68
-var max_hp: int = 68
-@export var damage: int = 20
+@export var speed: float = 120.0
+@export var hp: int = 88
+var max_hp: int = 88
+@export var damage: int = 24
 @export var drop_scene: PackedScene = preload("res://scenes/Drop.tscn")
 @export var enemy_projectile_scene: PackedScene = preload("res://scenes/EnemyProjectile.tscn")
 

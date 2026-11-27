@@ -122,7 +122,7 @@ func _collect(body: Node2D) -> void:
 			body.add_exp(1)
 		var world: WorldData = WorldDB.get_selected_world()
 		var reward_mult: float = world.reward_multiplier if world else 1.0
-		var base_coins: int = int(randf_range(6.0, 11.0) * reward_mult)
+		var base_coins: int = int(randf_range(3.0, 6.0) * reward_mult)
 
 		var tm: Node = get_node_or_null("/root/TalentManager")
 		var gold_pct: float = tm.get_bonus_value("gold") if (tm and tm.has_method("get_bonus_value")) else 0.0

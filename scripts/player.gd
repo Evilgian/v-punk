@@ -173,15 +173,15 @@ func _ready() -> void:
 			max_hp += maxi(10, int(round(float(max_hp) * (float(rb["max_hp_pct"]) / 100.0))))
 		if float(rb.get("fire_rate_pct", 0.0)) > 0.0:
 			fire_rate = maxf(0.075, fire_rate / (1.0 + float(rb["fire_rate_pct"]) / 100.0))
-		crit_chance = minf(0.85, crit_chance + float(rb.get("crit_pct", 0.0)) / 100.0)
+		crit_chance = minf(0.75, crit_chance + float(rb.get("crit_pct", 0.0)) / 100.0)
 		crit_dmg_mult += float(rb.get("crit_dmg_pct", 0.0)) / 100.0
-		dodge_chance = minf(0.60, dodge_chance + float(rb.get("dodge_pct", 0.0)) / 100.0)
-		damage_reduction = minf(0.50, damage_reduction + float(rb.get("dmg_red_pct", 0.0)) / 100.0)
+		dodge_chance = minf(0.35, dodge_chance + float(rb.get("dodge_pct", 0.0)) / 100.0)
+		damage_reduction = minf(0.35, damage_reduction + float(rb.get("dmg_red_pct", 0.0)) / 100.0)
 		drone_tech_bonus += float(rb.get("drone_spd_pct", 0.0)) / 100.0
 		exp_boost_bonus += float(rb.get("exp_pct", 0.0)) / 100.0
 		regen_stacks += int(rb.get("regen_stacks", 0))
 		if int(rb.get("start_shield", 0)) > 0:
-			shield_max += int(rb["start_shield"])
+			shield_max = mini(2, shield_max + int(rb["start_shield"]))
 			shield_charges = shield_max
 
 	# Applica i Perk Passivi Esclusivi della Skin Operativo equipaggiata!
@@ -268,9 +268,9 @@ func apply_perk(perk_id: String) -> void:
 		"executioner": executioner_stacks += 1
 		"berserker": berserker_stacks += 1
 		"lucky_overdrive":
-			crit_chance = minf(0.85, crit_chance + 0.10)
-			dodge_chance = minf(0.60, dodge_chance + 0.08)
-			Global.total_coins += 35
+			crit_chance = minf(0.75, crit_chance + 0.10)
+			dodge_chance = minf(0.35, dodge_chance + 0.06)
+			Global.total_coins += 25
 		"explosive": explosive_stacks += 1
 		"chain_lightning": chain_stacks += 1
 		"freeze_shot": has_freeze = true
@@ -283,19 +283,19 @@ func apply_perk(perk_id: String) -> void:
 			shockwave_stacks += 1
 			_trigger_shockwave_nova()
 		"energy_shield":
-			shield_max += 1
+			shield_max = mini(3, shield_max + 1)
 			shield_charges = shield_max
 			shield_changed.emit(shield_charges, shield_max)
 		"vampire": vampire_stacks += 1
-		"dodge": dodge_chance = minf(0.60, dodge_chance + 0.12)
+		"dodge": dodge_chance = minf(0.35, dodge_chance + 0.08)
 		"regen": regen_stacks += 1
 		"max_hp_up":
 			max_hp += 30
 			current_hp = mini(max_hp, current_hp + 30)
 		"titan_heart":
-			max_hp += 60
-			current_hp = mini(max_hp, current_hp + 60)
-			damage_reduction = minf(0.45, damage_reduction + 0.12)
+			max_hp += 50
+			current_hp = mini(max_hp, current_hp + 50)
+			damage_reduction = minf(0.35, damage_reduction + 0.08)
 		"move_speed": speed_modifier += 0.10
 		"heal":
 			current_hp = mini(max_hp, current_hp + int(max_hp * 0.35))

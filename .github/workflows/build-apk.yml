@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v2.7.${{ github.run_number }}"
-          VERSION_NAME="2.7.${{ github.run_number }}"
-          VERSION_CODE=$((800 + ${{ github.run_number }}))
+          VERSION_TAG="v2.8.${{ github.run_number }}"
+          VERSION_NAME="2.8.${{ github.run_number }}"
+          VERSION_CODE=$((900 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,33 +76,33 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v2.7.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v2.7.${{ github.run_number }}.apk
+          name: V-Punk-v2.8.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.8.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.7.${{ github.run_number }}
-          name: "V-PUNK: Rogue Protocol — Release v2.7.${{ github.run_number }}"
+          tag_name: v2.8.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.8.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### V-PUNK: Rogue Protocol — Versione `v2.7.${{ github.run_number }}` (Vantaggi Passivi per Rarità Stile Archero, Inventario Chiaro & Sub-Tab CROMO Ridisegnate)
+            ### V-PUNK: Rogue Protocol — Versione `v2.8.${{ github.run_number }}` (Scroll Fluido in Sinapsi & Tutte le Tab, Ribilanciamento Difficoltà/Economia & UI Visuale Mercato/Sinapsi)
 
-            #### 1. Vera Progressione di Rarità Stile *Archero* (Statistiche + Bonus Passivi Sbloccabili)
-            - **Incremento Netto a Parità di Livello**: ricalibrati i moltiplicatori di rarità (`1.0x` → `1.38x` → `1.85x` → `2.50x`) su tutte le armi, corazze, anelli e droni (es. *Anello Velocità* Lv.1: `+22 VEL` Comune → `+30 VEL` Raro → `+41 VEL` Epico → `+55 VEL` Leggendario).
-            - **3 Vantaggi Passivi Cumulativi per Rarità**: ogni pezzo sblocca automaticamente nuovi bonus passivi reali in partita salendo a **Raro**, **Epico** e **Leggendario** (es. Schivata, Velocità di Sparo, Probabilità/Danno Critico, Scudo Iniziale, Rigenerazione HP), visibili sia sulle card che nella scheda dettaglio.
+            #### 1. Scorrimento Touch Fluido Ovunque (`SINAPSI`, `MERCATO`, `CALIBRA`, `SINTESI`, `CONTRATTI`)
+            - **Zero Blocchi allo Swipe Verticale**: eliminato `MOUSE_FILTER_STOP` da card, contenitori e pulsanti dinamici dentro `ScrollContainer` (ora tutti usano `MOUSE_FILTER_PASS` + `ACTION_MODE_BUTTON_RELEASE` con `scroll_deadzone` ottimizzato), rendendo lo scorrimento verso il basso e verso l'alto immediato anche iniziando il trascinamento sopra una card o un bottone.
 
-            #### 2. Inventario Ripulito & Badge Generici `ANELLO` / `DRONE`
-            - **Zero Etichette `Anello 2` / `Drone 2`**: anelli e droni usano ora categorie pulite (`◎ ANELLO`, `✦ DRONE`) e si possono innestare liberamente nei 2 slot disponibili.
-            - **Card Zaino Chiare e Leggibili**: rimosso il testo ridondante sulla rarità in favore di valore esatto (`+41 VEL (▲ +11)`) e vantaggio passivo attivo (`✦ +10% Sparo`).
+            #### 2. Ribilanciamento Profondo di Difficoltà, Economia & Costi (Settori 1–12)
+            - **Economia & Costi Esponenziali**: introdotta curva esponenziale sui costi in Oro/Nuclei di **Calibrazione** (fino a Lv.20) e **Sinapsi**, riducendo l'inflazione di monete/gemme a fine run per dare vero peso ad ogni potenziamento.
+            - **Sfida Tattica Reale (Mondo 5 e oltre)**: innalzati esponenzialmente HP, danni, velocità proiettili e densità ostili dal Settore 2 al 12, con adattamento anti-oneshot su mob, Élite e Boss anche per chi possiede già equipaggiamento Epico/Leggendario molto potenziato, e tetti bilanciati a Schivata/Riduzione Danni.
 
-            #### 3. Nuove Sub-Tab in Alto su CROMO (`SKIN | DOTAZIONE | CALIBRA | SINTESI`)
-            - **Ordine & Visibilità**: spostata **SKIN** a sinistra, mantenuta **DOTAZIONE** come scheda predefinita quando si tocca *CROMO*, rimossi tutti i numeri tra parentesi e resi i 4 pulsanti solidi, grandi e ad alto contrasto.
+            #### 3. Restyling Visuale & Compatto di `MERCATO`, `SINAPSI` e Sotto-Schede
+            - **Mercato Visuale**: rimossi i muri di testo in favore di 2 grandi card Casse 3D affiancate, barra compatta Gemme Gratis, banner Operativi con ritratti 3D e 3 tile visuali Gemme con cristalli disegnati.
+            - **Griglia Sinapsi 3 Colonne Stile *Archero***: 14 medaglioni iconici dedicati con livello, bonus secco (`+ATK`, `+HP`, `%`) e bottone prezzo compatto senza frasi ridondanti.
 
             ---
-            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.7.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.8.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
           files: |
-            build/android/V-Punk-v2.7.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.8.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

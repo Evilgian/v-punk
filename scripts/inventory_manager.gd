@@ -25,6 +25,7 @@ var item_levels: Dictionary = {}
 
 const RARITY_ORDER := ["COMMON", "RARE", "EPIC", "LEGENDARY"]
 const RARITY_MULT := {"COMMON": 1.00, "RARE": 1.38, "EPIC": 1.85, "LEGENDARY": 2.50}
+const MAX_ITEM_LEVEL: int = 20
 
 func init_starter_loadout(chosen_class: String) -> void:
 	equipped_armor_id = ""
@@ -65,45 +66,49 @@ func init_starter_loadout(chosen_class: String) -> void:
 
 func get_item_level(item_id: String) -> int:
 	if item_id.is_empty(): return 1
-	return max(1, int(item_levels.get(item_id, 1)))
+	return clampi(int(item_levels.get(item_id, 1)), 1, MAX_ITEM_LEVEL)
 
 func get_upgrade_coin_cost(item_id: String) -> int:
 	var lvl := get_item_level(item_id)
-	return 40 * lvl
+	if lvl >= MAX_ITEM_LEVEL:
+		return -1
+	return int(round(125.0 * pow(1.42, float(lvl - 1))))
 
 func get_upgrade_scroll_cost(item_id: String) -> int:
 	var lvl := get_item_level(item_id)
-	return 1 + int((lvl - 1) / 3)
+	if lvl >= MAX_ITEM_LEVEL:
+		return 0
+	return 1 + int((lvl - 1) / 2)
 
 func get_item_rarity_mult(rarity_str: String) -> float:
 	return float(RARITY_MULT.get(rarity_str.to_upper(), 1.0))
 
 ## Calcola il valore reale di ATK o HP fornito da un oggetto (tenendo conto di Base + Rarità + Livello!)
 func get_item_primary_stat(item_id: String, slot_type: String, rarity_str: String = "COMMON", override_lvl: int = -1) -> Dictionary:
-	var lvl: int = override_lvl if override_lvl > 0 else get_item_level(item_id)
+	var lvl: int = clampi(override_lvl, 1, MAX_ITEM_LEVEL) if override_lvl > 0 else get_item_level(item_id)
 	var r_mult: float = get_item_rarity_mult(rarity_str)
 	var s := slot_type.to_upper()
 
 	if "ARMA" in s:
 		var w: WeaponStats = WeaponDB.weapons.get(item_id, null) as WeaponStats
 		var base_d: float = float(w.base_damage) if w else 14.0
-		var atk_val: int = int(round((base_d + float(lvl - 1) * 4.5) * r_mult * (1.0 + float(lvl - 1) * 0.04)))
+		var atk_val: int = int(round((base_d + float(lvl - 1) * 3.2) * r_mult))
 		return {"stat": "ATK", "value": atk_val, "unit": "ATK"}
 	elif "CORAZZA" in s or item_id in ["kevlar", "nano_armor"]:
-		var base_hp: float = 115.0 if item_id == "nano_armor" else 60.0
-		var hp_val: int = int(round((base_hp + float(lvl - 1) * 22.0) * r_mult))
+		var base_hp: float = 105.0 if item_id == "nano_armor" else 55.0
+		var hp_val: int = int(round((base_hp + float(lvl - 1) * 16.0) * r_mult))
 		return {"stat": "HP", "value": hp_val, "unit": "HP"}
 	elif item_id == "ring_crit":
-		var c_atk: int = int(round((9.0 + float(lvl - 1) * 3.5) * r_mult))
+		var c_atk: int = int(round((8.0 + float(lvl - 1) * 2.5) * r_mult))
 		return {"stat": "ATK", "value": c_atk, "unit": "ATK"}
 	elif item_id == "ring_speed" or "ANELLO" in s:
-		var spd: int = int(round((22.0 + float(lvl - 1) * 5.0) * r_mult))
+		var spd: int = int(round((22.0 + float(lvl - 1) * 4.0) * r_mult))
 		return {"stat": "VEL", "value": spd, "unit": "VEL"}
 	elif item_id == "drone_laser":
-		var pct: int = int(round((45.0 + float(lvl - 1) * 8.0) * r_mult))
+		var pct: int = int(round((42.0 + float(lvl - 1) * 6.0) * r_mult))
 		return {"stat": "DRONE", "value": pct, "unit": "% ATK"}
 	else:
-		var sh_hp: int = int(round((40.0 + float(lvl - 1) * 15.0) * r_mult))
+		var sh_hp: int = int(round((36.0 + float(lvl - 1) * 12.0) * r_mult))
 		return {"stat": "HP", "value": sh_hp, "unit": "HP"}
 
 ## Restituisce i 3 Vantaggi Passivi Cumulativi sbloccati da Rarità RARA, EPICA e LEGGENDARIA (stile Archero!)
@@ -294,11 +299,13 @@ func get_comparison_with_equipped(item_data: Dictionary) -> Dictionary:
 
 func upgrade_item_level(item_id: String) -> Dictionary:
 	var coin_cost := get_upgrade_coin_cost(item_id)
+	if coin_cost < 0:
+		return {"success": false, "message": "Livello massimo raggiunto!"}
 	var scroll_cost := get_upgrade_scroll_cost(item_id)
 	if Global.total_coins < coin_cost:
-		return {"success": false, "message": "Oro insufficiente! Servono " + str(coin_cost) + " Crediti Oro."}
+		return {"success": false, "message": "Oro insufficiente (" + str(coin_cost) + "¢)"}
 	if Global.upgrade_scrolls < scroll_cost:
-		return {"success": false, "message": "Nuclei insufficienti! Servono " + str(scroll_cost) + " Nuclei (trovane nei livelli!)."}
+		return {"success": false, "message": "Nuclei insufficienti (" + str(scroll_cost) + ")"}
 
 	Global.total_coins -= coin_cost
 	Global.upgrade_scrolls -= scroll_cost
@@ -307,7 +314,7 @@ func upgrade_item_level(item_id: String) -> Dictionary:
 
 	var ss: Node = get_node_or_null("/root/SaveSystem")
 	if ss and ss.has_method("save_game"): ss.save_game()
-	return {"success": true, "new_level": new_lvl, "message": "▲ POTENZIAMENTO COMPLETATO: Lv. " + str(new_lvl) + "!"}
+	return {"success": true, "new_level": new_lvl, "message": "▲ CALIBRATO A LV." + str(new_lvl) + "!"}
 
 const BASE_GEAR_CATALOG := [
 	{"id": "pistol_base", "name": "Pistola Cyber", "slot": "ARMA", "min_world": 1},

@@ -133,6 +133,17 @@ func start_room() -> void:
 	print("Avvio Stanza ", current_room, "/", current_world.total_rooms, " in ", current_world.display_name)
 
 	# 1. Stanza del Boss (Ogni 10 Livelli e all'Ultimo Livello del Mondo)
+	var w_idx_cur: int = maxi(1, WorldDB.world_order.find(current_world.id) + 1) if current_world else 1
+	var p_nodes_ref := get_tree().get_nodes_in_group("player")
+	var player_atk_cur: int = 18
+	var player_hp_cur: int = 120
+	if not p_nodes_ref.is_empty():
+		var pl_ref: Node = p_nodes_ref[0]
+		if "weapon_base_damage" in pl_ref and "bonus_damage" in pl_ref:
+			player_atk_cur = maxi(16, int(pl_ref.weapon_base_damage) + int(pl_ref.bonus_damage))
+		if "max_hp" in pl_ref:
+			player_hp_cur = maxi(100, int(pl_ref.max_hp))
+
 	var is_boss_stage: bool = (current_room == current_world.total_rooms) or (current_room % 10 == 0)
 	if is_boss_stage:
 		total_room_enemies = 1
@@ -143,25 +154,19 @@ func start_room() -> void:
 				boss.global_position = Vector2(360, 360)
 				if "is_final_boss" in boss:
 					boss.is_final_boss = is_final
-				var progress_ratio: float = clampf(float(current_room) / float(maxi(1, current_world.total_rooms)), 0.72, 1.0)
-				var boss_stage_bonus: float = 1.0 + float(maxi(0, current_room - 10)) * 0.048
-				var base_boss_hp: float = 4400.0 if is_final else 2800.0
+				var progress_ratio: float = clampf(float(current_room) / float(maxi(1, current_world.total_rooms)), 0.76, 1.0)
+				var boss_stage_bonus: float = 1.0 + float(maxi(0, current_room - 10)) * 0.025
+				var base_boss_hp: float = 3000.0 if is_final else 2000.0
 				var calc_hp: int = int(round(base_boss_hp * current_world.enemy_hp_multiplier * progress_ratio * boss_stage_bonus))
 				# Adattamento anti-oneshot rispetto all'ATK attuale dell'eroe: ogni Boss richiede sempre un vero scontro!
-				var p_nodes := get_tree().get_nodes_in_group("player")
-				if not p_nodes.is_empty():
-					var pl: Node = p_nodes[0]
-					var p_atk: int = 16
-					if "weapon_base_damage" in pl and "bonus_damage" in pl:
-						p_atk = maxi(16, int(pl.weapon_base_damage) + int(pl.bonus_damage))
-					var min_hits: int = 48 if is_final else 32
-					calc_hp = maxi(calc_hp, p_atk * min_hits)
+				var min_hits: int = 65 if is_final else 44
+				calc_hp = maxi(calc_hp, player_atk_cur * min_hits)
 				if "hp" in boss:
 					boss.hp = calc_hp
 				if "max_hp" in boss:
 					boss.max_hp = calc_hp
 				if "speed" in boss:
-					boss.speed = float(boss.speed) * minf(1.42, 1.0 + float(current_room) * 0.008)
+					boss.speed = float(boss.speed) * minf(1.48, 1.05 + float(current_room) * 0.009)
 				_spawn_into_arena(boss)
 		_update_hud_counter()
 		return
@@ -224,15 +229,22 @@ func start_room() -> void:
 			crate.global_position = crate_pos
 			_spawn_into_arena(crate)
 
-	# Progressione bilanciata stanza per stanza (sfida tattica reale senza spugne eccessive nei mondi 5..8)
-	total_room_enemies = 3 if (is_tutorial_world and current_room == 1) else clampi(4 + int(floor(float(current_room) * 0.42)), 4, 11)
+	# Progressione tattica intensa (con pressione adattiva morbida se il giocatore ha già equipaggiamento fuori scala!)
+	total_room_enemies = 3 if (is_tutorial_world and current_room == 1) else clampi(4 + int(floor(float(current_room) * 0.45)) + int(w_idx_cur / 3), 4, 13)
 	var r_step: float = float(maxi(0, current_room - 1))
-	var room_hp_scale: float = 1.0 + r_step * 0.068 + pow(r_step, 1.22) * 0.012
-	var room_dmg_scale: float = 1.0 + r_step * 0.048 + pow(r_step, 1.12) * 0.008
-	var room_spd_scale: float = minf(1.42, 1.0 + r_step * 0.012)
-	var elite_chance: float = clampf(0.14 + float(current_room - 4) * 0.016, 0.14, 0.38) if current_room >= 4 else 0.0
-	var max_elites: int = 1 if current_room < 9 else (2 if current_room < 20 else 3)
+	var room_hp_scale: float = 1.0 + r_step * 0.075 + pow(r_step, 1.24) * 0.014
+	var room_dmg_scale: float = 1.0 + r_step * 0.052 + pow(r_step, 1.14) * 0.009
+	var room_spd_scale: float = minf(1.48, 1.0 + float(w_idx_cur - 1) * 0.025 + r_step * 0.012)
+	var elite_chance: float = clampf(0.16 + float(current_room - 3) * 0.018 + float(w_idx_cur - 1) * 0.02, 0.16, 0.46) if (current_room >= 3 or w_idx_cur >= 3) else 0.0
+	var max_elites: int = 1 if (current_room < 7 and w_idx_cur < 3) else (2 if current_room < 16 else 4)
 	var elites_spawned: int = 0
+
+	# Se il giocatore entra con ATK molto superiore alla baseline del settore (es. armi Leggendarie/Epiche già potenziate),
+	# i nemici assorbono parzialmente il surplus così i combattimenti richiedono sempre più colpi e movimento tattico!
+	var expected_sector_atk: float = 18.0 * pow(1.36, float(w_idx_cur - 1))
+	var overgear_hp_mult: float = 1.0
+	if float(player_atk_cur) > expected_sector_atk * 1.25:
+		overgear_hp_mult = pow(float(player_atk_cur) / (expected_sector_atk * 1.25), 0.72)
 
 	for i in range(total_room_enemies):
 		var spawn_pos := _get_safe_spawn_pos(chosen_obstacles)
@@ -252,19 +264,25 @@ func start_room() -> void:
 					if "is_elite" in enemy:
 						enemy.is_elite = true
 					enemy.scale *= 1.16
-				var e_hp_mult: float = room_hp_scale * (1.70 if make_elite else 1.0)
-				var e_dmg_mult: float = room_dmg_scale * (1.30 if make_elite else 1.0)
-				var e_spd_mult: float = room_spd_scale * (1.12 if make_elite else 1.0)
+				var e_hp_mult: float = room_hp_scale * overgear_hp_mult * (1.85 if make_elite else 1.0)
+				var e_dmg_mult: float = room_dmg_scale * (1.35 if make_elite else 1.0)
+				var e_spd_mult: float = room_spd_scale * (1.14 if make_elite else 1.0)
 				if "hp" in enemy:
-					enemy.hp = int(round(float(enemy.hp) * current_world.enemy_hp_multiplier * e_hp_mult))
+					var scaled_hp: int = int(round(float(enemy.hp) * current_world.enemy_hp_multiplier * e_hp_mult))
+					var min_mob_hits: int = (6 if make_elite else 3) if w_idx_cur >= 3 else (4 if make_elite else 2)
+					enemy.hp = maxi(scaled_hp, player_atk_cur * min_mob_hits)
 				if "max_hp" in enemy and "hp" in enemy:
 					enemy.max_hp = enemy.hp
 				if "damage" in enemy:
-					enemy.damage = int(round(float(enemy.damage) * current_world.enemy_dmg_multiplier * e_dmg_mult))
+					var scaled_dmg: int = int(round(float(enemy.damage) * current_world.enemy_dmg_multiplier * e_dmg_mult))
+					if w_idx_cur >= 3:
+						var min_threat_dmg: int = int(round(float(player_hp_cur) * (0.085 + float(w_idx_cur - 3) * 0.012) * (1.25 if make_elite else 1.0)))
+						scaled_dmg = maxi(scaled_dmg, min_threat_dmg)
+					enemy.damage = scaled_dmg
 				if "speed" in enemy:
 					enemy.speed = float(enemy.speed) * e_spd_mult
 				if "fire_rate" in enemy:
-					enemy.fire_rate = maxf(0.85, float(enemy.fire_rate) / (1.0 + r_step * 0.016))
+					enemy.fire_rate = maxf(0.75, float(enemy.fire_rate) / (1.0 + float(w_idx_cur - 1) * 0.06 + r_step * 0.016))
 				_spawn_into_arena(enemy)
 
 	_update_hud_counter()

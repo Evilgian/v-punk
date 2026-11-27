@@ -1,11 +1,11 @@
 extends CharacterBody2D
 
-@export var hp: int = 42
-var max_hp: int = 42
-@export var speed: float = 105.0
-@export var attack_range: float = 350.0
-@export var fire_rate: float = 2.0
-@export var damage: int = 13
+@export var hp: int = 54
+var max_hp: int = 54
+@export var speed: float = 112.0
+@export var attack_range: float = 365.0
+@export var fire_rate: float = 1.65
+@export var damage: int = 16
 @export var drop_scene: PackedScene = preload("res://scenes/Drop.tscn")
 @export var enemy_projectile_scene: PackedScene = preload("res://scenes/EnemyProjectile.tscn")
 
