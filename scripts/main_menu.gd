@@ -204,8 +204,9 @@ func _ready() -> void:
 	var pill_scrolls: Control = find_child("PillScrolls", true, false) as Control
 	if pill_scrolls:
 		_connect_button(pill_scrolls, func():
+			SoundFX.play_click()
 			current_equip_tab = "UPGRADE"
-			_on_nav_equip_pressed()
+			_show_inventory_view()
 		)
 	var pill_coins: Control = find_child("PillCoins", true, false) as Control
 	if pill_coins:
@@ -1299,8 +1300,9 @@ func _rebuild_home_loadout_dashboard() -> void:
 		CyberTheme.style_label(sl3, Color(0.88, 1.0, 0.94, 1.0), 2)
 		status_pill.add_child(sl3)
 	_connect_button(status_pill, func():
+		SoundFX.play_click()
 		current_equip_tab = "MERGE" if (fusible_cnt > 0 and not can_auto_eq) else "ARSENAL"
-		_on_nav_equip_pressed()
+		_show_inventory_view()
 	)
 	hdr_row.add_child(status_pill)
 
@@ -1451,10 +1453,9 @@ func _get_slot_visual_meta(slot_type: String) -> Dictionary:
 	elif "CORAZZA" in s:
 		return {"tag": "🛡 CORAZZA", "short": "CORAZZA", "col": Color(0.12, 0.96, 0.60, 1.0), "order": 1}
 	elif "ANELLO" in s:
-		return {"tag": "◎ " + s, "short": "ANELLO", "col": Color(0.84, 0.38, 1.0, 1.0), "order": 2}
+		return {"tag": "◎ ANELLO", "short": "ANELLO", "col": Color(0.84, 0.38, 1.0, 1.0), "order": 2}
 	else:
-		var d_num := " 1" if "1" in s else (" 2" if "2" in s else "")
-		return {"tag": "✦ DRONE" + d_num, "short": "DRONE", "col": Color(0.0, 0.92, 1.0, 1.0), "order": 3}
+		return {"tag": "✦ DRONE", "short": "DRONE", "col": Color(0.0, 0.92, 1.0, 1.0), "order": 3}
 
 func _make_slot_category_pill(slot_type: String) -> PanelContainer:
 	var meta := _get_slot_visual_meta(slot_type)
@@ -1582,48 +1583,49 @@ func _setup_equip_subtabs() -> void:
 	if not inventory_view.get_node_or_null("EquipSegHousing"):
 		var seg_house := PanelContainer.new()
 		seg_house.name = "EquipSegHousing"
-		seg_house.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.025, 0.04, 0.08, 0.96), Color(0.18, 0.34, 0.56, 0.75), 0.0, 1, 3, 0))
+		seg_house.add_theme_stylebox_override("panel", CyberTheme.make_cyber_box(Color(0.03, 0.05, 0.10, 0.98), Color(0.24, 0.48, 0.76, 0.85), 0.0, 2, 4, 3))
 
 		equip_sub_nav = HBoxContainer.new()
 		equip_sub_nav.name = "EquipSubNav"
-		equip_sub_nav.custom_minimum_size = Vector2(0, 52)
-		equip_sub_nav.add_theme_constant_override("separation", 5)
+		equip_sub_nav.custom_minimum_size = Vector2(0, 56)
+		equip_sub_nav.add_theme_constant_override("separation", 7)
 		equip_sub_nav.alignment = BoxContainer.ALIGNMENT_CENTER
 		seg_house.add_child(equip_sub_nav)
 
-		btn_equip_tab_arsenal = Button.new()
-		btn_equip_tab_arsenal.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn_equip_tab_arsenal.custom_minimum_size = Vector2(0, 48)
-		btn_equip_tab_arsenal.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
-		btn_equip_tab_arsenal.text = "DOTAZIONE"
-		btn_equip_tab_arsenal.add_theme_font_size_override("font_size", 14)
-		btn_equip_tab_arsenal.pressed.connect(func(): _switch_equip_tab("ARSENAL"))
-		equip_sub_nav.add_child(btn_equip_tab_arsenal)
-
+		# Ordine richiesto: [ SKIN ]  [ DOTAZIONE ]  [ CALIBRA ]  [ SINTESI ] — grandi, visibili e senza numeri!
 		btn_equip_tab_skins = Button.new()
 		btn_equip_tab_skins.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn_equip_tab_skins.custom_minimum_size = Vector2(0, 48)
+		btn_equip_tab_skins.custom_minimum_size = Vector2(0, 54)
 		btn_equip_tab_skins.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
-		btn_equip_tab_skins.text = "SKIN & PERK"
-		btn_equip_tab_skins.add_theme_font_size_override("font_size", 14)
+		btn_equip_tab_skins.text = "SKIN"
+		btn_equip_tab_skins.add_theme_font_size_override("font_size", 16)
 		btn_equip_tab_skins.pressed.connect(func(): _switch_equip_tab("SKINS"))
 		equip_sub_nav.add_child(btn_equip_tab_skins)
 
+		btn_equip_tab_arsenal = Button.new()
+		btn_equip_tab_arsenal.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn_equip_tab_arsenal.custom_minimum_size = Vector2(0, 54)
+		btn_equip_tab_arsenal.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+		btn_equip_tab_arsenal.text = "DOTAZIONE"
+		btn_equip_tab_arsenal.add_theme_font_size_override("font_size", 16)
+		btn_equip_tab_arsenal.pressed.connect(func(): _switch_equip_tab("ARSENAL"))
+		equip_sub_nav.add_child(btn_equip_tab_arsenal)
+
 		btn_equip_tab_upgrade = Button.new()
 		btn_equip_tab_upgrade.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn_equip_tab_upgrade.custom_minimum_size = Vector2(0, 48)
+		btn_equip_tab_upgrade.custom_minimum_size = Vector2(0, 54)
 		btn_equip_tab_upgrade.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 		btn_equip_tab_upgrade.text = "CALIBRA"
-		btn_equip_tab_upgrade.add_theme_font_size_override("font_size", 14)
+		btn_equip_tab_upgrade.add_theme_font_size_override("font_size", 16)
 		btn_equip_tab_upgrade.pressed.connect(func(): _switch_equip_tab("UPGRADE"))
 		equip_sub_nav.add_child(btn_equip_tab_upgrade)
 
 		btn_equip_tab_merge = Button.new()
 		btn_equip_tab_merge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn_equip_tab_merge.custom_minimum_size = Vector2(0, 48)
+		btn_equip_tab_merge.custom_minimum_size = Vector2(0, 54)
 		btn_equip_tab_merge.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 		btn_equip_tab_merge.text = "SINTESI"
-		btn_equip_tab_merge.add_theme_font_size_override("font_size", 14)
+		btn_equip_tab_merge.add_theme_font_size_override("font_size", 16)
 		btn_equip_tab_merge.pressed.connect(func(): _switch_equip_tab("MERGE"))
 		equip_sub_nav.add_child(btn_equip_tab_merge)
 
@@ -1729,29 +1731,27 @@ func _populate_inventory() -> void:
 		fusible = im.get_fusible_items()
 	var can_improve: bool = (im != null and im.has_method("can_improve_loadout") and im.can_improve_loadout())
 
-	# Aggiorna stile e badge del Selettore Segmentato CROMO (4 sezioni: DOTAZIONE | SKIN | CALIBRA | SINTESI)
-	if btn_equip_tab_arsenal:
-		btn_equip_tab_arsenal.text = "DOTAZIONE !" if can_improve else "DOTAZIONE"
-		CyberTheme.style_segmented_tab(btn_equip_tab_arsenal, current_equip_tab == "ARSENAL", CyberTheme.COL_CYAN)
+	# Aggiorna stile dei 4 pulsanti CROMO: [ SKIN | DOTAZIONE | CALIBRA | SINTESI ] (senza numeri tra parentesi!)
 	if btn_equip_tab_skins:
-		btn_equip_tab_skins.text = "SKIN (" + str(Global.SKIN_ORDER.size()) + ")"
+		btn_equip_tab_skins.text = "SKIN"
 		CyberTheme.style_segmented_tab(btn_equip_tab_skins, current_equip_tab == "SKINS", CyberTheme.COL_GREEN)
+	if btn_equip_tab_arsenal:
+		btn_equip_tab_arsenal.text = "DOTAZIONE"
+		CyberTheme.style_segmented_tab(btn_equip_tab_arsenal, current_equip_tab == "ARSENAL", CyberTheme.COL_CYAN)
 	if btn_equip_tab_upgrade:
-		btn_equip_tab_upgrade.text = "CALIBRA (" + str(Global.upgrade_scrolls) + ")"
+		btn_equip_tab_upgrade.text = "CALIBRA"
 		CyberTheme.style_segmented_tab(btn_equip_tab_upgrade, current_equip_tab == "UPGRADE", CyberTheme.COL_YELLOW)
 	if btn_equip_tab_merge:
-		btn_equip_tab_merge.text = ("SINTESI (" + str(fusible.size()) + ")") if not fusible.is_empty() else "SINTESI"
+		btn_equip_tab_merge.text = "SINTESI"
 		CyberTheme.style_segmented_tab(btn_equip_tab_merge, current_equip_tab == "MERGE", CyberTheme.COL_MAGENTA)
 
-	var active_skin_d: Dictionary = Global.get_skin_def()
 	if btn_hero_skin_badge:
-		btn_hero_skin_badge.text = "SKIN: " + str(active_skin_d.get("name", "V-RUNNER")) + " »"
-		CyberTheme.style_button(btn_hero_skin_badge, CyberTheme.COL_CYAN, false)
+		btn_hero_skin_badge.visible = false
 
 	if btn_auto_equip_best:
 		btn_auto_equip_best.visible = can_improve
 		if can_improve:
-			btn_auto_equip_best.text = "OTTIMIZZA CROMO »"
+			btn_auto_equip_best.text = "▲ EQUIPAGGIA IL MEGLIO »"
 			CyberTheme.style_button(btn_auto_equip_best, CyberTheme.COL_YELLOW, true)
 
 	var show_arsenal: bool = (current_equip_tab == "ARSENAL")
@@ -1799,7 +1799,7 @@ func _populate_inventory() -> void:
 			flt_bar.add_child(flt_vb)
 
 			var flt_lbl := Label.new()
-			flt_lbl.text = "FILTRA PER CATEGORIA CYBERWARE  (SCORRI E TOCCA PER GESTIRE)"
+			flt_lbl.text = "ZAINO EQUIPAGGIAMENTO  •  TOCCA UN PEZZO PER DETTAGLI E INNESTO"
 			flt_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			flt_lbl.add_theme_font_size_override("font_size", 13)
 			CyberTheme.style_label(flt_lbl, CyberTheme.COL_CYAN, 2)
@@ -1812,10 +1812,10 @@ func _populate_inventory() -> void:
 
 			var filters := [
 				{"id": "ALL", "txt": "TUTTI", "col": CyberTheme.COL_YELLOW},
-				{"id": "ARMA", "txt": "⚔ ARMI", "col": Color(1.0, 0.62, 0.14, 1.0)},
-				{"id": "CORAZZA", "txt": "🛡 CORAZZE", "col": Color(0.12, 0.96, 0.60, 1.0)},
-				{"id": "ANELLO", "txt": "◎ ANELLI", "col": Color(0.84, 0.38, 1.0, 1.0)},
-				{"id": "PET", "txt": "✦ DRONI", "col": Color(0.0, 0.92, 1.0, 1.0)}
+				{"id": "ARMA", "txt": "ARMI", "col": Color(1.0, 0.62, 0.14, 1.0)},
+				{"id": "CORAZZA", "txt": "CORAZZE", "col": Color(0.12, 0.96, 0.60, 1.0)},
+				{"id": "ANELLO", "txt": "ANELLI", "col": Color(0.84, 0.38, 1.0, 1.0)},
+				{"id": "DRONE", "txt": "DRONI", "col": Color(0.0, 0.92, 1.0, 1.0)}
 			]
 			for f_def in filters:
 				var fb := Button.new()
@@ -1912,8 +1912,8 @@ func _populate_inventory() -> void:
 			var is_eq: bool = im.is_item_equipped(item_id, item_rar) if (im and im.has_method("is_item_equipped")) else false
 			if cnt <= 0 and not is_eq:
 				continue
-			var sl_up: String = str(item.get("slot", "ARMA")).to_upper()
-			if current_gear_filter != "ALL" and not (current_gear_filter in sl_up):
+			var sl_cat: String = str(_get_slot_visual_meta(str(item.get("slot", "ARMA"))).get("short", "ARMA"))
+			if current_gear_filter != "ALL" and sl_cat != current_gear_filter:
 				continue
 			filtered.append(item)
 
@@ -2429,11 +2429,10 @@ func _populate_merge_workshop(im: Node) -> void:
 func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: String, slot_name: String, rarity_val: Variant, is_eq: bool, count: int = 1, item_lvl: int = 1) -> PanelContainer:
 	var rarity_str: String = str(rarity_val).to_upper()
 	var rarity_col := CyberTheme.get_rarity_color(rarity_str)
-	var slot_meta := _get_slot_visual_meta(slot_name)
 
-	# Tile Verticale Chiara con Etichetta Categoria Colorata (⚔ ARMA / 🛡 CORAZZA / ◎ ANELLO / ✦ DRONE) + Scroll Touch Fluido!
+	# Tile Inventario Stile Archero: Pulita, Immediata, Zero Badge "Anello 2" e Vantaggio Rarità Chiaro!
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(208, 224)
+	card.custom_minimum_size = Vector2(208, 214)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override("panel", CyberTheme.make_rarity_card_box(rarity_str, 8, 8))
 
@@ -2462,9 +2461,9 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 		eq_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		eq_pill.add_theme_stylebox_override("panel", CyberTheme.make_equipped_badge_box())
 		var eq_lbl := Label.new()
-		eq_lbl.text = "✓ ATTIVO"
+		eq_lbl.text = "✓ IN USO"
 		eq_lbl.add_theme_font_size_override("font_size", 11)
-		CyberTheme.style_label(eq_lbl, Color(0.88, 1.0, 0.94, 1.0), 2)
+		CyberTheme.style_label(eq_lbl, Color(0.90, 1.0, 0.95, 1.0), 2)
 		eq_pill.add_child(eq_lbl)
 		top_tags.add_child(eq_pill)
 	else:
@@ -2474,15 +2473,15 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 		var lvl_lbl := Label.new()
 		lvl_lbl.text = ("Lv." + str(item_lvl) + " • x" + str(count)) if count > 1 else ("Lv." + str(item_lvl))
 		lvl_lbl.add_theme_font_size_override("font_size", 11)
-		CyberTheme.style_label(lvl_lbl, rarity_col.lightened(0.24), 2)
+		CyberTheme.style_label(lvl_lbl, rarity_col.lightened(0.28), 2)
 		lvl_pill.add_child(lvl_lbl)
 		top_tags.add_child(lvl_pill)
 
 	var icon_box := Control.new()
-	icon_box.custom_minimum_size = Vector2(0, 88)
+	icon_box.custom_minimum_size = Vector2(0, 86)
 	icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon_box.draw.connect(func():
-		CyberTheme.draw_item_icon(icon_box, Vector2(icon_box.size.x * 0.5, 46.0), item_id, slot_name, rarity_col, 80.0, is_eq)
+		CyberTheme.draw_item_icon(icon_box, Vector2(icon_box.size.x * 0.5, 44.0), item_id, slot_name, rarity_col, 80.0, is_eq)
 	)
 	vb.add_child(icon_box)
 
@@ -2495,30 +2494,33 @@ func _create_gear_grid_card(item_data: Dictionary, item_id: String, item_name: S
 	CyberTheme.style_label(lbl_name, Color.WHITE, 3)
 	vb.add_child(lbl_name)
 
-	var lbl_rar_sub := Label.new()
-	lbl_rar_sub.text = CyberTheme.get_rarity_badge_text(rarity_str)
-	lbl_rar_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_rar_sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	lbl_rar_sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lbl_rar_sub.add_theme_font_size_override("font_size", 12)
-	CyberTheme.style_label(lbl_rar_sub, rarity_col.lightened(0.20), 2)
-	vb.add_child(lbl_rar_sub)
-
 	var im_ref: Node = get_node_or_null("/root/InventoryManager")
 	if im_ref and im_ref.has_method("get_comparison_with_equipped"):
 		var cmp_d: Dictionary = im_ref.get_comparison_with_equipped(item_data)
 		var cmp_txt: String = str(cmp_d.get("text", ""))
 		var cmp_better: bool = bool(cmp_d.get("is_better", false))
-		var cmp_same: bool = bool(cmp_d.get("is_same", false))
-		var lbl_cmp := Label.new()
-		lbl_cmp.text = cmp_txt
-		lbl_cmp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl_cmp.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		lbl_cmp.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		lbl_cmp.add_theme_font_size_override("font_size", 13)
-		var cmp_col: Color = CyberTheme.COL_GREEN if (cmp_same or cmp_better) else Color(1.0, 0.45, 0.55, 1.0)
-		CyberTheme.style_label(lbl_cmp, cmp_col, 2)
-		vb.add_child(lbl_cmp)
+		var lbl_stat := Label.new()
+		lbl_stat.text = cmp_txt
+		lbl_stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl_stat.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		lbl_stat.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lbl_stat.add_theme_font_size_override("font_size", 14)
+		var st_col: Color = CyberTheme.COL_GREEN if cmp_better else (CyberTheme.COL_YELLOW if is_eq else Color(0.88, 0.94, 1.0, 0.96))
+		CyberTheme.style_label(lbl_stat, st_col, 3)
+		vb.add_child(lbl_stat)
+
+	# Riga vantaggio passivo di Rarità (Raro/Epico/Leggendario) al posto del vecchio testo ridondante!
+	var perk_short: String = ""
+	if im_ref and im_ref.has_method("get_highest_unlocked_perk_short"):
+		perk_short = im_ref.get_highest_unlocked_perk_short(item_id, slot_name, rarity_str)
+	var lbl_perk := Label.new()
+	lbl_perk.text = perk_short if not perk_short.is_empty() else "Comune"
+	lbl_perk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_perk.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	lbl_perk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl_perk.add_theme_font_size_override("font_size", 12)
+	CyberTheme.style_label(lbl_perk, rarity_col.lightened(0.28) if not perk_short.is_empty() else Color(0.55, 0.63, 0.75, 0.80), 2)
+	vb.add_child(lbl_perk)
 
 	_connect_button(card, func():
 		SoundFX.play_click()
@@ -2716,8 +2718,9 @@ func _populate_shop() -> void:
 		btn_open_skins.add_theme_font_size_override("font_size", 15)
 		CyberTheme.style_button(btn_open_skins, CyberTheme.COL_CYAN, false)
 		btn_open_skins.pressed.connect(func():
+			SoundFX.play_click()
 			current_equip_tab = "SKINS"
-			_on_nav_equip_pressed()
+			_show_inventory_view()
 		)
 		shb.add_child(btn_open_skins)
 
@@ -3173,6 +3176,7 @@ func _on_nav_shop_pressed() -> void:
 
 func _on_nav_equip_pressed() -> void:
 	SoundFX.play_click()
+	current_equip_tab = "ARSENAL"
 	_show_inventory_view()
 
 func _on_nav_home_pressed() -> void:

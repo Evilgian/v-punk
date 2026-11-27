@@ -207,7 +207,7 @@ static func make_glass_counter_box(accent: Color) -> StyleBoxFlat:
 	sb.content_margin_bottom = 6
 	return sb
 
-## Stile Tab per Selettore Tattico Segmentato (DOTAZIONE | CALIBRA | SINTESI, ecc.)
+## Stile Pulsanti Sub-Tab Alta Visibilità (SKIN | DOTAZIONE | CALIBRA | SINTESI, Filtri, ecc.)
 static func style_segmented_tab(btn: Button, is_active: bool, accent: Color = COL_CYAN) -> void:
 	if not btn:
 		return
@@ -215,33 +215,51 @@ static func style_segmented_tab(btn: Button, is_active: bool, accent: Color = CO
 	if f_bold:
 		btn.add_theme_font_override("font", f_bold)
 	var sb := StyleBoxFlat.new()
+	var sb_h := StyleBoxFlat.new()
 	if is_active:
-		sb.bg_color = Color(accent.r * 0.22 + 0.05, accent.g * 0.22 + 0.06, accent.b * 0.22 + 0.10, 0.98)
-		sb.border_color = accent
+		# Placca attiva Giallo Cyberpunk / Accento Pieno ad altissimo contrasto!
+		sb.bg_color = COL_YELLOW
+		sb.border_color = Color.WHITE
+		sb.border_width_left = 4
+		sb.border_width_top = 2
+		sb.border_width_right = 2
+		sb.border_width_bottom = 3
+		sb.shadow_color = Color(COL_YELLOW.r, COL_YELLOW.g, COL_YELLOW.b, 0.32)
+		sb.shadow_size = 5
+	else:
+		# Pulsante inattivo solido, ben definito e subito riconoscibile come cliccabile!
+		sb.bg_color = Color(0.08, 0.13, 0.23, 0.98)
+		sb.border_color = Color(accent.r * 0.55 + 0.22, accent.g * 0.55 + 0.30, accent.b * 0.55 + 0.40, 0.92)
 		sb.border_width_left = 4
 		sb.border_width_top = 1
 		sb.border_width_right = 1
-		sb.border_width_bottom = 3
-	else:
-		sb.bg_color = Color(0.03, 0.04, 0.07, 0.82)
-		sb.border_color = Color(0.18, 0.24, 0.34, 0.55)
 		sb.border_width_bottom = 2
 	sb.corner_radius_top_left = 2
 	sb.corner_radius_top_right = 2
 	sb.corner_radius_bottom_left = 2
-	sb.corner_radius_bottom_right = 6
-	sb.content_margin_left = 10
-	sb.content_margin_right = 10
+	sb.corner_radius_bottom_right = 8
+	sb.content_margin_left = 8
+	sb.content_margin_right = 8
 	sb.content_margin_top = 8
 	sb.content_margin_bottom = 8
+	sb_h = sb.duplicate() as StyleBoxFlat
+	if not is_active:
+		sb_h.bg_color = Color(0.12, 0.19, 0.32, 1.0)
 	btn.add_theme_stylebox_override("normal", sb)
-	btn.add_theme_stylebox_override("hover", sb)
+	btn.add_theme_stylebox_override("hover", sb_h)
 	btn.add_theme_stylebox_override("pressed", sb)
-	btn.add_theme_color_override("font_color", Color.WHITE if is_active else Color(0.66, 0.74, 0.86, 0.92))
-	btn.add_theme_color_override("font_hover_color", Color.WHITE)
-	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
-	btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06, 0.96))
-	btn.add_theme_constant_override("outline_size", 3 if is_active else 2)
+	if is_active:
+		btn.add_theme_color_override("font_color", Color(0.04, 0.05, 0.09, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color(0.04, 0.05, 0.09, 1.0))
+		btn.add_theme_color_override("font_pressed_color", Color(0.04, 0.05, 0.09, 1.0))
+		btn.add_theme_color_override("font_outline_color", Color(1.0, 0.98, 0.65, 0.35))
+		btn.add_theme_constant_override("outline_size", 1)
+	else:
+		btn.add_theme_color_override("font_color", Color(0.93, 0.97, 1.0, 1.0))
+		btn.add_theme_color_override("font_hover_color", Color.WHITE)
+		btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+		btn.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.98))
+		btn.add_theme_constant_override("outline_size", 3)
 
 static func make_equipped_badge_box() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

@@ -97,14 +97,27 @@ func setup_item(item_data: Dictionary) -> void:
 		item_title.add_theme_font_size_override("font_size", 22)
 		CyberTheme.style_label(item_title, rar_col.lightened(0.15), 4)
 	if item_info:
-		var eq_tag := "  •  ✓ INNESTATO" if is_eq else ""
-		item_info.text = "SLOT: " + islot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nDisponibili: " + str(Global.total_coins) + " Crediti   |   " + str(Global.upgrade_scrolls) + " Nuclei"
-		item_info.add_theme_font_size_override("font_size", 16)
+		var clean_slot := "ARMA" if "ARMA" in islot.to_upper() else ("CORAZZA" if "CORAZZA" in islot.to_upper() else ("ANELLO" if "ANELLO" in islot.to_upper() else "DRONE"))
+		var eq_tag := "  •  ✓ IN USO" if is_eq else ""
+		item_info.text = "TIPO: " + clean_slot + "  •  " + CyberTheme.get_rarity_badge_text(rar_str) + eq_tag + "\nDisponibili: " + str(Global.total_coins) + " Crediti   |   " + str(Global.upgrade_scrolls) + " Nuclei"
+		item_info.add_theme_font_size_override("font_size", 15)
 		CyberTheme.style_label(item_info, CyberTheme.COL_EQUIPPED if is_eq else rar_col, 3)
 	if item_desc:
-		item_desc.text = stat_desc
+		var full_txt := stat_desc
+		if im and im.has_method("get_item_rarity_perks"):
+			var r_order := ["COMMON", "RARE", "EPIC", "LEGENDARY"]
+			var cur_r_idx: int = r_order.find(rar_str.to_upper())
+			var p_list: Array = im.get_item_rarity_perks(iid, islot)
+			full_txt += "\n\nVANTAGGI DI RARITÀ:"
+			for pk in p_list:
+				var req_r: String = str(pk["rarity"]).to_upper()
+				var req_idx: int = r_order.find(req_r)
+				var r_it: String = CyberTheme.get_rarity_label_it(req_r)
+				var unlocked: bool = cur_r_idx >= req_idx
+				full_txt += "\n" + ("✓ " if unlocked else "🔒 ") + "[" + r_it + "] " + str(pk["desc"])
+		item_desc.text = full_txt
 		item_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		item_desc.add_theme_font_size_override("font_size", 17)
+		item_desc.add_theme_font_size_override("font_size", 15)
 		CyberTheme.style_label(item_desc, Color(0.92, 0.97, 1.0, 1.0), 3)
 
 	if btn_action:
@@ -124,7 +137,8 @@ func setup_item(item_data: Dictionary) -> void:
 		btn_action.pressed.connect(func():
 			if im:
 				if is_eq and islot.to_upper() != "ARMA":
-					im.unequip_item(islot)
+					var eq_sl: String = im.find_equipped_slot_for(iid, rar_str) if im.has_method("find_equipped_slot_for") else islot
+					im.unequip_item(eq_sl if not eq_sl.is_empty() else islot)
 				elif not is_eq:
 					im.equip_item(iid, islot, rar_str)
 			SoundFX.play_pickup()

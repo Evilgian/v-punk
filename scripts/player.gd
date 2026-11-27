@@ -164,6 +164,26 @@ func _ready() -> void:
 	max_hp += (Global.upgrade_hp_lvl * 20) + hp_talent
 	bonus_damage += (Global.upgrade_dmg_lvl * 2) + atk_talent
 
+	# Applica i Bonus Passivi Cumulativi di Rarità (Raro / Epico / Leggendario stile Archero!)
+	if im and im.has_method("get_total_equipped_rarity_bonuses"):
+		var rb: Dictionary = im.get_total_equipped_rarity_bonuses()
+		if float(rb.get("atk_pct", 0.0)) > 0.0:
+			bonus_damage += maxi(2, int(round(float(weapon_base_damage + bonus_damage) * (float(rb["atk_pct"]) / 100.0))))
+		if float(rb.get("max_hp_pct", 0.0)) > 0.0:
+			max_hp += maxi(10, int(round(float(max_hp) * (float(rb["max_hp_pct"]) / 100.0))))
+		if float(rb.get("fire_rate_pct", 0.0)) > 0.0:
+			fire_rate = maxf(0.075, fire_rate / (1.0 + float(rb["fire_rate_pct"]) / 100.0))
+		crit_chance = minf(0.85, crit_chance + float(rb.get("crit_pct", 0.0)) / 100.0)
+		crit_dmg_mult += float(rb.get("crit_dmg_pct", 0.0)) / 100.0
+		dodge_chance = minf(0.60, dodge_chance + float(rb.get("dodge_pct", 0.0)) / 100.0)
+		damage_reduction = minf(0.50, damage_reduction + float(rb.get("dmg_red_pct", 0.0)) / 100.0)
+		drone_tech_bonus += float(rb.get("drone_spd_pct", 0.0)) / 100.0
+		exp_boost_bonus += float(rb.get("exp_pct", 0.0)) / 100.0
+		regen_stacks += int(rb.get("regen_stacks", 0))
+		if int(rb.get("start_shield", 0)) > 0:
+			shield_max += int(rb["start_shield"])
+			shield_charges = shield_max
+
 	# Applica i Perk Passivi Esclusivi della Skin Operativo equipaggiata!
 	var skin_d: Dictionary = Global.get_skin_def()
 	if float(skin_d.get("spd_pct", 0.0)) > 0.0:

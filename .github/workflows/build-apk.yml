@@ -57,9 +57,9 @@ jobs:
       - name: Imposta Versione Build & Compila APK Android
         run: |
           mkdir -p build/android
-          VERSION_TAG="v2.6.${{ github.run_number }}"
-          VERSION_NAME="2.6.${{ github.run_number }}"
-          VERSION_CODE=$((700 + ${{ github.run_number }}))
+          VERSION_TAG="v2.7.${{ github.run_number }}"
+          VERSION_NAME="2.7.${{ github.run_number }}"
+          VERSION_CODE=$((800 + ${{ github.run_number }}))
           echo "Compilazione versione: $VERSION_TAG (code: $VERSION_CODE)"
 
           sed -i "s/const GAME_VERSION: String = \".*\"/const GAME_VERSION: String = \"$VERSION_TAG\"/g" scripts/global.gd
@@ -76,31 +76,33 @@ jobs:
       - name: Carica APK negli Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: V-Punk-v2.6.${{ github.run_number }}-APK
-          path: build/android/V-Punk-v2.6.${{ github.run_number }}.apk
+          name: V-Punk-v2.7.${{ github.run_number }}-APK
+          path: build/android/V-Punk-v2.7.${{ github.run_number }}.apk
 
       - name: Pubblica Release Versionata su GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.6.${{ github.run_number }}
-          name: "V-PUNK: Rogue Protocol — Release v2.6.${{ github.run_number }}"
+          tag_name: v2.7.${{ github.run_number }}
+          name: "V-PUNK: Rogue Protocol — Release v2.7.${{ github.run_number }}"
           make_latest: true
           body: |
-            ### V-PUNK: Rogue Protocol — Versione `v2.6.${{ github.run_number }}` (Fix Slot Anelli Attivi, Economia Drop Bilanciata & Scelta Perk Stile Archero)
+            ### V-PUNK: Rogue Protocol — Versione `v2.7.${{ github.run_number }}` (Vantaggi Passivi per Rarità Stile Archero, Inventario Chiaro & Sub-Tab CROMO Ridisegnate)
 
-            #### 1. Fix Tracciamento Rarità negli Slot Equipaggiamento (Max 2 Anelli Attivi)
-            - **Zero Doppioni `✓ ATTIVO` nell'Inventario**: ora ogni slot (`ARMA`, `CORAZZA`, `ANELLO 1`, `ANELLO 2`, `PET 1`, `PET 2`) registra l'esatta coppia `(id, rarità)` innestata, evitando che copie di altre rarità dello stesso anello o arma vengano mostrate contemporaneamente come attive.
+            #### 1. Vera Progressione di Rarità Stile *Archero* (Statistiche + Bonus Passivi Sbloccabili)
+            - **Incremento Netto a Parità di Livello**: ricalibrati i moltiplicatori di rarità (`1.0x` → `1.38x` → `1.85x` → `2.50x`) su tutte le armi, corazze, anelli e droni (es. *Anello Velocità* Lv.1: `+22 VEL` Comune → `+30 VEL` Raro → `+41 VEL` Epico → `+55 VEL` Leggendario).
+            - **3 Vantaggi Passivi Cumulativi per Rarità**: ogni pezzo sblocca automaticamente nuovi bonus passivi reali in partita salendo a **Raro**, **Epico** e **Leggendario** (es. Schivata, Velocità di Sparo, Probabilità/Danno Critico, Scudo Iniziale, Rigenerazione HP), visibili sia sulle card che nella scheda dettaglio.
 
-            #### 2. Economia Drop & Casse Ribilanciata (Progressione Sintesi 3-in-1)
-            - **Addio Pioggia di Leggendari**: ridotta la frequenza dei drop in partita e introdotto il tiro di rarità pesato per Settore (`0%` Leggendari nei primi Settori, `2%` nella Cassa Epica da 300 Gemme), rendendo la **Sintesi 3-in-1** il vero cuore dell'evoluzione verso Epico e Leggendario.
+            #### 2. Inventario Ripulito & Badge Generici `ANELLO` / `DRONE`
+            - **Zero Etichette `Anello 2` / `Drone 2`**: anelli e droni usano ora categorie pulite (`◎ ANELLO`, `✦ DRONE`) e si possono innestare liberamente nei 2 slot disponibili.
+            - **Card Zaino Chiare e Leggibili**: rimosso il testo ridondante sulla rarità in favore di valore esatto (`+41 VEL (▲ +11)`) e vantaggio passivo attivo (`✦ +10% Sparo`).
 
-            #### 3. Scelta Perk al Level-Up Ridisegnata in Stile *Archero*
-            - **3 Carte Affiancate con Grandi Icone Dedicate**: nuovo layout visivo immediato con medaglione icona `128x128` specifico per ognuna delle 36 abilità, cornice di rarità e spiegazione lampo di 3-4 parole leggibile all'istante.
+            #### 3. Nuove Sub-Tab in Alto su CROMO (`SKIN | DOTAZIONE | CALIBRA | SINTESI`)
+            - **Ordine & Visibilità**: spostata **SKIN** a sinistra, mantenuta **DOTAZIONE** come scheda predefinita quando si tocca *CROMO*, rimossi tutti i numeri tra parentesi e resi i 4 pulsanti solidi, grandi e ad alto contrasto.
 
             ---
-            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.6.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
+            **Installazione / Aggiornamento**: scarica **`V-Punk-v2.7.${{ github.run_number }}.apk`** qui sotto sul tuo smartphone Android e aprilo per aggiornare direttamente l'app mantenendo tutti i salvataggi (`versionCode` incrementato).
           files: |
-            build/android/V-Punk-v2.6.${{ github.run_number }}.apk
+            build/android/V-Punk-v2.7.${{ github.run_number }}.apk
             build/android/V-Punk.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
